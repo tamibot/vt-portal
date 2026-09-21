@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi seguimiento · Vane Tello</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="brand/VT-Verde.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Marca: títulos en script (equivalente a Highest) + cuerpo en Lato, según el Manual de Identidad. -->
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde:#9BB937; --verde-osc:#7A9425; --verde-cl:#C3D583; --verde-pal:#EDF3DC; --verde-hum:#F7FAEF;
+  --taupe:#8E8565; --taupe-cl:#C3BCA8; --naranja:#F7903C; --naranja-pal:#FEF0E3;
+  --amarillo:#F4E9AB; --amarillo-pal:#FBF6DE;
+  --tinta:#41423A; --tinta-sv:#78796D;
+  --script:'Kaushan Script',cursive; --sans:'Lato',system-ui,sans-serif;
+  --r:18px; --sombra:0 16px 40px -26px rgba(65,66,58,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--sans);font-weight:400;color:var(--tinta);background:var(--verde-hum);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{width:min(940px,94vw);margin-inline:auto}
+h1{font-family:var(--script);font-weight:400;color:var(--verde);font-size:clamp(1.7rem,4.4vw,2.4rem);line-height:1.2}
+h2{font-family:var(--script);font-weight:400;color:var(--verde);font-size:1.5rem;line-height:1.25}
+h2.dato{font-family:var(--sans);font-weight:900;font-size:1.12rem;letter-spacing:-.01em;
+  color:var(--verde-osc);text-transform:none}
+.valida{margin-top:.9rem;padding-top:.7rem;border-top:1px solid var(--verde-pal);
+  font-size:.8rem;color:var(--tinta-sv);font-weight:300}
+.eti{font-size:.68rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe)}
+
+/* barra */
+.top{background:#fff;border-bottom:1px solid var(--verde-pal);position:sticky;top:0;z-index:20}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0}
+.lock{display:flex;align-items:center}
+.lock img{height:32px;width:auto}
+.lock b{font-weight:300;letter-spacing:.22em;font-size:.74rem;color:var(--verde-osc);text-transform:uppercase;white-space:nowrap}
+.top .quien{font-size:.82rem;color:var(--tinta-sv);font-weight:300;text-align:right}
+.top .quien b{display:block;font-weight:900;color:var(--tinta);font-size:.92rem}
+
+main{padding:1.6rem 0 3rem}
+.saludo{margin-bottom:1.4rem}
+.saludo p{color:var(--tinta-sv);font-weight:300;font-size:.96rem;margin-top:.2rem}
+
+.grid{display:grid;gap:1rem}
+/* Sin esto, un texto largo impone su min-content y estira la columna en móvil. */
+.grid > *{min-width:0}
+@media(min-width:820px){.grid.dos{grid-template-columns:1.25fr .75fr}}
+.card{background:#fff;border:1px solid var(--verde-pal);border-radius:var(--r);padding:1.3rem;box-shadow:var(--sombra)}
+.card + .card{margin-top:1rem}
+.card h2{margin-bottom:.7rem}
+
+/* próxima cita */
+.cita{background:var(--verde);color:#fff;border:0}
+.cita h2{color:#fff}
+.cita .fecha{font-family:var(--script);font-size:clamp(1.45rem,5.6vw,2rem);line-height:1.15;margin:.2rem 0 .1rem;overflow-wrap:break-word}
+.cita .det{font-size:.94rem;color:rgba(255,255,255,.92);font-weight:300}
+.cita .estado{
+  display:inline-block;background:rgba(255,255,255,.22);border-radius:999px;
+  padding:.2rem .7rem;font-size:.68rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+}
+.cita .aviso{
+  margin-top:1rem;padding-top:.9rem;border-top:1px solid rgba(255,255,255,.3);
+  font-size:.88rem;color:rgba(255,255,255,.92);font-weight:300;
+}
+.cita .aviso b{font-weight:900;color:#fff}
+.cita ul{list-style:none;margin-top:.5rem;display:grid;gap:.3rem}
+.cita ul li{padding-left:1.1rem;position:relative;font-size:.88rem}
+.cita ul li::before{content:'';position:absolute;left:0;top:.6em;width:5px;height:5px;background:#fff;border-radius:50%;opacity:.8}
+.cita .btns{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  font-family:var(--sans);font-weight:900;font-size:.92rem;
+  padding:.7rem 1.3rem;border:0;border-radius:999px;cursor:pointer;
+  transition:transform .2s,background .2s,border-color .2s;
+}
+.btn-b{background:#fff;color:var(--verde-osc)}
+.btn-b:hover{transform:translateY(-2px)}
+.btn-o{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.55)}
+.btn-o:hover{border-color:#fff;transform:translateY(-2px)}
+.btn-p{background:var(--verde);color:#fff}
+.btn-p:hover{background:var(--verde-osc);transform:translateY(-2px)}
+.btn-p:disabled{background:var(--taupe-cl);cursor:wait;transform:none}
+.btn-s{background:#fff;color:var(--taupe);border:1.5px solid var(--taupe-cl);font-weight:700}
+.btn-s:hover{border-color:var(--taupe)}
+
+/* progreso */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-bottom:1.1rem}
+@media(min-width:620px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--verde-hum);border:1px solid var(--verde-pal);border-radius:14px;padding:.85rem}
+.kpi .n{font-family:var(--sans);font-weight:900;font-size:1.75rem;color:var(--verde-osc);
+  line-height:1.1;letter-spacing:-.02em}
+.kpi .t{font-size:.7rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--taupe);margin-top:.15rem}
+.kpi .d{font-size:.8rem;font-weight:700;margin-top:.2rem}
+.baja{color:var(--verde-osc)}
+.sube{color:var(--naranja)}
+.igual{color:var(--tinta-sv)}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.leyenda{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.78rem;color:var(--tinta-sv);font-weight:700;margin-top:.5rem}
+.leyenda i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:.35rem;vertical-align:-1px}
+
+/* tablas */
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;font-size:.68rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe);padding:.4rem .5rem;border-bottom:1.5px solid var(--verde-pal)}
+td{padding:.55rem .5rem;border-bottom:1px solid var(--verde-pal);font-weight:300}
+tr:last-child td{border-bottom:0}
+.tabla-scroll{overflow-x:auto}
+
+/* listas de archivos */
+.archivo{
+  display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-bottom:1px solid var(--verde-pal);
+}
+.archivo:last-child{border-bottom:0}
+.archivo img{width:34px;flex:0 0 34px;mix-blend-mode:multiply}
+.archivo .t{font-weight:700;font-size:.92rem}
+.archivo .f{font-size:.78rem;color:var(--tinta-sv);font-weight:300}
+.archivo .ver{margin-left:auto;font-size:.82rem;font-weight:900;color:var(--verde-osc)}
+.archivo .ver.no{color:var(--taupe-cl);font-weight:700}
+
+/* recomendaciones */
+.recos{list-style:none;display:grid;gap:.6rem}
+.recos li{padding-left:1.5rem;position:relative;font-weight:300;font-size:.94rem}
+.recos li::before{
+  content:'';position:absolute;left:0;top:.45em;width:14px;height:14px;background:var(--verde);
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 6L9 17l-5-5' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat;
+}
+
+/* adherencia */
+.badge{display:inline-block;border-radius:999px;padding:.25rem .75rem;font-size:.72rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.b-alta{background:var(--verde-pal);color:var(--verde-osc)}
+.b-media{background:var(--amarillo-pal);color:#8a6d16}
+.b-baja{background:var(--naranja-pal);color:#c2571a}
+
+/* formulario de medidas */
+.medidas{display:grid;gap:.8rem}
+@media(min-width:560px){.medidas{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:.76rem;font-weight:900;letter-spacing:.03em;margin-bottom:.3rem}
+input{
+  width:100%;font-family:var(--sans);font-size:1rem;color:var(--tinta);background:#fff;
+  padding:.7rem .85rem;border:1.5px solid var(--verde-pal);border-radius:11px;
+}
+input:focus{outline:0;border-color:var(--verde);box-shadow:0 0 0 4px rgba(155,185,55,.16)}
+.nota{font-size:.8rem;color:var(--tinta-sv);font-weight:300;margin-top:.8rem}
+.ok-msg{display:none;background:var(--verde-pal);border-radius:12px;padding:.9rem 1rem;font-size:.9rem;margin-top:.9rem}
+
+footer{background:#fff;border-top:1px solid var(--verde-pal);padding:1.5rem 0;font-size:.8rem;color:var(--tinta-sv);font-weight:300}
+footer .wrap{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:space-between;align-items:center}
+footer img{width:170px;opacity:.9}
+
+.cargando,.error{text-align:center;padding:3rem 1rem;color:var(--tinta-sv);font-weight:300}
+.error b{color:var(--tinta);font-weight:900;display:block;margin-bottom:.3rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <div class="lock"><img src="brand/VT-Hoja-membretada.png" alt="VT Nutricionistas by Vane Tello"></div>
+    <div class="quien" id="quien"></div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap" id="app">
+    <p class="cargando">Cargando tu seguimiento…</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="brand/VT-Hoja-membretada.png" alt="Vane Tello">
+    <span>Dudas: <a href="https://wa.me/51991137288" style="color:var(--verde-osc);font-weight:900">+51 991 137 288</a> · Lic. Vanessa Tello · CNP 5788</span>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   Portal del paciente (Frente 3).
+
+   La ficha real se consulta en Kommo mediante n8n con el DNI del paciente.
+   `?t=` se conserva para enlaces antiguos y `?p=demo` para pruebas.
+
+   El formulario de medidas todavía se deriva a WhatsApp; no se inventa un
+   guardado en CRM hasta definir el campo y el permiso clínico correspondiente.
+   ========================================================================== */
+const WA = '51991137288';
+const params = new URLSearchParams(location.search);
+
+/* Acceso: el enlace público de cliente pide únicamente el DNI. El token queda
+   compatible para no romper enlaces antiguos ya enviados por WhatsApp. */
+const token = (params.get('t') || '').replace(/[^a-z0-9_.-]/gi, '');
+const dni = (params.get('dni') || '').replace(/\D/g, '');
+const demo = params.get('p') === 'demo';
+const ID = demo ? 'demo' : token || dni;
+const accesoValido = demo || (token.includes('.') && token.length >= 24) || /^\d{6,12}$/.test(dni);
+
+// Al conectar el CRM: FUENTE = `https://…/paciente/${ID}` y listo.
+// La ficha se pide a n8n con el token del paciente, no a un archivo estático.
+// Servirla como `datos/<token>.json` desde un host público dejaría el peso, la
+// grasa corporal y las recomendaciones de cada paciente como archivo abierto —y
+// en el historial de git—. Son datos de salud: no pueden vivir ahí.
+// El demo sí es local: son datos inventados.
+const API_FICHA = 'https://primary-production-9caaf.up.railway.app/webhook/portal-vt';
+const FUENTE = demo ? 'datos/demo.json' : `${API_FICHA}?${token ? `t=${encodeURIComponent(token)}` : `dni=${encodeURIComponent(dni)}`}`;
+
+const $ = s => document.querySelector(s);
+const fmt = iso => {
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-').map(Number);
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+  return `${d} de ${meses[m - 1]}`;
+};
+const fmtCorto = iso => iso ? iso.split('-').reverse().slice(0, 2).join('/') : '';
+const dias = iso => {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((new Date(iso + 'T00:00:00') - hoy) / 86400000);
+};
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* --- gráfico de líneas, sin librerías --- */
+function grafico(meds){
+  const W = 640, H = 190, pad = {t:14, r:14, b:26, l:34};
+  const series = [
+    {k:'peso',      color:'#9BB937', label:'Peso (kg)'},
+    {k:'grasa_pct', color:'#F7903C', label:'% de grasa'},
+  ];
+  const xs = (i) => pad.l + i * ((W - pad.l - pad.r) / Math.max(1, meds.length - 1));
+  let out = '';
+  series.forEach(s => {
+    const vals = meds.map(m => m[s.k]);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const rango = (max - min) || 1;
+    const ys = v => pad.t + (1 - (v - min) / rango) * (H - pad.t - pad.b);
+    const pts = meds.map((m, i) => `${xs(i)},${ys(m[s.k])}`).join(' ');
+    out += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.5"
+              stroke-linejoin="round" stroke-linecap="round"/>`;
+    meds.forEach((m, i) => {
+      out += `<circle cx="${xs(i)}" cy="${ys(m[s.k])}" r="4" fill="#fff" stroke="${s.color}" stroke-width="2.5"/>`;
+      out += `<text x="${xs(i)}" y="${ys(m[s.k]) - 11}" text-anchor="middle"
+                font-size="10" font-weight="700" fill="${s.color}">${m[s.k]}</text>`;
+    });
+  });
+  const ejeX = meds.map((m, i) =>
+    `<text x="${xs(i)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="#78796D">${fmtCorto(m.fecha)}</text>`
+  ).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución de peso y porcentaje de grasa">
+    ${out}${ejeX}
+  </svg>
+  <div class="leyenda">
+    <span><i style="background:#9BB937"></i>Peso (kg)</span>
+    <span><i style="background:#F7903C"></i>% de grasa</span>
+  </div>`;
+}
+
+// En peso, grasa y visceral bajar es bueno. En músculo y agua es al revés:
+// el color va por si el cambio favorece al paciente, no por el signo.
+function delta(meds, campo, unidad, bajarEsBueno = true){
+  if (meds.length < 2) return '';
+  const d = +(meds.at(-1)[campo] - meds[0][campo]).toFixed(1);
+  const favorable = bajarEsBueno ? d < 0 : d > 0;
+  const clase = d === 0 ? 'igual' : favorable ? 'baja' : 'sube';
+  const signo = d > 0 ? '+' : '';
+  return `<div class="d ${clase}">${signo}${d} ${unidad} desde el inicio</div>`;
+}
+
+function pintar(d){
+  const p = d.paciente || {};
+  const nombre = [p.nombre_1, p.apellido_1].filter(Boolean).join(' ');
+  const meds = d.mediciones || [];
+  const ult = meds.at(-1) || {};
+  const cita = d.proxima_cita || {};
+  const presencial = (cita.modalidad || '').startsWith('Presencial');
+  const cuantos = dias(cita.fecha);
+  const cuando = cuantos === 0 ? 'hoy' : cuantos === 1 ? 'mañana'
+               : cuantos > 1 ? `en ${cuantos} días` : 'pendiente de reagendar';
+  const adh = (p.adherencia || '').toLowerCase();
+
+  $('#quien').innerHTML = `<b>${esc(nombre)}</b>${esc(p.nutricionista_asignada || '')}`;
+
+  $('#app').innerHTML = `
+    <div class="saludo">
+      <h1>Hola, ${esc(p.nombre_1 || '')}</h1>
+      <p>Acá tienes tu próxima cita, tu avance y tus planes. Todo en un solo lugar.</p>
+    </div>
+
+    <div class="grid dos">
+      <div>
+        <!-- ---------- próxima cita ---------- -->
+        <div class="card cita">
+          <span class="estado">Tu próxima cita · ${esc(cita.estado || '')}</span>
+          <div class="fecha">${fmt(cita.fecha)} · ${esc(cita.hora || '')}</div>
+          <div class="det">${esc(cita.modalidad || '')} — ${esc(cita.nutricionista || '')}<br>
+            ${presencial ? esc(cita.direccion || '') : 'Te enviamos el enlace de Zoom un día antes.'}</div>
+          <div class="aviso">
+            <b>Es ${cuando}. Para aprovecharla:</b>
+            <ul>
+              ${presencial ? `
+                <li>Llega 10 minutos antes: primero tomamos tu peso.</li>
+                <li>Ropa ligera, la misma que usas en cada cita. Sin faja, anillos, pulseras, reloj ni correa.</li>
+                <li>No vengas justo después de entrenar.</li>
+                <li>Regístrate en recepción de la clínica con tu DNI.</li>` : `
+                <li>Llena tu cuadro de medidas más abajo, antes de la cita.</li>
+                <li>Ten a mano tu balanza y tu cinta métrica.</li>
+                <li>Envíanos 3 fotos de cuerpo completo (frente, perfil y espaldas) con ropa ceñida.</li>`}
+              <li>Si tienes análisis o suplementos que quieras que revise, mándalos antes.</li>
+            </ul>
+          </div>
+          <div class="btns">
+            ${presencial
+              ? `<a class="btn btn-b" href="https://maps.google.com/?q=${encodeURIComponent(cita.direccion || '')}" target="_blank" rel="noopener">Ver cómo llegar</a>`
+              : (cita.link_zoom ? `<a class="btn btn-b" href="${esc(cita.link_zoom)}" target="_blank" rel="noopener">Entrar a Zoom</a>` : '')}
+            <a class="btn btn-o" href="https://wa.me/${WA}?text=${encodeURIComponent(`Hola, soy ${nombre}. Necesito reagendar mi cita del ${cita.fecha}.`)}" target="_blank" rel="noopener">Necesito reagendar</a>
+          </div>
+        </div>
+
+        <!-- ---------- progreso ---------- -->
+        <div class="card">
+          <h2 class="dato">Tu avance</h2>
+          <div class="kpis">
+            <div class="kpi"><div class="n">${ult.peso ?? '—'}</div><div class="t">kg de peso</div>${delta(meds,'peso','kg')}</div>
+            <div class="kpi"><div class="n">${ult.grasa_pct ?? '—'}%</div><div class="t">grasa corporal</div>${delta(meds,'grasa_pct','pts')}</div>
+            <div class="kpi"><div class="n">${ult.musculo_kg ?? '—'}</div><div class="t">kg de músculo</div>${delta(meds,'musculo_kg','kg',false)}</div>
+            <div class="kpi"><div class="n">${ult.grasa_visceral ?? '—'}</div><div class="t">grasa visceral</div>${delta(meds,'grasa_visceral','pts')}</div>
+          </div>
+          ${meds.length > 1 ? grafico(meds) : '<p class="nota">Con la próxima medición podrás ver tu evolución en el tiempo.</p>'}
+          <div class="tabla-scroll" style="margin-top:1.1rem">
+            <table>
+              <thead><tr><th>Fecha</th><th>Peso</th><th>% grasa</th><th>Músculo</th><th>Agua</th><th>Visceral</th><th>IMC</th></tr></thead>
+              <tbody>
+                ${meds.slice().reverse().map(m => `<tr>
+                  <td><b>${fmtCorto(m.fecha)}</b></td><td>${m.peso} kg</td><td>${m.grasa_pct}%</td>
+                  <td>${m.musculo_kg} kg</td><td>${m.agua_pct}%</td><td>${m.grasa_visceral}</td><td>${m.imc}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <p class="nota">Los valores vienen de la balanza de bioimpedancia SECA de las citas presenciales.</p>
+        </div>
+
+        <!-- ---------- cuadro de medidas (reemplaza el Excel manual) ---------- -->
+        <div class="card">
+          <h2 class="dato">Tu cuadro de medidas</h2>
+          <p class="nota" style="margin:0 0 1rem">Si tu cita es virtual, llena esto antes. Toma las medidas en ayunas y sin ropa gruesa.</p>
+          <form id="fmedidas" novalidate>
+            <div class="medidas">
+              <div><label for="m_peso">Peso (kg)</label><input id="m_peso" name="peso" inputmode="decimal" required placeholder="74.2"></div>
+              <div><label for="m_cintura">Cintura (cm)</label><input id="m_cintura" name="cintura" inputmode="decimal" required placeholder="86"></div>
+              <div><label for="m_cadera">Cadera (cm)</label><input id="m_cadera" name="cadera" inputmode="decimal" placeholder="102"></div>
+              <div><label for="m_brazo">Brazo (cm)</label><input id="m_brazo" name="brazo" inputmode="decimal" placeholder="30"></div>
+              <div><label for="m_muslo">Muslo (cm)</label><input id="m_muslo" name="muslo" inputmode="decimal" placeholder="58"></div>
+              <div><label for="m_cuello">Cuello (cm)</label><input id="m_cuello" name="cuello" inputmode="decimal" placeholder="34"></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem">
+              <button class="btn btn-p" type="submit">Enviar mis medidas</button>
+              <a class="btn btn-s" id="fotos" href="#" target="_blank" rel="noopener">Enviar mis 3 fotos por WhatsApp</a>
+            </div>
+            <div class="ok-msg" id="ok-medidas"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ---------- columna lateral ---------- -->
+      <div>
+        <div class="card">
+          <span class="eti">Cómo vas</span>
+          <h2 class="dato" style="margin:.3rem 0 .6rem">Tu seguimiento</h2>
+          <p style="font-size:.92rem;font-weight:300;margin-bottom:.8rem">
+            Adherencia: <span class="badge ${adh === 'alta' ? 'b-alta' : adh === 'media' ? 'b-media' : 'b-baja'}">${esc(p.adherencia || '—')}</span>
+          </p>
+          <table>
+            <tbody>
+              <tr><td>Seguimientos</td><td style="text-align:right"><b>${d.seguimiento?.nro_seguimientos ?? '—'}</b></td></tr>
+              <tr><td>Último</td><td style="text-align:right"><b>${fmtCorto(d.seguimiento?.fecha_ultimo_seguimiento)}</b></td></tr>
+              <tr><td>Próximo</td><td style="text-align:right"><b>${fmtCorto(d.seguimiento?.fecha_proximo_seguimiento)}</b></td></tr>
+              <tr><td>Objetivo</td><td style="text-align:right"><b>${esc(p.objetivo_tratamiento || '—')}</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <span class="eti">De tu última cita</span>
+          <h2 style="margin:.3rem 0 .7rem">Recomendaciones</h2>
+          <ul class="recos">${(d.recomendaciones || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+          <p class="valida">Validado por <b>Lic. Vanessa Tello</b> · Nutricionista colegiada · CNP 5788</p>
+        </div>
+
+        <div class="card">
+          <span class="eti">Tus documentos</span>
+          <h2 style="margin:.3rem 0 .5rem">Planes y resultados</h2>
+          ${[...(d.planes || []).map(x => ({...x, ico:'brand/Paquete-2-Virtual.png'})),
+             ...(d.resultados_seca || []).map(x => ({...x, ico:'brand/Cita-unica-presencial.png'}))]
+            .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''))
+            .map(x => `<div class="archivo">
+              <img src="${x.ico}" alt="">
+              <div><div class="t">${esc(x.titulo)}</div><div class="f">${fmt(x.fecha)}</div></div>
+              ${x.archivo
+                ? `<a class="ver" href="${esc(x.archivo)}" target="_blank" rel="noopener">Descargar</a>`
+                : `<span class="ver no">Pendiente de subir</span>`}
+            </div>`).join('') || '<p class="nota">Todavía no hay documentos cargados.</p>'}
+        </div>
+
+        <div class="card">
+          <span class="eti">Historial</span>
+          <h2 style="margin:.3rem 0 .5rem">Tus citas</h2>
+          <table>
+            <tbody>
+              ${(d.citas || []).map(c => `<tr>
+                <td><b>${fmtCorto(c.fecha)}</b><br><span style="font-size:.78rem;color:var(--tinta-sv)">${esc(c.modalidad)}</span></td>
+                <td style="text-align:right">${esc(c.estado)}<br><span style="font-size:.78rem;color:var(--tinta-sv)">${esc(c.nutricionista)}</span></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Fotos: no hay storage todavía, se derivan a WhatsApp con el mensaje escrito.
+  $('#fotos').href = `https://wa.me/${WA}?text=${encodeURIComponent(`Hola, soy ${nombre}. Te envío mis 3 fotos para la cita.`)}`;
+
+  $('#fmedidas').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    if (!form.checkValidity()){ form.reportValidity(); return; }
+    const datos = Object.fromEntries(new FormData(form).entries());
+    datos.paciente = ID;
+    datos.fecha = new Date().toISOString();
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    // Sin CRM todavía: queda guardado y se avisa por WhatsApp.
+    localStorage.setItem('vt_medidas_' + ID + '_' + Date.now(), JSON.stringify(datos));
+    const msg = `Hola, soy ${nombre}. Estas son mis medidas: ` +
+      Object.entries(datos).filter(([k]) => !['paciente','fecha'].includes(k) && datos[k])
+        .map(([k, v]) => `${k} ${v}`).join(', ');
+    const ok = $('#ok-medidas');
+    ok.style.display = 'block';
+    ok.innerHTML = `Listo, quedaron registradas. <a href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}"
+      target="_blank" rel="noopener" style="color:var(--verde-osc);font-weight:900">Avísale a Vane por WhatsApp</a>.`;
+    btn.disabled = false; btn.textContent = 'Actualizar mis medidas';
+  });
+}
+
+if (!token && !dni && !demo){
+  location.replace('cliente.html');
+} else if (!accesoValido){
+  $('#app').innerHTML = `<div class="error">
+    <b>Este enlace no es válido</b>
+    Pídele a Vane tu enlace personal por WhatsApp al
+    <a href="https://wa.me/${WA}" style="color:var(--verde-osc);font-weight:900">+51 991 137 288</a>.
+  </div>`;
+} else fetch(FUENTE)
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(pintar)
+  .catch(err => {
+    console.error('No se pudo cargar el seguimiento:', err);
+    $('#app').innerHTML = `<div class="error">
+      <b>No pudimos cargar tu seguimiento</b>
+      Escríbenos por WhatsApp al <a href="https://wa.me/${WA}" style="color:var(--verde-osc);font-weight:900">+51 991 137 288</a> y lo revisamos.
+    </div>`;
+  });
+</script>
+</body>
+</html>

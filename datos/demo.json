@@ -1,0 +1,128 @@
+{
+  "_nota": "Ficha de EJEMPLO para el portal, con datos inventados. El nombre es ficticio a propósito: no debe coincidir con ningún paciente real, porque este archivo se usa en capturas y demos. Contrato de datos del portal. Los nombres de campo son los mismos que los campos personalizados del CRM (ver crm-import/README.md), para que conectarlo sea un mapeo directo y no una traducción.",
+  "paciente": {
+    "nombre_1": "María",
+    "apellido_1": "Ejemplo",
+    "apellido_2": "Demo",
+    "objetivo_tratamiento": "Perder peso, mejorar hábitos",
+    "nutricionista_asignada": "Lic. Vanessa Tello",
+    "modalidad": "Presencial (Miraflores)",
+    "adherencia": "Alta",
+    "riesgo_abandono": "No",
+    "fecha_primera_consulta": "2026-05-12"
+  },
+  "proxima_cita": {
+    "fecha": "2026-08-13",
+    "hora": "16:30",
+    "modalidad": "Presencial (Miraflores)",
+    "direccion": "Clínica Avendaño · Leonidas Avendaño 116, Miraflores",
+    "link_zoom": "",
+    "estado": "confirmada",
+    "nutricionista": "Lic. Vanessa Tello"
+  },
+  "seguimiento": {
+    "nro_seguimientos": 7,
+    "fecha_ultimo_seguimiento": "2026-07-31",
+    "fecha_proximo_seguimiento": "2026-08-14",
+    "seguimientos_desde_ultima_cita": 2
+  },
+  "mediciones": [
+    {
+      "fecha": "2026-05-12",
+      "peso": 78.4,
+      "grasa_pct": 38.2,
+      "musculo_kg": 44.1,
+      "agua_pct": 46.0,
+      "grasa_visceral": 11,
+      "imc": 29.8
+    },
+    {
+      "fecha": "2026-05-26",
+      "peso": 77.1,
+      "grasa_pct": 37.1,
+      "musculo_kg": 44.3,
+      "agua_pct": 46.8,
+      "grasa_visceral": 10,
+      "imc": 29.3
+    },
+    {
+      "fecha": "2026-06-16",
+      "peso": 75.6,
+      "grasa_pct": 35.4,
+      "musculo_kg": 44.6,
+      "agua_pct": 47.5,
+      "grasa_visceral": 9,
+      "imc": 28.7
+    },
+    {
+      "fecha": "2026-07-14",
+      "peso": 74.2,
+      "grasa_pct": 33.8,
+      "musculo_kg": 45.0,
+      "agua_pct": 48.2,
+      "grasa_visceral": 8,
+      "imc": 28.2
+    }
+  ],
+  "planes": [
+    {
+      "fecha": "2026-07-14",
+      "titulo": "Plan de alimentación · 7 días",
+      "archivo": ""
+    },
+    {
+      "fecha": "2026-06-16",
+      "titulo": "Plan de alimentación · 7 días",
+      "archivo": ""
+    },
+    {
+      "fecha": "2026-05-12",
+      "titulo": "Plan de alimentación · 7 días (inicial)",
+      "archivo": ""
+    }
+  ],
+  "resultados_seca": [
+    {
+      "fecha": "2026-07-14",
+      "titulo": "Resultados de bioimpedancia SECA",
+      "archivo": ""
+    },
+    {
+      "fecha": "2026-06-16",
+      "titulo": "Resultados de bioimpedancia SECA",
+      "archivo": ""
+    }
+  ],
+  "recomendaciones": [
+    "Sumar una porción de proteína al desayuno: huevo, pollo deshilachado o queso fresco.",
+    "Cenar mínimo 2 horas antes de dormir para mejorar la digestión.",
+    "Caminar 30 minutos, 4 veces por semana, en el horario que te acomode.",
+    "Tomar 2 litros de agua al día; si te cuesta, deja la botella a la vista."
+  ],
+  "citas": [
+    {
+      "fecha": "2026-07-14",
+      "modalidad": "Presencial",
+      "nutricionista": "Lic. Vanessa Tello",
+      "estado": "asistió"
+    },
+    {
+      "fecha": "2026-06-16",
+      "modalidad": "Presencial",
+      "nutricionista": "Lic. Vanessa Tello",
+      "estado": "asistió"
+    },
+    {
+      "fecha": "2026-05-26",
+      "modalidad": "Virtual",
+      "nutricionista": "Ximena (equipo VT)",
+      "estado": "asistió"
+    },
+    {
+      "fecha": "2026-05-12",
+      "modalidad": "Presencial",
+      "nutricionista": "Lic. Vanessa Tello",
+      "estado": "asistió"
+    }
+  ]
+}
