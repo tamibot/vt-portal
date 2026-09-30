@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda del equipo · VT</title><meta name="robots" content="noindex">
+<link rel="icon" href="brand/VT-Verde.png">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--v:#9BB937;--vo:#617618;--vp:#EEF4DE;--p:#F6F7F2;--t:#2F302A;--s:#6B6C62;--b:#E3E6D8;--l:#EEF0E8;
+  --n:#B8480F;--np:#FDEEE3;--a:#7A5F00;--ap:#FBF4D9;--r:#B42318;--rp:#FDECEA;--az:#1D5FA8;--azp:#E8F0FA;--wa:#187A43}
+*{box-sizing:border-box}
+body{margin:0;background:var(--p);color:var(--t);font:14px/1.4 Lato,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--vo)}
+.wrap{width:min(1240px,100% - 32px);margin-inline:auto}
+:focus-visible{outline:2px solid var(--vo);outline-offset:2px}
+
+/* cabecera */
+header.top{background:#fff;border-bottom:1px solid var(--b);position:sticky;top:0;z-index:5}
+header.top .wrap{display:flex;align-items:center;gap:8px;height:52px}
+header.top img{height:24px;margin-right:10px}
+.tabs{display:flex;gap:2px;flex:1;height:100%}
+.tab{border:0;background:none;padding:0 12px;font-weight:700;cursor:pointer;color:var(--s);font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--t)}
+.tab[aria-selected=true]{color:var(--vo);border-bottom-color:var(--vo)}
+.tab b{background:var(--n);color:#fff;border-radius:999px;padding:0 6px;font-size:11px;line-height:17px}
+.cargo{border:1px solid var(--b);border-radius:8px;padding:5px 8px;background:#fff;font-size:13px;max-width:210px;color:var(--s)}
+
+/* botones */
+.btn{border:1px solid var(--b);background:#fff;border-radius:8px;padding:0 12px;height:32px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--t)}
+.btn:hover{border-color:var(--vo);color:var(--vo)}
+.btn.pri{background:var(--vo);border-color:var(--vo);color:#fff}
+.btn.pri:hover{background:#4E5F13;color:#fff}
+.btn.chico{height:28px;padding:0 9px;font-size:12.5px;border-radius:7px}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.wa:hover{background:#12613A;color:#fff}
+.btn.hecho{border-color:var(--vo);color:var(--vo)}
+.btn:disabled{opacity:.5;cursor:default}
+main{padding:16px 0 60px}
+
+/* encabezado de vista */
+.titular{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.titular h1{font-size:18px;font-weight:900;margin:0}
+.titular p{margin:0;color:var(--s);font-size:13px}
+.consejo{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--b);border-left:3px solid var(--vo);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:var(--s)}
+.consejo b{color:var(--t)}
+.consejo button{margin-left:auto;border:0;background:none;cursor:pointer;color:var(--s);font-size:18px;line-height:1}
+
+/* panel: menú de listas + lista */
+.panel{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+.menu{position:sticky;top:68px;background:#fff;border:1px solid var(--b);border-radius:10px;padding:6px}
+.menu .grupo{margin:10px 8px 4px;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--s)}
+.menu .grupo:first-child{margin-top:4px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:0;background:none;border-radius:7px;padding:7px 8px;cursor:pointer;font-size:13.5px;color:var(--t);text-align:left}
+.item:hover{background:var(--p)}
+.item[aria-current=true]{background:var(--vp);color:var(--vo);font-weight:700}
+.item b{font-size:11.5px;font-weight:700;color:var(--s);min-width:20px;text-align:right}
+.item b.urge{background:var(--n);color:#fff;border-radius:999px;padding:0 6px;text-align:center}
+.item.vacia{color:#A3A497}
+
+.lista{background:#fff;border:1px solid var(--b);border-radius:10px;overflow:hidden;min-width:0}
+.lista-cab{padding:12px 14px 10px;border-bottom:1px solid var(--l)}
+.lista-cab h2{font-size:15px;font-weight:900;margin:0}
+.lista-cab p{margin:2px 0 0;color:var(--s);font-size:12.5px}
+.lista-cab input[type=search]{margin-top:8px}
+.ventas-filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:10px 14px;border-bottom:1px solid var(--l)}
+.ventas-filtros label{display:flex;flex-direction:column;font-size:11.5px;font-weight:700;color:var(--s);gap:3px}
+.ventas-filtros input,.ventas-filtros select{height:32px;border:1px solid var(--b);border-radius:7px;padding:0 6px;font-size:13px;background:#fff}
+.ventas-total{display:flex;flex-wrap:wrap;gap:16px;padding:8px 14px;background:#FAFBF6;border-bottom:1px solid var(--l);font-size:13px}
+.tabla-ventas{overflow-x:auto}
+.tabla-ventas table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tabla-ventas th,.tabla-ventas td{padding:6px 10px;border-bottom:1px solid var(--l);text-align:left;white-space:nowrap}
+.tabla-ventas th{background:#FAFBF6;font-size:11px;text-transform:uppercase;color:var(--s)}
+.tabla-ventas tr[data-abrir]{cursor:pointer}.tabla-ventas tr[data-abrir]:hover{background:#FAFBF6}
+.vacio{padding:28px 14px;text-align:center;color:var(--s)}
+.mas{display:block;width:100%;border:0;border-top:1px solid var(--l);background:var(--p);padding:9px;font-weight:700;color:var(--vo);cursor:pointer;font-size:13px}
+
+/* filas */
+.fila{display:grid;grid-template-columns:70px minmax(130px,1fr) minmax(150px,1fr) 360px;gap:4px 14px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--l)}
+.fila:last-child{border-bottom:0}
+.fila[data-abrir],.fila[data-seg]{cursor:pointer}
+.fila:hover{background:#FAFBF6}
+.fila.apagada{opacity:.5}
+.c-cuando b{display:block;font-size:14px;font-weight:900}
+.c-cuando span{display:block;font-size:11.5px;color:var(--s)}
+.c-quien{min-width:0}
+.c-quien b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-quien span{display:block;font-size:12px;color:var(--s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-detalle{min-width:0;font-size:12.5px}
+.motivo{display:block;color:var(--t);margin-bottom:2px}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--vp);color:var(--vo);white-space:nowrap}
+.pill.gris{background:#F0F1EC;color:var(--s)}
+.pill.naranja{background:var(--np);color:var(--n)}
+.pill.amarillo{background:var(--ap);color:var(--a)}
+.pill.rojo{background:var(--rp);color:var(--r)}
+.pill.azul{background:var(--azp);color:var(--az)}
+.c-acciones{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+
+/* agenda */
+.barra-agenda{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+input[type=search]{width:100%;height:34px;padding:0 10px;border:1px solid var(--b);border-radius:8px;background:#fff;font-size:13.5px}
+.barra-agenda input[type=search]{width:auto;flex:1;min-width:220px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--b);background:#fff;border-radius:999px;height:30px;padding:0 11px;font-weight:700;cursor:pointer;font-size:12.5px;color:var(--t);display:inline-flex;align-items:center;gap:5px}
+.chip b{color:var(--s);font-weight:700}
+.chip[aria-pressed=true]{background:var(--vo);border-color:var(--vo);color:#fff}
+.chip[aria-pressed=true] b{color:#fff}
+details.filtros-mas{position:relative}
+details.filtros-mas summary{list-style:none;cursor:pointer}
+details.filtros-mas summary::-webkit-details-marker{display:none}
+details.filtros-mas .caja{position:absolute;right:0;top:36px;z-index:4;background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px;box-shadow:0 12px 30px -12px #0003;display:grid;grid-template-columns:1fr 1fr;gap:8px;width:360px}
+.caja label{display:flex;flex-direction:column;font-size:11.5px;font-weight:700;color:var(--s);gap:3px}
+.caja select{height:32px;border:1px solid var(--b);border-radius:7px;background:#fff;padding:0 6px;font-size:13px}
+.dia-cab{display:flex;align-items:baseline;gap:8px;padding:9px 14px;background:#FAFBF6;border-bottom:1px solid var(--l);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--s)}
+.dia-cab.hoy{color:var(--vo)}
+.dia-cab span{font-weight:400;text-transform:none;letter-spacing:0}
+.lista + .lista{margin-top:12px}
+
+/* calendario */
+.cal-barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.cal-nav{display:flex;gap:6px;align-items:center}
+.cal-nav h1{font-size:17px;font-weight:900;margin:0 0 0 6px;white-space:nowrap}
+.cal-modo{width:200px;height:32px}
+.cal-prof{width:250px;height:32px}
+.cal-barra input[type=search]{width:190px;margin-left:auto}
+.leyenda{margin:0 0 10px;color:var(--s);font-size:12px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.leyenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:8px}
+.e-por{background:#E9B949}.e-conf{background:#3B7DD8}.e-asis{background:#6E9A22}.e-no{background:#D14343}
+.chip-cita{display:block;width:100%;text-align:left;border:0;border-left:3px solid #E9B949;background:#FFFBEF;border-radius:5px;padding:3px 6px;margin-bottom:3px;font-size:12px;cursor:pointer;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-cita b{font-weight:900;margin-right:3px}
+.chip-cita.Confirmada{border-color:#3B7DD8;background:#EFF5FD}
+.chip-cita.Asistió{border-color:#6E9A22;background:#F2F7E6}
+.chip-cita.No.asistió,.chip-cita.No-asistio{border-color:#D14343;background:#FDEFEF}
+.chip-cita:hover{filter:brightness(.97)}
+.semana{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));background:#fff;border:1px solid var(--b);border-radius:10px;overflow:hidden}
+.col{border-right:1px solid var(--l);min-height:360px;display:flex;flex-direction:column}
+.col:last-child{border-right:0}
+.col-cab{border:0;border-bottom:1px solid var(--l);background:#FAFBF6;padding:7px 8px;text-align:left;cursor:pointer;font-size:12px;color:var(--s)}
+.col-cab b{display:block;font-size:15px;color:var(--t)}
+.col-cab.hoy{background:var(--vp)}.col-cab.hoy b{color:var(--vo)}
+.col-cuerpo{padding:6px}
+.col .libre{font-size:11.5px;color:#A3A497;text-align:center;padding:10px 0}
+.mes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:#fff;border:1px solid var(--b);border-radius:10px;overflow:hidden}
+.mes .dsem{padding:6px 8px;font-size:11px;font-weight:900;text-transform:uppercase;color:var(--s);background:#FAFBF6;border-bottom:1px solid var(--l)}
+.celda{border-right:1px solid var(--l);border-bottom:1px solid var(--l);min-height:96px;padding:5px;cursor:pointer;background:#fff;text-align:left}
+.celda:nth-child(7n){border-right:0}
+.celda:hover{background:#FAFBF6}
+.celda.fuera{background:#FAFAF7;color:#B9BAAE}
+.celda .num{font-size:12px;font-weight:700;display:block;margin-bottom:3px}
+.celda.hoy .num{background:var(--vo);color:#fff;border-radius:999px;display:inline-block;padding:0 6px}
+.celda .mas-dia{font-size:11px;color:var(--s)}
+.celda .cuenta{display:none;font-size:11px;font-weight:700;color:var(--vo)}
+.dia-vista .fila{grid-template-columns:70px minmax(160px,1fr) minmax(160px,1.1fr) 200px}
+.fila.libre{background:#FCFDF9}
+.fila.libre .c-quien b{color:#A3A497;font-weight:400}
+
+/* diálogos */
+dialog{border:0;border-radius:12px;padding:0;width:min(640px,100% - 20px);max-height:92vh;box-shadow:0 30px 80px -20px #0006;color:var(--t)}
+dialog::backdrop{background:#2f302a80}
+dialog form{padding:16px 18px 0}
+dialog h3{margin:0;font-size:16px;font-weight:900}
+dialog .sub{margin:2px 0 10px;color:var(--s);font-size:12.5px}
+.barra{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:8px;background:var(--p);border-radius:8px}
+.barra .titulo{width:100%;font-size:10.5px;font-weight:900;color:var(--s);text-transform:uppercase;letter-spacing:.05em}
+fieldset{border:0;padding:0;margin:0 0 12px}
+legend{font-size:10.5px;font-weight:900;color:var(--vo);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.campos{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.campos label{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:var(--s);gap:3px}
+.campos .ancho{grid-column:1/-1}
+.campos input,.campos select,.campos textarea{height:34px;padding:0 9px;border:1px solid var(--b);border-radius:7px;background:#fff;font-size:14px;font-weight:400;color:var(--t)}
+.campos textarea{height:auto;min-height:62px;padding:7px 9px;resize:vertical}
+.check{flex-direction:row!important;align-items:center;gap:7px!important;font-weight:400!important;color:var(--t)!important}
+.check input{height:auto!important}
+.segmento{display:flex;border:1px solid var(--b);border-radius:8px;overflow:hidden;height:34px}
+.segmento label{flex:1;display:flex;flex-direction:row;justify-content:center;align-items:center;cursor:pointer;font-size:13.5px;color:var(--t)}
+.segmento input{position:absolute;opacity:0;pointer-events:none}
+.segmento label:has(input:checked){background:var(--vo);color:#fff;font-weight:700}
+.segmento label:has(input:focus-visible){outline:2px solid var(--vo);outline-offset:-2px}
+.turnos{display:flex;flex-wrap:wrap;gap:5px}
+.turno{border:1px solid var(--b);background:#fff;border-radius:6px;height:28px;padding:0 8px;font-size:12.5px;font-weight:700;cursor:pointer}
+.turno:hover{border-color:var(--vo)}
+.turno[aria-pressed=true]{background:var(--vo);border-color:var(--vo);color:#fff}
+.turno.ocupado{text-decoration:line-through;color:#A3A497;background:#F3F4EF}
+.caja-paquete{background:#F3F6EA;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:13px}
+.caja-paquete label{flex-direction:row;align-items:center;gap:6px;font-weight:700;color:var(--t);margin-top:4px}
+.caja-paquete input[type=number]{width:64px;height:30px}
+.nota{font-size:12px;color:var(--s);font-weight:400;margin:4px 0 0}
+details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-size:13px;margin-bottom:8px}
+.pie{display:flex;gap:8px;margin-top:12px;padding:12px 0 14px;border-top:1px solid var(--l);position:sticky;bottom:0;background:#fff}
+.pie .der{display:flex;gap:6px;flex-wrap:wrap;flex-direction:row-reverse;margin-left:auto}
+.error{color:var(--r);font-weight:700;font-size:13px;margin:8px 0 0}
+.historial{margin-top:10px;font-size:12.5px;color:var(--s)}
+.historial ul{margin:4px 0 0;padding-left:18px}
+.aviso{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--t);color:#fff;padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;z-index:50;max-width:calc(100% - 32px)}
+.franja-demo{background:#7A5F00;color:#fff;text-align:center;padding:5px 16px;font-weight:700;font-size:12.5px}
+.franja-demo a{color:#fff}
+
+/* acceso */
+.acceso{width:min(380px,100% - 32px);margin:12vh auto;background:#fff;border:1px solid var(--b);border-radius:12px;padding:24px}
+.acceso h1{color:var(--vo);font-size:20px;font-weight:900;margin:12px 0 4px}
+.acceso label{display:block;font-weight:700;font-size:12.5px;margin:12px 0 4px;color:var(--s)}
+.acceso input,.acceso select{width:100%;height:38px;padding:0 10px;border:1px solid var(--b);border-radius:8px;background:#fff;font-size:14px}
+.acceso .btn{width:100%;justify-content:center;margin-top:16px;height:38px}
+
+@media (max-width:1100px){
+  .fila{grid-template-columns:64px minmax(120px,1fr) minmax(120px,1fr) 300px}
+}
+@media (max-width:900px){
+  .panel{grid-template-columns:1fr}
+  .menu{position:static;display:flex;gap:4px;overflow-x:auto;padding:4px;scrollbar-width:none}
+  .menu .grupo{display:none}
+  .item{width:auto;flex:0 0 auto;white-space:nowrap}
+  .item.vacia{display:none}
+}
+@media (max-width:680px){
+  .cal-barra input[type=search]{width:100%;margin-left:0}
+  .cal-modo{width:100%}
+  .semana{grid-template-columns:1fr}
+  .col{min-height:0;border-right:0;border-bottom:1px solid var(--l)}
+  .col .libre{display:none}
+  .celda{min-height:52px}
+  .celda .chip-cita{display:none}
+  .celda .mas-dia{display:none}
+  .celda .cuenta{display:block}
+  header.top{position:static}
+  header.top .wrap{height:auto;flex-wrap:wrap;padding:8px 0;gap:6px}
+  .tabs{order:3;width:100%;height:40px;border-top:1px solid var(--l)}
+  .tab{flex:1;justify-content:center}
+  .cargo{max-width:150px}
+  .fila{grid-template-columns:52px 1fr;grid-template-areas:"cuando quien" "cuando detalle" "acciones acciones";padding:10px 12px}
+  .c-cuando{grid-area:cuando;align-self:start}
+  .c-quien{grid-area:quien}
+  .c-detalle{grid-area:detalle}
+  .c-acciones{grid-area:acciones;justify-content:flex-start;margin-top:4px}
+  .campos{grid-template-columns:1fr}
+  .campos input,.campos select{font-size:16px}
+  input[type=search],.cargo{font-size:16px}
+  details.filtros-mas .caja{width:min(320px,calc(100vw - 32px))}
+}
+</style>
+</head>
+<body>
+
+<div id="pantalla-acceso" hidden>
+  <form class="acceso" id="form-acceso">
+    <img src="brand/VT-Hoja-membretada.png" alt="VT Nutricionistas by Vane Tello" width="170">
+    <h1>Agenda del equipo</h1>
+    <label for="clave">Clave del equipo</label>
+    <input id="clave" type="password" autocomplete="current-password" required>
+    <label for="cargo-acceso">¿Cuál es tu cargo?</label>
+    <select id="cargo-acceso" required></select>
+    <p class="error" id="error-acceso" role="alert" hidden></p>
+    <button class="btn pri" type="submit">Entrar</button>
+    <p class="nota" style="margin-top:1rem"><a href="manual.html">Manual de uso</a> · <a href="https://tamibot.github.io/vt-descubre/reservar.html">Página de reservas</a></p>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <div class="franja-demo" id="franja-demo" hidden>MODO PRÁCTICA · nada de lo que hagas se guarda · <a href="equipo.html">Salir</a></div>
+  <header class="top"><div class="wrap">
+    <img src="brand/VT-Hoja-membretada.png" alt="VT Nutricionistas">
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" role="tab" data-vista="hoy">Tareas</button>
+      <button class="tab" role="tab" data-vista="agenda">Calendario</button>
+      <button class="tab" role="tab" data-vista="seguimiento">Seguimiento</button>
+      <button class="tab" role="tab" data-vista="cobros">Cobros</button>
+    </nav>
+    <button class="btn pri" id="nueva">+ Nueva cita</button>
+    <button class="btn" id="recargar" aria-label="Actualizar" title="Actualizar">↻</button>
+    <a class="btn" href="manual.html" target="_blank" rel="noopener" title="Manual de uso">? Ayuda</a>
+    <select id="cargo" class="cargo" aria-label="Tu cargo"></select>
+  </div></header>
+
+  <main class="wrap">
+    <section id="vista-hoy" role="tabpanel">
+      <div class="titular"><h1 id="hoy-fecha"></h1><p id="hoy-resumen"></p></div>
+      <div class="consejo" id="consejo" hidden>
+        <span><b>Cómo se usa:</b> elige una tarea → toca <b>WhatsApp</b> (el mensaje ya está escrito) → marca lo que pasó. La paciente sale de la lista.</span>
+        <button type="button" id="consejo-ok" aria-label="Cerrar consejo">×</button>
+      </div>
+      <div class="panel">
+        <nav class="menu" id="hoy-menu" aria-label="Listas de trabajo"></nav>
+        <div class="lista" id="hoy-lista"></div>
+      </div>
+    </section>
+
+    <section id="vista-agenda" role="tabpanel" hidden>
+      <div class="cal-barra">
+        <div class="cal-nav">
+          <button type="button" class="btn" data-cal-mover="-1" aria-label="Anterior">‹</button>
+          <button type="button" class="btn" data-cal-hoy>Hoy</button>
+          <button type="button" class="btn" data-cal-mover="1" aria-label="Siguiente">›</button>
+          <h1 id="cal-titulo"></h1>
+        </div>
+        <div class="segmento cal-modo" role="radiogroup" aria-label="Vista del calendario">
+          <label><input type="radio" name="cal-modo" value="dia">Día</label>
+          <label><input type="radio" name="cal-modo" value="semana" checked>Semana</label>
+          <label><input type="radio" name="cal-modo" value="mes">Mes</label>
+        </div>
+        <div class="segmento cal-prof" role="radiogroup" aria-label="Agenda de">
+          <label><input type="radio" name="cal-prof" value="" checked>Todas</label>
+          <label><input type="radio" name="cal-prof" value="Lic. Vanessa Tello">Lic. Vanessa</label>
+          <label><input type="radio" name="cal-prof" value="Nutricionista del equipo">Equipo</label>
+        </div>
+        <input id="f-texto" type="search" placeholder="Buscar paciente" aria-label="Buscar paciente">
+      </div>
+      <p class="leyenda"><i class="e-por"></i>Por confirmar <i class="e-conf"></i>Confirmada <i class="e-asis"></i>Asistió <i class="e-no"></i>No asistió · <b>P</b> presencial · <b>V</b> virtual</p>
+      <div id="lista"></div>
+    </section>
+
+    <section id="vista-seguimiento" role="tabpanel" hidden>
+      <div class="titular"><h1>Seguimiento nutricional</h1><p>3 días y 1 semana después de su última consulta; luego cada 2 semanas.</p></div>
+      <div class="panel">
+        <nav class="menu" id="seg-menu" aria-label="Listas de seguimiento"></nav>
+        <div class="lista" id="seg-lista"></div>
+      </div>
+    </section>
+
+    <section id="vista-cobros" role="tabpanel" hidden>
+      <div class="titular"><h1>Cobros y ventas</h1><p>Lo pagado, lo pendiente, los paquetes y las clínicas.</p></div>
+      <div class="panel">
+        <nav class="menu" id="cob-menu" aria-label="Cobros"></nav>
+        <div class="lista" id="cob-lista"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Cita: nueva o ficha -->
+<dialog id="dlg-cita" aria-labelledby="cita-titulo"><form method="dialog" id="form-cita">
+  <h3 id="cita-titulo">Nueva cita</h3>
+  <p class="sub" id="cita-sub"></p>
+  <div class="barra" id="cita-barra" hidden></div>
+  <fieldset><legend>Paciente</legend>
+    <div class="campos">
+      <label class="ancho">Nombre<input name="paciente" list="lista-pacientes" required autocomplete="off" placeholder="Escribe para buscar pacientes que ya existen"></label>
+      <label>Teléfono<input name="telefono" inputmode="tel" placeholder="9 dígitos"></label>
+      <label>Correo<input name="email" type="email" placeholder="para el informe de ventas"></label>
+      <label>DNI<input name="dni" inputmode="numeric" maxlength="12" placeholder="8 dígitos"></label>
+      <label>Llega por<input name="llega_por" list="lista-llega" autocomplete="off" placeholder="Instagram, TikTok, referida…"></label>
+      <label>Tipo de paciente<select name="tipo_paciente"></select></label>
+      <label>Tipo<select name="tipo"><option value="">—</option><option>Primera cita</option><option>Control</option><option>Paquete</option><option>Pre operación</option><option>Post operación</option></select></label>
+    </div>
+    <p class="nota" id="nota-tipo"></p>
+  </fieldset>
+  <fieldset><legend>Cita</legend>
+    <div class="campos">
+      <div class="ancho segmento" role="radiogroup" aria-label="Modalidad">
+        <label><input type="radio" name="modalidad" value="Presencial">Presencial</label>
+        <label><input type="radio" name="modalidad" value="Virtual" checked>Virtual</label>
+      </div>
+      <label>Fecha<input name="fecha" type="date" required></label>
+      <label>Hora<input name="hora" type="time" step="300" required></label>
+      <div class="ancho"><div class="turnos" id="turnos"></div><p class="nota" id="turnos-nota"></p></div>
+    </div>
+  </fieldset>
+  <fieldset><legend>Pago</legend>
+    <div class="campos">
+      <label class="ancho">Servicio<select name="servicio" id="servicio"></select></label>
+      <label>Precio de lista (S/)<input name="precio_lista" type="number" min="0" step="any"></label>
+      <label>Descuento (%)<input name="descuento_pct" type="number" min="0" max="100" step="any" placeholder="0"></label>
+      <label>Precio final (S/)<input name="monto" type="number" min="0" step="any"></label>
+      <label>Pago<select name="pago"></select></label>
+      <label id="pagador-campo" hidden>¿Quién paga?<input name="pagador" placeholder="Clínica Avendaño"></label>
+      <label>Medio de pago<select name="medio_pago"></select></label>
+    </div>
+    <p class="nota" id="nota-precio"></p>
+    <div class="caja-paquete" id="caja-paquete" hidden></div>
+  </fieldset>
+  <details class="mas-datos"><summary>Más datos</summary>
+    <div class="campos">
+      <label>Estado<select name="estado"></select></label>
+      <label>Profesional<select name="profesional"><option value="Lic. Vanessa Tello">Lic. Vanessa Tello</option><option value="Nutricionista del equipo">Nutricionista del equipo</option></select></label>
+      <label class="ancho" id="zoom-campo">Enlace de Zoom<input name="enlace_zoom" type="url" placeholder="https://…"></label>
+      <label class="ancho">Notas<textarea name="notas" placeholder="Lo que el resto del equipo tiene que saber"></textarea></label>
+      <label class="ancho check"><input type="checkbox" name="permitir_cruce"> Permitir horario compartido (ya coordinado, p. ej. dos familiares juntos)</label>
+    </div>
+  </details>
+  <p class="error" id="cita-error" role="alert" hidden></p>
+  <div class="historial" id="historial"></div>
+  <div class="pie"><div class="der"><button class="btn pri" id="guardar-cita" value="guardar">Guardar</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></div>
+</form></dialog>
+
+<dialog id="dlg-med" aria-labelledby="med-titulo"><form method="dialog" id="form-med">
+  <h3 id="med-titulo">Registrar resultados</h3>
+  <p class="sub" id="med-sub"></p>
+  <div class="campos">
+    <label>Fecha<input name="fecha" type="date" required></label>
+    <label>Peso (kg)<input name="peso" type="number" step="0.1" min="0"></label>
+    <label>% grasa<input name="grasa_pct" type="number" step="0.1" min="0" max="100"></label>
+    <label>Músculo (kg)<input name="musculo_kg" type="number" step="0.1" min="0"></label>
+    <label>Grasa visceral<input name="grasa_visceral" type="number" step="0.5" min="0"></label>
+    <label>% agua<input name="agua_pct" type="number" step="0.1" min="0" max="100"></label>
+    <label>IMC<input name="imc" type="number" step="0.1" min="0"></label>
+    <label class="ancho">Recomendaciones (una por línea; las ve el paciente en su portal)<textarea name="recomendaciones" rows="5"></textarea></label>
+  </div>
+  <p class="nota">Al guardar, la cita queda como «Asistió».</p>
+  <p class="error" id="med-error" role="alert" hidden></p>
+  <div class="pie"><div class="der"><button class="btn pri" value="guardar">Guardar resultados</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></div>
+</form></dialog>
+
+<dialog id="dlg-seg" aria-labelledby="seg-titulo"><form method="dialog" id="form-seg">
+  <h3 id="seg-titulo"></h3>
+  <p class="sub" id="seg-sub"></p>
+  <div class="barra" id="seg-barra"></div>
+  <div class="campos">
+    <label>Fecha<input name="fecha" type="date" required></label>
+    <label>¿Respondió?<select name="respondio" required><option value="">Elige</option><option value="true">Sí</option><option value="false">No</option></select></label>
+    <label class="ancho">Qué contó<textarea name="comentarios" placeholder="Cómo va con el plan, dudas, síntomas"></textarea></label>
+    <label class="ancho">Resultado<input name="resultado" list="resultados-seg" placeholder="Le va bien, tiene dudas, quiere agendar…"></label>
+    <label>Adherencia<select name="adherencia"><option value="">—</option><option>Alta</option><option>Media</option><option>Baja</option></select></label>
+    <label>Estado<select name="estado"><option>Activo</option><option>Inactivo</option></select></label>
+    <label class="ancho check"><input type="checkbox" name="riesgo"> En riesgo de abandonar</label>
+    <label class="ancho">Objetivo / tratamiento<input name="objetivo" list="objetivos-seg"></label>
+    <label class="ancho">Notas de la ficha<textarea name="notas"></textarea></label>
+  </div>
+  <p class="error" id="seg-error" role="alert" hidden></p>
+  <div class="historial" id="seg-historial"></div>
+  <div class="pie"><div class="der"><button class="btn pri" value="guardar">Anotar seguimiento</button><button class="btn" value="ficha" formnovalidate>Guardar sin anotar contacto</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></div>
+</form></dialog>
+
+<datalist id="resultados-seg"><option>Le va bien, sin dudas</option><option>Tiene dudas</option><option>No está siguiendo el plan</option><option>Quiere agendar control</option><option>No respondió</option></datalist>
+<datalist id="objetivos-seg"><option>Perder peso</option><option>Perder peso, Bariátrico</option><option>Mejorar hábitos alimenticios</option><option>Ganar músculo y perder grasa</option><option>Ganar masa muscular</option></datalist>
+<datalist id="lista-pacientes"></datalist>
+<datalist id="lista-llega"></datalist>
+<div class="aviso" id="aviso" hidden role="status"></div>
+
+<script>
+const N8N = 'https://primary-production-9caaf.up.railway.app/webhook/';
+const KOMMO_LEAD = 'https://vanetello.kommo.com/leads/detail/';
+// Cargos, no nombres (así los llama el equipo). El cargo decide con qué pestaña abre.
+const CARGOS = ['Asistente de la nutricionista', 'Nutricionista del equipo', 'Nutricionista (Lic.)', 'Soporte técnico', 'Otra persona'];
+const INICIO_POR_CARGO = { 'Nutricionista del equipo': 'seguimiento' };
+const ESTADOS = ['Por confirmar', 'Confirmada', 'Asistió', 'No asistió', 'Cancelada', 'Reprogramada'];
+const VIVOS = ['Por confirmar', 'Confirmada', 'Asistió'];
+const PAGOS = ['Por pagar', 'Adelanto 25%', 'Pagado', 'Paquete', 'Cortesía', 'Pendiente clínica'];
+// [nombre, precio, citas que incluye]. Catálogo de Vanessa (lista desplegable de su Excel,
+// 1-oct). «ya pagado»/«cortesía» van en S/0. Las citas por paquete salen del nombre; las de
+// «Nutricional Jr» y «especial semipresencial» están por confirmar con Vanessa.
+const SERVICIOS = [
+  ['Cita única virtual', 200, 1], ['Cita única presencial', 240, 1],
+  ['Cita única virtual −10%', 180, 1], ['Cita única presencial −10%', 216, 1], ['Cita única presencial −15%', 204, 1],
+  ['Cita única de nutrición · ya pagada', 0, 1], ['Cita única de nutrición · cortesía', 0, 1],
+  ['Consulta individual · nutricionista Jr', 120, 1], ['Consulta individual Jr · Dr. Salazar', 70, 1],
+  ['Plan de alimentación', 120, 1], ['Cita pre operación', 150, 1], ['Cita post operación', 150, 1],
+  ['Paquete Vane Tello virtual', 700, 4], ['Paquete Vane Tello semipresencial', 800, 4], ['Paquete Vane Tello presencial', 880, 4],
+  ['Paquete Vane Tello · ya pagado', 0, 4],
+  ['Paquete 2 citas virtuales', 380, 2], ['Paquete 2 citas virtuales · pagado', 0, 2],
+  ['Paquete 2 citas presenciales', 440, 2], ['Paquete 2 citas presenciales · pagado', 0, 2],
+  ['Paquete nutricional Jr', 550, 4], ['Paquete nutricional Jr · pagado', 0, 4],
+  ['Paquete bariátrico virtual', 870, 5], ['Paquete bariátrico semipresencial', 990, 5], ['Paquete bariátrico presencial', 1100, 5],
+  ['Paquete bariátrico · nutricionista Jr', 550, 5], ['Paquete bariátrico · ya pagado', 0, 5],
+  ['Paquete embarazo presencial', 1100, 5], ['Paquete embarazo · ya pagado', 0, 5],
+  ['Parejas · virtual', 340, 1], ['Parejas · presencial', 390, 1],
+  ['Familiar estándar (3 personas) · virtual', 340, 1], ['Familiar estándar (3 personas) · presencial', 520, 1],
+  ['Familiar personalizado (3 personas) · presencial', 600, 1], ['Familiar personalizado (4 personas) · virtual', 580, 1],
+  ['Familiar personalizado (4 personas) · presencial', 680, 1],
+  ['Promoción San Valentín · virtual', 300, 1], ['Promoción San Valentín · presencial', 360, 1],
+  ['Paquete especial semipresencial', 400, 1]];
+// Cómo pagó la paciente (lista de Vanessa) y cómo llegó/qué tipo de paciente es.
+const MEDIOS = ['Yape', 'Plin', 'Efectivo', 'Transferencia', 'Hotmart', 'Vatema', 'PayPal', 'MercadoPago', 'Link de pago', 'Clínica Avendaño', 'Dr. Salazar', 'Cortesía'];
+const TIPOS_PACIENTE = ['Particular - Nuevo', 'Particular - Antiguo', 'PRE - GTM', 'POS - GTM', 'GTM - Nuevo', 'GTM - Antiguo', 'PRE - BY PASS', 'POS - BY PASS', 'BY PASS - Nuevo', 'BY PASS - Antiguo',
+  'PRE - BIG ELIPSE', 'POS - BIG ELIPSE', 'BIG ELIPSE - Antiguo', 'BIG - Nuevo', 'PRE - BIG ORBERA', 'POS - BIG ORBERA', 'BIG ORBERA - Antiguo'];
+
+// Horario confirmado el 29-set (igual que la página de reservas). Martes y
+// jueves son una sola agenda para presencial y virtual.
+const DURACION = 45;
+const LUNES = [['09:30', '12:30']], MIERCOLES = [['14:15', '18:00']];
+const MAR_JUE = [['08:15', '13:30'], ['15:15', '17:30']];
+const AGENDA = { Presencial: { 2: MAR_JUE, 4: MAR_JUE }, Virtual: { 1: LUNES, 2: MAR_JUE, 3: MIERCOLES, 4: MAR_JUE } };
+const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+const aHora = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const turnos = tramos => (tramos || []).flatMap(([i, f]) => { const o = []; for (let m = aMin(i); m <= aMin(f); m += DURACION) o.push(aHora(m)); return o; });
+
+// ---------- utilidades
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const guardado = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k) || localStorage.getItem(k); (k === 'clave' ? sessionStorage : localStorage).setItem(k, v); } catch (e) { return null; } };
+const sumar = (iso, n) => new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const diasEntre = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 864e5);
+const diaSemana = iso => new Date(iso + 'T12:00:00Z').getUTCDay();
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+const fechaLarga = iso => { const d = new Date(iso + 'T12:00:00Z'); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`; };
+const fechaCorta = iso => { const d = new Date(iso + 'T12:00:00Z'); return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`; };
+const cuando = iso => { const n = diasEntre(D.hoy, iso); return n === 0 ? 'hoy' : n === 1 ? 'mañana' : n === -1 ? 'ayer' : n > 1 && n < 7 ? DIAS[diaSemana(iso)] : fechaCorta(iso); };
+// Igual que public.vt_tel / vt_quien en SQL: peruanos a 9 dígitos, extranjeros
+// completos; «quién es» = teléfono + primer nombre (hermanas con el número de la mamá).
+const telNorm = t => { const d = String(t || '').replace(/\D/g, ''); return /^(51)?9\d{8}$/.test(d) ? d.slice(-9) : d.length >= 7 ? d : ''; };
+const fmtTel = v => { const d = telNorm(v); if (!d) return 'sin teléfono'; return /^9\d{8}$/.test(d) ? d.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') : '+' + d; };
+const sinTildes = s => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const quien = c => { const t = telNorm(c.telefono), n = sinTildes(c.paciente); return t ? t + '|' + n.split(' ')[0] : n; };
+const nombreCorto = c => { const n = (String(c.paciente || c.nombre || '').replace(/^(Cita \d{4}-\d{2}-\d{2} · |Paciente · |Lead #\d+)/, '').trim().split(/[ ·]/)[0]) || '';
+  return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase(); };
+const horaLima = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' });
+const soles = n => n == null || n === '' || isNaN(n) ? '…' : Number(n).toLocaleString('es-PE', Number.isInteger(Number(n)) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const parte = (monto, f) => monto == null ? null : Number(monto) * f;
+
+// ---------- mensajes de WhatsApp (textos en la base: public.vt_plantillas)
+// Enlace para el recordatorio «registra tu peso, medidas y fotos»: el portal de la
+// paciente. Si se deja vacío, esa línea se omite del mensaje.
+const MEDIDAS_URL = 'https://tamibot.github.io/vt-portal/cliente.html';   // portal de la paciente: entra con su DNI y llena su cuadro de medidas
+const esEquipo = c => c.profesional && c.profesional !== 'Lic. Vanessa Tello';
+// Qué plantilla corresponde a cada momento de la cita (los 3 tipos de Vanessa).
+const plantilla = (c, tipo) => tipo === 'recordatorio'
+  ? `dia_antes_${String(c.modalidad).toLowerCase()}_${esEquipo(c) ? 'equipo' : 'vanessa'}`
+  : tipo === 'confirmar' ? 'confirmar_5_7' : tipo;
+function mensaje(clave, c) {
+  const p = D.plantillas?.[clave]; if (!p) return '';
+  const precio = c.monto == null ? null : Number(c.monto);
+  const valores = { nombre: nombreCorto(c), fecha: c.fecha ? fechaLarga(c.fecha) : '', hora: c.hora || '',
+    modalidad: String(c.modalidad || '').toLowerCase(), precio: soles(precio),
+    adelanto: soles(parte(precio, .25)), saldo: soles(parte(precio, .75)),
+    zoom: c.enlace_zoom || '(te lo enviamos por aquí antes de la cita)', medidas: MEDIDAS_URL };
+  const lineas = p.texto.split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
+  return lineas.join('\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
+}
+// api.whatsapp.com recibe bien los emojis en Windows; wa.me los rompía (30-set).
+const waUrl = (tel, texto) => { const t = telNorm(tel); return `https://api.whatsapp.com/send?phone=${/^9\d{8}$/.test(t) ? '51' + t : t}` + (texto ? `&text=${encodeURIComponent(texto)}` : ''); };
+// Dos botones: el mensaje listo de ese momento, y «Chat» (WhatsApp sin mensaje, para escribir a mano).
+function wa(c, tipo, etiqueta = 'WhatsApp') {
+  const t = telNorm(c.telefono);
+  if (!t) return c.fecha && c.hora && c.id ? `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Agrega el teléfono en la ficha">Falta el teléfono</button>` : '<span class="pill gris">Sin teléfono</span>';
+  const abrir = (texto, clase, rotulo, ayuda) => DEMO
+    ? `<button type="button" class="btn chico ${clase}" data-demo-wa>${esc(rotulo)}</button>`
+    : `<a class="btn chico ${clase}" href="${waUrl(c.telefono, texto)}" target="_blank" rel="noopener" title="${esc(ayuda)}">${esc(rotulo)}</a>`;
+  const chat = abrir('', tipo && tipo !== 'cita' ? '' : 'wa', tipo && tipo !== 'cita' ? 'Chat' : 'WhatsApp', 'Abrir WhatsApp sin mensaje, para escribir a mano');
+  if (!tipo || tipo === 'cita') return chat;
+  const clave = plantilla(c, tipo);
+  if (/\{(precio|adelanto|saldo)\}/.test(D.plantillas?.[clave]?.texto || '') && !Number(c.monto) && c.fecha && c.hora) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Elige el servicio en la ficha">Falta el precio</button>` + chat;
+  return abrir(mensaje(clave, c), 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
+}
+const boton = (texto, id, campos, clase = '') => `<button type="button" class="btn chico ${clase}" data-editar="${id}" data-campos="${esc(JSON.stringify(campos))}">${texto}</button>`;
+
+let D = null, clave = guardado('clave') || '', vista = null, editando = null, midiendo = null, siguiendo = null;
+const F = { texto: '' };
+const S = { texto: '', toca: 'hoy', limite: 30 };
+
+function aviso(txt) { const a = $('#aviso'); a.textContent = txt; a.hidden = false; clearTimeout(aviso.t); aviso.t = setTimeout(() => a.hidden = true, 3500); }
+
+// ---------- modo práctica (equipo.html?demo=1): datos inventados, no toca la base
+const DEMO = /[?&]demo/.test(location.search);
+function datosDemo() {
+  const hoy = new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+  const nombres = ['Lucía Ramos', 'Carlos Díaz', 'María Torres', 'Ana Salas', 'Jorge Quispe', 'Rosa Medina', 'Pedro Huamán', 'Elena Castro', 'Sofía Paredes', 'Luis Rojas'];
+  const citas = [[-20, '10:15', 'Asistió', 'Pagado', 1], [-7, '09:30', 'No asistió', 'Pagado', 0], [-2, '11:00', 'Confirmada', 'Pagado', 1],
+    [0, '09:30', 'Confirmada', 'Pagado', 1], [0, '10:15', 'Por confirmar', 'Adelanto 25%', 1], [1, '15:15', 'Por confirmar', 'Por pagar', 0],
+    [5, '08:15', 'Por confirmar', 'Pagado', 1], [3, '14:15', 'Por confirmar', 'Por pagar', 1], [-150, '12:00', 'Asistió', 'Pagado', 0], [1, '09:30', 'Confirmada', 'Pagado', 1]]
+    .map(([d, h, e, pg, rec], i) => ({
+      id: i + 1, paciente: nombres[i], telefono: '98700010' + i, fecha: sumar(hoy, d), hora: h, duracion_min: 45,
+      modalidad: i % 3 ? 'Virtual' : 'Presencial', profesional: 'Lic. Vanessa Tello', tipo: rec ? 'Control' : 'Primera cita',
+      servicio: i % 3 ? 'Cita virtual' : 'Cita presencial', estado: e, pago: pg, monto: i % 3 ? 200 : 240, recurrente: !!rec,
+      creado: sumar(hoy, -3) + ' 10:00', actualizado: hoy + ' 09:00', actualizado_por: 'Asistente de la nutricionista', origen: 'Demo', medicion: null,
+      notas: i === 7 ? '[REVISAR] modalidad supuesta (Presencial)' : '' }));
+  const seg = [[0, -20, 1, 'Media', true, 'Perder peso'], [5, -3, 0, null, null, null], [6, -12, 1, 'Alta', false, 'Perder peso, Bariátrico'], [7, -40, 3, 'Baja', true, 'Mejorar hábitos alimenticios']]
+    .map(([i, u, n, adh, r, obj], k) => ({
+      id: k === 1 ? null : k + 1, paciente: nombres[i], telefono: '98700010' + i, objetivo: obj, adherencia: adh, riesgo: r, estado: 'Activo',
+      ultima: sumar(hoy, u), proxima_cita: null, total: n, n_desde: n, ultimo_seg: n ? sumar(hoy, u + 3) : null,
+      proximo_seg: n === 0 ? sumar(hoy, u + 3) : n === 1 ? sumar(hoy, u + 7) : sumar(hoy, u + 17),
+      historial: n ? [{ fecha: sumar(hoy, u + 3), respondio: k !== 3, resultado: k === 3 ? '' : 'Le va bien, sin dudas', responsable: 'Nutricionista del equipo' }] : [] }));
+  const plantillas = Object.fromEntries(['cita', 'confirmar_5_7', 'dia_antes_virtual_vanessa', 'dia_antes_virtual_equipo', 'dia_antes_presencial_vanessa', 'dia_antes_presencial_equipo', 'confirmada', 'pago', 'saldo', 'reagendar', 'control', 'reactivar', 'seg_primero', 'seg', 'operado_6m', 'operado_1a']
+    .map(k => [k, { titulo: k, texto: `Hola {nombre} 😊 (mensaje de práctica «${k}») {fecha} {hora}` }]));
+  citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  citas.push({ id: 11, paciente: 'Marta Gil', telefono: '900000011', fecha: sumar(hoy, 2), hora: '09:00', duracion_min: 45, modalidad: 'Virtual', profesional: 'Nutricionista del equipo', tipo: 'Control', servicio: 'Consulta individual · nutricionista Jr', estado: 'Confirmada', pago: 'Pagado', monto: 120, precio_lista: 120, descuento_pct: 0, recurrente: true, creado: sumar(hoy, -5) + ' 10:00', origen: 'Demo', medicion: null, notas: '' },
+    { id: 12, paciente: 'Clínica Avendaño · Raúl Soto', telefono: '900000012', fecha: sumar(hoy, -3), hora: '11:00', duracion_min: 45, modalidad: 'Presencial', profesional: 'Lic. Vanessa Tello', tipo: 'Primera cita', servicio: 'Cita presencial', estado: 'Asistió', pago: 'Pendiente clínica', pagador: 'Clínica Avendaño', monto: 240, precio_lista: 240, descuento_pct: 0, recurrente: false, creado: sumar(hoy, -9) + ' 10:00', origen: 'Demo', medicion: null, notas: '' },
+    { id: 13, paciente: 'Ana Salas', telefono: '987000103', fecha: sumar(hoy, 9), hora: '10:15', duracion_min: 45, modalidad: 'Presencial', profesional: 'Lic. Vanessa Tello', tipo: 'Paquete', servicio: 'Paquete Vane Tello presencial', estado: 'Por confirmar', pago: 'Paquete', monto: 0, paquete_id: 1, nro_paquete: 2, paquete_total: 4, recurrente: true, creado: sumar(hoy, -5) + ' 10:00', origen: 'Demo', medicion: null, notas: '' });
+  citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  return { hoy, citas, seguimiento: seg, plantillas, paquetes: [{ id: 1, paciente: 'Ana Salas', telefono: '987000103', servicio: 'Paquete Vane Tello presencial', total: 4, usadas: 2 }], pacientes: nombres.map((n, i) => ({ nombre: n, telefono: '98700010' + i, recurrente: i % 2 === 0 })),
+    sin_proxima: [citas[0], citas[8]], no_asistio: [citas[1]], sin_marcar: [citas[2]],
+    operados: [{ id: 1, paciente: 'Carmen Vega', telefono: '987000111', fecha: sumar(hoy, -182), procedimiento: 'GTM', hito: '6m', fecha_hito: sumar(hoy, 1), avisado: null }],
+    por_cerrar: [{ lead_id: 1, nombre: 'Andrea Flores', etapa: 'Llenó el formulario', desde: sumar(hoy, -2), servicio: null }] };
+}
+// Lo que en la versión real calcula la base (vt_citas_datos), acá en memoria.
+function demoListas() {
+  const ultima = {};
+  for (const c of D.citas) if (!['Cancelada', 'Reprogramada'].includes(c.estado)) { const q = quien(c); if (!ultima[q] || c.fecha + c.hora > ultima[q].fecha + ultima[q].hora) ultima[q] = c; }
+  const inactivos = new Set(D.seguimiento.filter(x => x.estado === 'Inactivo').map(quien));
+  D.sin_proxima = Object.values(ultima).filter(c => c.estado === 'Asistió' && !inactivos.has(quien(c)));
+  D.no_asistio = Object.values(ultima).filter(c => c.estado === 'No asistió');
+  D.sin_marcar = D.citas.filter(c => viva(c) && (c.fecha < D.hoy || (c.fecha === D.hoy && c.hora < horaLima())));
+}
+function demoEnviar(p) {
+  if (p.accion === 'seguimiento' || p.accion === 'ficha') {
+    const x = D.seguimiento.find(s => (p.paciente_id && s.id === p.paciente_id) || s.paciente === p.paciente) || (D.seguimiento.push({ paciente: p.paciente, telefono: p.telefono, historial: [], total: 0, n_desde: 0 }), D.seguimiento.at(-1));
+    Object.assign(x, { id: x.id || Date.now(), adherencia: p.adherencia || null, estado: p.estado, riesgo: p.riesgo, objetivo: p.objetivo, notas: p.notas });
+    if (p.accion === 'seguimiento') {
+      x.historial.unshift({ fecha: p.fecha, respondio: p.respondio, comentarios: p.comentarios, resultado: p.resultado, responsable: p.usuario });
+      x.total++; x.n_desde++; x.ultimo_seg = p.fecha; x.proximo_seg = x.n_desde === 1 ? sumar(x.ultima, 7) : sumar(p.fecha, 14);
+    }
+    if (x.estado !== 'Activo') { x.proximo_seg = null; D.sin_proxima = D.sin_proxima.filter(c => quien(c) !== quien(x)); }
+    return { ok: true };
+  }
+  if (p.accion === 'aviso_cirugia') { const o = D.operados.find(o => o.id === p.id); o.avisado = D.hoy; return { ok: true }; }
+  const v = D.citas.find(c => c.id === Number(p.id || p.cita_id));
+  const [fecha, hora] = (p.inicio || '').split('T');
+  if (p.accion === 'crear' || (p.accion === 'editar' && p.inicio)) {
+    const choque = D.citas.find(c => c.id !== v?.id && c.fecha === fecha && VIVOS.includes(c.estado) && Math.abs(aMin(c.hora) - aMin(hora)) < DURACION);
+    if (choque && !p.permitir_cruce) return { ok: false, motivo: `Ese horario ya lo tiene ${choque.paciente} (${choque.hora}).` };
+  }
+  const datos = { ...p }; for (const k of ['accion', 'inicio', 'usuario', 'permitir_cruce', 'origen_id']) delete datos[k];
+  if (fecha) Object.assign(datos, { fecha, hora });
+  if (p.accion === 'crear' && p.paquete_total) D.paquetes.push({ id: Date.now(), paciente: p.paciente, telefono: p.telefono, servicio: p.servicio, total: Number(p.paquete_total), usadas: 1 });
+  if (p.accion === 'crear') D.citas.push({ ...datos, id: Date.now(), creado: D.hoy + ' 12:00', duracion_min: 45, monto: datos.monto === '' ? null : Number(datos.monto),
+    recurrente: D.pacientes.find(x => x.nombre === p.paciente)?.recurrente ?? (!!p.tipo && p.tipo !== 'Primera cita') });
+  else if (p.accion === 'editar') Object.assign(v, datos, { id: v.id }, 'monto' in datos ? { monto: datos.monto === '' ? null : Number(datos.monto) } : {});
+  else if (p.accion === 'medicion') Object.assign(v, { estado: 'Asistió', medicion: datos });
+  D.citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  return { ok: true };
+}
+
+// ---------- carga y envío. La clave va en el cuerpo del POST, nunca en la URL.
+async function cargar() {
+  if (DEMO) { D = D || datosDemo(); demoListas(); $('#franja-demo').hidden = false; entrar(); return true; }
+  $('#recargar').disabled = true;
+  try {
+    const r = await fetch(N8N + 'citas-datos-vt', { method: 'POST', cache: 'no-store', signal: AbortSignal.timeout?.(30000), headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave }) });
+    if (r.status === 401) { pedirAcceso('La clave no es correcta.'); return false; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    D = await r.json(); D.cargado = Date.now();
+    entrar();
+    return true;
+  } catch (e) {
+    if (!D) pedirAcceso('No se pudo conectar con la agenda. Revisa tu internet y vuelve a entrar.');
+    else aviso('No se pudo actualizar. Revisa tu conexión y vuelve a intentar.');
+    return false;
+  } finally { $('#recargar').disabled = false; }
+}
+function entrar() {
+  $('#pantalla-acceso').hidden = true; $('#app').hidden = false;
+  $('#lista-pacientes').innerHTML = D.pacientes.map(p => `<option value="${esc(p.nombre)}">${esc(p.telefono || '')}</option>`).join('');
+  $('#recargar').title = 'Actualizar' + (D.generado ? ' (última vez: ' + String(D.generado).slice(11) + ')' : '');
+  vista = vista || INICIO_POR_CARGO[$('#cargo').value] || 'hoy';
+  pintar();
+}
+setInterval(() => { if (!document.hidden && D && !DEMO && !document.querySelector('dialog[open]')) cargar(); }, 10 * 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && D && !DEMO && Date.now() - D.cargado > 5 * 60e3 && !document.querySelector('dialog[open]')) cargar(); });
+
+async function enviar(pedido) {
+  if (DEMO) return demoEnviar(pedido);
+  const r = await fetch(N8N + 'citas-api-vt', { method: 'POST', signal: AbortSignal.timeout?.(20000), headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ ...pedido, clave, usuario: $('#cargo').value || 'equipo' }) });
+  const j = await r.json().catch(() => ({ ok: false, motivo: 'Respuesta ilegible del servidor.' }));
+  if (r.status === 401) pedirAcceso('La sesión venció. Vuelve a ingresar la clave.');
+  return j;
+}
+function pedirAcceso(motivo) {
+  $('#app').hidden = true; $('#pantalla-acceso').hidden = false;
+  $('#error-acceso').hidden = !motivo; $('#error-acceso').textContent = motivo || '';
+}
+
+// ---------- reglas del negocio
+const futura = c => c.fecha >= D.hoy;
+const viva = c => ['Por confirmar', 'Confirmada'].includes(c.estado);
+const porRevisar = c => /\[REVISAR\]/.test(c.notas || '') && c.estado !== 'Cancelada';
+// 48 h para pagar desde la reserva (lámina 5); lo importado no tiene fecha real de reserva.
+const vencida = c => c.pago === 'Por pagar' && ['Reserva web', 'Tablero'].includes(c.origen) && c.creado && (Date.now() - new Date(c.creado.replace(' ', 'T') + ':00-05:00')) > 48 * 3600e3;
+// En fin de semana cuenta como «escrito hoy» lo que se escribió el viernes.
+const escritoHoy = c => c.recordado && c.recordado >= sumar(D.hoy, -({ 6: 1, 0: 2 }[diaSemana(D.hoy)] || 0));
+
+const pillEstado = e => `<span class="pill ${{ 'Por confirmar': 'amarillo', Confirmada: 'azul', 'Asistió': '', 'No asistió': 'rojo', Cancelada: 'gris', Reprogramada: 'gris' }[e] ?? 'gris'}">${esc(e)}</span>`;
+const pillPago = c => `<span class="pill ${c.pago === 'Por pagar' ? (vencida(c) ? 'rojo' : 'naranja') : c.pago === 'Adelanto 25%' ? 'amarillo' : ''}">${esc(c.pago)}${vencida(c) ? ' · pasaron 48 h' : ''}</span>`;
+
+// Una fila: cuándo · quién · por qué aparece · qué hacer.
+const filaLibre = ({ attrs = '', clase = '', cuando = ['', ''], quien = ['', ''], motivo = '', pills = '', acciones = [] }) =>
+  `<div class="fila ${clase}" ${attrs}><div class="c-cuando"><b>${cuando[0]}</b><span>${cuando[1]}</span></div>
+    <div class="c-quien"><b>${quien[0]}</b><span>${quien[1]}</span></div>
+    <div class="c-detalle">${motivo ? `<span class="motivo">${motivo}</span>` : ''}<span class="pills">${pills}</span></div>
+    <div class="c-acciones">${acciones.join('')}</div></div>`;
+let SIMPLE = false;   // en Tareas la lista ya dice de qué se trata: sin etiquetas repetidas
+function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true } = {}) {
+  const pills = SIMPLE ? [] : [pillEstado(c.estado), ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? pillPago(c) : ''];
+  if (c.recurrente === false && !SIMPLE) pills.push('<span class="pill azul">Nueva</span>');
+  if (esEquipo(c)) pills.push('<span class="pill gris">Equipo</span>');
+  if (c.medicion && !SIMPLE) pills.push('<span class="pill">Con resultados</span>');
+  if (c.recordado && (c.fecha >= D.hoy || c.recordado > c.fecha)) pills.push(`<span class="pill gris">${escritoHoy(c) ? 'Escrito hoy' : 'Escrito el ' + fechaCorta(c.recordado)}</span>`);
+  return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
+    cuando: [esc(c.hora), mostrarFecha ? esc(cuando(c.fecha)) : ''],
+    quien: [esc(c.paciente), [c.modalidad, fmtTel(c.telefono)].map(esc).join(' · ')],
+    motivo, pills: pills.join(''), acciones });
+}
+
+// ---------- HOY: lo que hay que hacer, en orden de prioridad
+// Qué días cuentan como «mañana» para el recordatorio de 1 día antes: la
+// agenda es de lunes a jueves, así que el viernes y el sábado ya toca escribir
+// a las del lunes.
+function diasRecordatorio() {
+  const dow = diaSemana(D.hoy), hasta = dow === 5 ? 3 : dow === 6 ? 2 : 1;
+  return Array.from({ length: hasta }, (_, k) => sumar(D.hoy, k + 1));
+}
+const escritoTras = c => c.recordado && c.recordado > c.fecha;           // se le escribió DESPUÉS de su cita
+const nDias = n => `${n} día${n === 1 ? '' : 's'}`;
+
+function seccionesHoy() { SIMPLE = true; try { return seccionesHoyBase(); } finally { SIMPLE = false; } }
+function seccionesHoyBase() {
+  const proximos = diasRecordatorio();
+  const vivasFuturas = D.citas.filter(c => futura(c) && viva(c));
+  // 1 día antes: a todas (va con indicaciones). 5 días antes: una sola vez a las que no confirmaron.
+  const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= sumar(D.hoy, 7) &&
+    (proximos.includes(c.fecha) ? !escritoHoy(c) : c.estado === 'Por confirmar' && !c.recordado));
+  const conDeuda = c => ['Por pagar', 'Adelanto 25%'].includes(c.pago);
+  // Saldo del 25 %: recién cuando la cita está a 3 días. Y quien ya asistió y debe, también.
+  const cobrar = D.citas.filter(c => conDeuda(c) && (
+      (futura(c) && viva(c) && (c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
+      (c.estado === 'Asistió' && c.fecha >= sumar(D.hoy, -30))))
+    .sort((a, b) => (vencida(b) - vencida(a)) || (escritoHoy(a) - escritoHoy(b)) || (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  const hoy = D.citas.filter(c => c.fecha === D.hoy && !['Cancelada', 'Reprogramada'].includes(c.estado));
+  const recientes = D.sin_proxima.filter(c => diasEntre(c.fecha, D.hoy) >= 14 && diasEntre(c.fecha, D.hoy) <= 120);
+  const antiguos = D.sin_proxima.filter(c => diasEntre(c.fecha, D.hoy) > 120);
+  const porEscribir = (a, b) => (!!escritoTras(a) - !!escritoTras(b)) || b.fecha.localeCompare(a.fecha);
+  const escribi = c => boton('Ya le escribí', c.id, { recordado: D.hoy });
+  // Sin confirmar / reprogramaron (pedido del 30-set): tres grupos, cada uno con su acción.
+  const conCitaNueva = c => D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c));
+  const vistos = new Set();
+  const sinConfirmar = [
+    ...vivasFuturas.filter(c => c.estado === 'Por confirmar' && c.recordado && c.fecha <= sumar(D.hoy, 7) && !escritoHoy(c) && !confirmar.includes(c))
+      .map(c => ({ c, motivo: `Ya se le escribió el ${fechaCorta(c.recordado)} y no confirmó · cita ${cuando(c.fecha)}`,
+        acciones: [wa(c, 'confirmar', 'Insistir'), boton('Confirmó ✓', c.id, { estado: 'Confirmada' }, 'hecho'), escribi(c)] })),
+    ...D.sin_marcar.filter(c => c.estado === 'Por confirmar')
+      .map(c => ({ c, motivo: `Su cita del ${fechaCorta(c.fecha)} pasó sin confirmarse: ¿vino?`,
+        acciones: [boton('Asistió ✓', c.id, { estado: 'Asistió' }, 'hecho'), boton('No asistió', c.id, { estado: 'No asistió' }), wa(c, 'reagendar', 'Escribir')] })),
+    ...D.citas.filter(c => c.estado === 'Reprogramada' && c.fecha >= sumar(D.hoy, -30) && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c)))
+      .map(c => ({ c, motivo: `Reprogramó su cita del ${fechaCorta(c.fecha)} y aún no tiene nueva fecha`,
+        acciones: [wa(c, 'reagendar', 'Escribir'), `<button type="button" class="btn chico hecho" data-reagendar="${c.id}">Agendar</button>`] })),
+  ];
+  const agendar = c => `<button type="button" class="btn chico hecho" data-reagendar="${c.id}">Agendar</button>`;
+  const noVolvera = c => `<button type="button" class="btn chico" data-no-volvera="${c.id}">No volverá</button>`;
+  return [
+    { id: 'hoy', titulo: 'Citas de hoy', ayuda: 'Quién viene hoy.',
+      items: hoy.map(c => tarjeta(c, { mostrarFecha: false, acciones: [wa(c, 'cita'),
+        c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
+        c.estado === 'Asistió' && !c.medicion ? `<button type="button" class="btn chico" data-medir="${c.id}">Resultados</button>` : ''] })) },
+    { id: 'confirmar', titulo: 'Confirmar citas', urge: true, ayuda: 'Envía el WhatsApp (ya está escrito) y marca lo que respondió.',
+      items: confirmar.map(c => {
+        const cerca = proximos.includes(c.fecha);
+        const faltaZoom = cerca && c.modalidad === 'Virtual' && !c.enlace_zoom;
+        return tarjeta(c, { motivo: (cerca ? `${c.fecha === proximos[0] ? 'Mañana' : 'El ' + DIAS[diaSemana(c.fecha)]} · recordatorio` : `En ${nDias(diasEntre(D.hoy, c.fecha))} · pedir confirmación`)
+            + (faltaZoom ? ' <span class="pill rojo">Sin enlace de Zoom</span>' : ''),
+          acciones: [cerca ? wa(c, 'recordatorio', 'Enviar recordatorio') : wa(c, 'confirmar', 'Pedir confirmación'),
+            // «Confirmó» no marca «escrito»: la de mañana igual necesita su recordatorio con indicaciones.
+            c.estado === 'Por confirmar' ? boton('Confirmó ✓', c.id, cerca ? { estado: 'Confirmada' } : { estado: 'Confirmada', recordado: D.hoy }, 'hecho') : '',
+            escribi(c)] });
+      }) },
+    { id: 'cobrar', titulo: 'Cobrar', urge: true, ayuda: 'Las pacientes nuevas pagan el 100 % al reservar. Tienen 48 h para pagar o se libera el turno.',
+      items: cobrar.map(c => {
+        const nueva = c.recurrente === false || c.tipo === 'Primera cita';
+        const [motivo, plantillaPago, acciones] = c.pago === 'Adelanto 25%'
+          ? [`Falta el saldo: S/${soles(parte(c.monto, .75))}`, 'saldo', [boton('Pagó el saldo ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
+          : nueva ? [`Nueva · paga el 100 %: S/${soles(c.monto)}`, 'pago', [boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
+          : [`Seguimiento · falta el pago: S/${soles(c.monto)}`, 'pago', [boton('Pagó todo ✓', c.id, { pago: 'Pagado' }, 'hecho'), boton('Pagó el 25 %', c.id, { pago: 'Adelanto 25%' })]];
+        const extra = c.estado === 'Asistió' ? ' · ya asistió' : '';
+        return tarjeta(c, { motivo: motivo + extra, acciones: [wa(c, plantillaPago, 'Enviar datos de pago'), ...acciones, escribi(c),
+          vencida(c) && viva(c) ? `<button type="button" class="btn chico" data-liberar="${c.id}">Liberar horario</button>` : ''] });
+      }) },
+    { id: 'asistencia', titulo: '¿Vino a su cita?', urge: true, ayuda: 'Solo citas que estaban confirmadas y ya pasaron: marca si vino o no.',
+      items: D.sin_marcar.filter(c => c.estado === 'Confirmada').map(c => tarjeta(c, { acciones: [boton('Asistió ✓', c.id, { estado: 'Asistió' }, 'hecho'), boton('No asistió', c.id, { estado: 'No asistió' })] })) },
+    { id: 'sin-confirmar', titulo: 'Sin confirmar o reprogramaron', ayuda: 'Pacientes que no respondieron, cuya cita pasó sin confirmarse, o que reprogramaron y aún no tienen nueva cita. Sigue con ellas por separado.',
+      items: sinConfirmar.map(x => tarjeta(x.c, { motivo: x.motivo, acciones: x.acciones })) },
+    { id: 'revisar', titulo: 'Revisar datos importados', ayuda: 'Citas traídas del calendario y de Kommo con algo por confirmar. Ábrela, corrígela y borra la línea «[REVISAR]» de las notas.',
+      items: D.citas.filter(porRevisar).map(c => tarjeta(c, { motivo: esc((c.notas.match(/\[REVISAR\] ([^\n]*)/) || [])[1] || '') })) },
+    { id: 'no-asistio', titulo: 'Reagendar (no vinieron)', ayuda: 'No vinieron a su última cita y no tienen otra.',
+      items: D.no_asistio.slice().sort(porEscribir).map(c => tarjeta(c, { motivo: `Faltó el ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reagendar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
+    { id: 'no-volvieron', titulo: 'Invitar a su control', ayuda: 'Vinieron hace 2 semanas a 4 meses y no tienen otra cita.',
+      items: recientes.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita hace ${nDias(diasEntre(c.fecha, D.hoy))}`, acciones: [wa(c, 'control', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
+    { id: 'reactivar', titulo: 'Reactivar pacientes', ayuda: 'Vinieron hace 4 a 12 meses y no volvieron.',
+      items: antiguos.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita: ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reactivar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
+    { id: 'por-cerrar', titulo: 'Ventas sin cerrar', ayuda: 'Llenaron «Descubre tu plan», reservaron y no pagaron, o piden retomar. Se trabajan desde Kommo.',
+      items: D.por_cerrar.map(l => filaLibre({ cuando: [fechaCorta(l.desde), 'hace ' + nDias(diasEntre(l.desde, D.hoy))],
+        quien: [esc(l.nombre || 'Sin nombre'), esc(l.servicio || '')], motivo: esc(l.etapa),
+        acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(l.lead_id)}" target="_blank" rel="noopener">Abrir en Kommo</a>`] })) },
+  ];
+}
+
+const H = { sec: null, limite: 30 };
+const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['sin-confirmar']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar']]];
+const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
+function pintarHoy() {
+  const secs = Object.fromEntries(seccionesHoy().map(s => [s.id, s]));
+  const tareas = URGENTES.reduce((n, k) => n + secs[k].items.length, 0);
+  const conItems = MENU_HOY.flatMap(([, ids]) => ids).filter(id => secs[id].items.length);
+  if (H.sec && !conItems.includes(H.sec) && D.cargado) aviso('¡Lista terminada! ✓ Pasamos a la siguiente.');
+  if (!conItems.includes(H.sec)) H.sec = URGENTES.find(k => secs[k].items.length) || conItems[0] || null;
+  const seg = D.seguimiento.filter(x => x.estado === 'Activo' && tocaHoy(x)).length + D.operados.filter(o => !o.avisado).length;
+  $('#hoy-fecha').textContent = fechaLarga(D.hoy).replace(/^./, m => m.toUpperCase());
+  $('#hoy-resumen').textContent = (tareas ? `${tareas} tareas urgentes` : 'Lo urgente está al día ✓') + ` · ${secs.hoy.items.length} citas hoy`;
+  const citasHoy = secs.hoy.items.length;
+  $('#hoy-menu').innerHTML = MENU_HOY.map(([grupo, ids]) => {
+      const con = ids.filter(id => secs[id].items.length);
+      return con.length ? `<p class="grupo">${grupo}</p>` + con.map(id => `<button type="button" class="item" data-sec="${id}" aria-current="${H.sec === id}"><span>${secs[id].titulo}</span><b class="${secs[id].urge ? 'urge' : ''}">${secs[id].items.length}</b></button>`).join('') : '';
+    }).join('')
+    + `<p class="grupo">Ir a</p><button type="button" class="item" data-vista-ir="agenda"><span>Citas de hoy</span><b>${citasHoy || ''}</b></button>`
+    + `<button type="button" class="item" data-vista-ir="seguimiento"><span>Seguimiento nutricional</span><b>${seg || ''}</b></button>`;
+  if (!H.sec) { $('#hoy-lista').innerHTML = '<p class="vacio">Todo al día ✓ No hay tareas pendientes.</p>'; return; }
+  const s = secs[H.sec], vis = s.items.slice(0, H.limite), resto = s.items.length - vis.length;
+  $('#hoy-lista').innerHTML = `<div class="lista-cab"><h2>${s.titulo}</h2><p>${s.ayuda}</p></div>`
+    + (s.items.length ? vis.join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '')
+      : '<p class="vacio">Nada pendiente aquí ✓</p>');
+}
+
+// ---------- AGENDA
+const C = { modo: 'semana', fecha: null, prof: '' };
+const lunes = iso => sumar(iso, -((diaSemana(iso) + 6) % 7));
+const DSEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+const visibles = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado) && (!C.prof || c.profesional === C.prof));
+const chipCita = c => `<button type="button" class="chip-cita ${c.estado === 'No asistió' ? 'No-asistio' : esc(c.estado)}" data-abrir="${c.id}" title="${esc(c.paciente + ' · ' + c.modalidad + ' · ' + c.estado + ' · ' + c.pago)}"><b>${esc(c.hora)}</b>${esc(String(c.paciente).split(' ').slice(0, 2).join(' '))} · ${c.modalidad === 'Presencial' ? 'P' : 'V'}${esEquipo(c) ? ' · Eq' : ''}</button>`;
+
+function pintarAgenda() {
+  C.fecha = C.fecha || D.hoy;
+  document.querySelector(`[name=cal-modo][value=${C.modo}]`).checked = true;
+  document.querySelector(`[name=cal-prof][value="${C.prof}"]`).checked = true;
+  const texto = sinTildes(F.texto), dig = String(F.texto).replace(/\D/g, '');
+  if (texto || dig.length >= 4) {          // buscar: lista de sus citas
+    const r = D.citas.filter(c => sinTildes(c.paciente).includes(texto) || (dig.length >= 4 && String(c.telefono || '').includes(dig.length >= 9 ? telNorm(dig) : dig))).reverse();
+    $('#cal-titulo').textContent = `Búsqueda: ${r.length} cita${r.length === 1 ? '' : 's'}`;
+    $('#lista').innerHTML = `<div class="lista">${r.length ? r.map(c => tarjeta(c, { acciones: [wa(c, 'cita')] })).join('') : '<p class="vacio">Nadie con ese nombre o teléfono en el último año ni en las próximas citas.</p>'}</div>`;
+    return;
+  }
+  ({ dia: pintarDia, semana: pintarSemana, mes: pintarMes })[C.modo]();
+}
+
+// Día: los turnos del horario, ocupados o libres, más las citas fuera de horario.
+function pintarDia() {
+  const f = C.fecha, del = visibles().filter(c => c.fecha === f);
+  $('#cal-titulo').textContent = fechaLarga(f).replace(/^./, m => m.toUpperCase()) + (f === D.hoy ? ' · hoy' : '');
+  const horario = C.prof === 'Nutricionista del equipo' ? [] : [...new Set([...turnos(AGENDA.Virtual[diaSemana(f)]), ...turnos(AGENDA.Presencial[diaSemana(f)])])].sort();
+  const horas = [...new Set([...horario, ...del.map(c => c.hora)])].sort();
+  const filas = horas.map(h => {
+    const aqui = del.filter(c => c.hora === h);
+    const tapado = !aqui.length && del.filter(c => !esEquipo(c)).some(c => aMin(c.hora) < aMin(h) + DURACION && aMin(h) < aMin(c.hora) + (c.duracion_min || DURACION));
+    if (aqui.length) return aqui.map(c => tarjeta(c, { mostrarFecha: false, motivo: [c.servicio, c.monto != null && 'S/' + soles(c.monto)].filter(Boolean).map(esc).join(' · '),
+      acciones: [wa(c, 'cita'), c.estado === 'Asistió' && !c.medicion ? `<button type="button" class="btn chico" data-medir="${c.id}">Resultados</button>` : ''] })).join('');
+    if (tapado || f < D.hoy || (f === D.hoy && h < horaLima())) return '';
+    return filaLibre({ clase: 'libre', cuando: [h, ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
+  }).join('');
+  $('#lista').innerHTML = `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
+}
+
+function pintarSemana() {
+  const ini = lunes(C.fecha), dias = Array.from({ length: 7 }, (_, k) => sumar(ini, k));
+  const citas = visibles();
+  const conCitas = dias.filter(d => citas.some(c => c.fecha === d));
+  const mostrar = dias.filter((d, k) => k < 6 || conCitas.includes(d));   // domingo sólo si hay algo
+  const fin = dias[6];
+  $('#cal-titulo').textContent = `${fechaCorta(ini)} – ${fechaCorta(fin)}`;
+  $('#lista').innerHTML = `<div class="semana" style="--cols:${mostrar.length}">` + mostrar.map(d => {
+    const del = citas.filter(c => c.fecha === d);
+    const atiende = AGENDA.Virtual[diaSemana(d)] || AGENDA.Presencial[diaSemana(d)];
+    return `<div class="col"><button type="button" class="col-cab ${d === D.hoy ? 'hoy' : ''}" data-ir-dia="${d}">${DSEM[(diaSemana(d) + 6) % 7]}<b>${new Date(d + 'T12:00:00Z').getUTCDate()}</b>${del.length ? del.length + ' cita' + (del.length > 1 ? 's' : '') : ''}</button>
+      <div class="col-cuerpo">${del.map(chipCita).join('') || `<p class="libre">${atiende || C.prof === 'Nutricionista del equipo' ? 'Sin citas' : 'No atiende'}</p>`}</div></div>`;
+  }).join('') + '</div>';
+}
+
+function pintarMes() {
+  const f = C.fecha, primero = f.slice(0, 8) + '01', ini = lunes(primero);
+  $('#cal-titulo').textContent = MESES_L[Number(f.slice(5, 7)) - 1].replace(/^./, m => m.toUpperCase()) + ' ' + f.slice(0, 4);
+  const citas = visibles();
+  let html = DSEM.map(d => `<div class="dsem">${d}</div>`).join('');
+  for (let k = 0; k < 42; k++) {
+    const d = sumar(ini, k);
+    if (k >= 35 && d.slice(5, 7) !== f.slice(5, 7)) break;
+    const del = citas.filter(c => c.fecha === d);
+    html += `<div class="celda ${d.slice(5, 7) !== f.slice(5, 7) ? 'fuera' : ''} ${d === D.hoy ? 'hoy' : ''}" data-ir-dia="${d}" role="button" tabindex="0">
+      <span class="num">${new Date(d + 'T12:00:00Z').getUTCDate()}</span>${del.slice(0, 3).map(chipCita).join('')}${del.length > 3 ? `<span class="mas-dia">+${del.length - 3} más</span>` : ''}${del.length ? `<span class="cuenta">${del.length} cita${del.length > 1 ? 's' : ''}</span>` : ''}</div>`;
+  }
+  $('#lista').innerHTML = `<div class="mes">${html}</div>`;
+}
+
+// ---------- SEGUIMIENTO
+const tocaHoy = x => x.proximo_seg && x.proximo_seg <= D.hoy;
+const MENU_SEG = [['hoy', 'Le toca hoy', 'Pacientes a quienes toca escribir hoy o están atrasados.'],
+  ['semana', 'Próximos 7 días', 'Les toca escribir en los próximos 7 días.'], ['riesgo', 'En riesgo', 'Marcados en riesgo de abandonar.'],
+  ['baja', 'Adherencia baja', 'Con adherencia baja al plan.'], ['todos', 'Todos los activos', 'Todos los pacientes en seguimiento.'],
+  ['inactivos', 'Inactivos', 'Ya no reciben seguimiento.'], ['operados', 'Operados · 6 meses y 1 año', 'Se cumplen 6 meses o 1 año de su cirugía (dos semanas antes o después). Escríbeles para su control.']];
+const FILTRO_SEG = { hoy: x => tocaHoy(x), semana: x => x.proximo_seg && x.proximo_seg <= sumar(D.hoy, 7), riesgo: x => x.riesgo, baja: x => x.adherencia === 'Baja', todos: () => true };
+function pintarSeguimiento(soloFilas) {
+  const act = D.seguimiento.filter(x => x.estado === 'Activo');
+  const cuenta = k => k === 'inactivos' ? D.seguimiento.length - act.length : k === 'operados' ? D.operados.filter(o => !o.avisado).length : act.filter(FILTRO_SEG[k]).length;
+  const [, titulo, ayuda] = MENU_SEG.find(m => m[0] === S.toca);
+  if (!soloFilas) {
+    $('#seg-menu').innerHTML = '<p class="grupo">Seguimiento</p>' + MENU_SEG.map(([k, n], i) => (i === 6 ? '<p class="grupo">Operados</p>' : '')
+      + `<button type="button" class="item" data-seg-toca="${k}" aria-current="${S.toca === k}"><span>${k === 'operados' ? '6 meses y 1 año' : n}</span><b class="${(k === 'hoy' || k === 'operados') && cuenta(k) ? 'urge' : ''}">${cuenta(k) || ''}</b></button>`).join('');
+    $('#seg-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p>${S.toca === 'operados' ? '' : `<input id="s-texto" type="search" placeholder="Buscar paciente en toda la lista" value="${esc(S.texto)}" aria-label="Buscar paciente">`}</div><div id="seg-filas"></div>`;
+  }
+  let filas;
+  if (S.toca === 'operados') {
+    filas = D.operados.map(o => filaLibre({ clase: o.avisado ? 'apagada' : '', cuando: [esc(cuando(o.fecha_hito)), o.hito === '6m' ? '6 meses' : '1 año'],
+      quien: [esc(o.paciente), esc(fmtTel(o.telefono))], motivo: `${esc(o.procedimiento || 'Cirugía')} · ${fechaCorta(o.fecha)} ${o.fecha.slice(0, 4)}`,
+      pills: o.avisado ? `<span class="pill gris">Escrito el ${fechaCorta(o.avisado)}</span>` : '',
+      acciones: [wa(o, o.hito === '6m' ? 'operado_6m' : 'operado_1a', 'Escribir'), o.avisado ? '' : `<button type="button" class="btn chico hecho" data-aviso-cir="${o.id}" data-hito="${o.hito}">Ya le escribí</button>`,
+        `<button type="button" class="btn chico" data-agendar-nombre="${esc(o.paciente)}" data-agendar-tel="${esc(o.telefono || '')}">Agendar</button>`] }));
+  } else {
+    const t = sinTildes(S.texto);
+    filas = D.seguimiento.filter(x => t ? sinTildes(x.paciente).includes(t) : S.toca === 'inactivos' ? x.estado === 'Inactivo' : x.estado === 'Activo' && FILTRO_SEG[S.toca](x))
+      .sort((a, b) => (a.proximo_seg || '9999').localeCompare(b.proximo_seg || '9999') || String(a.paciente).localeCompare(b.paciente))
+      .map(x => {
+        const i = D.seguimiento.indexOf(x), atraso = tocaHoy(x) ? diasEntre(x.proximo_seg, D.hoy) : 0;
+        const pills = [atraso ? `<span class="pill rojo">Atrasado ${nDias(atraso)}</span>` : '',
+          x.adherencia ? `<span class="pill ${{ Alta: '', Media: 'amarillo', Baja: 'rojo' }[x.adherencia]}">Adherencia ${esc(x.adherencia.toLowerCase())}</span>` : '',
+          x.riesgo ? '<span class="pill rojo">En riesgo</span>' : '', x.estado === 'Inactivo' ? '<span class="pill gris">Inactivo</span>' : '',
+          x.historial?.[0] ? `<span class="pill gris">Último: ${fechaCorta(x.historial[0].fecha)}${x.historial[0].respondio === false ? ' · no respondió' : ''}</span>` : ''].join('');
+        return filaLibre({ attrs: `data-seg="${i}" tabindex="0"`, clase: x.estado === 'Inactivo' ? 'apagada' : '',
+          cuando: [x.proximo_seg ? esc(cuando(x.proximo_seg)) : '—', x.proximo_seg ? 'le toca' : ''],
+          quien: [esc(x.paciente), [x.objetivo || 'sin objetivo anotado', x.ultima && 'consulta del ' + fechaCorta(x.ultima)].filter(Boolean).map(esc).join(' · ')],
+          motivo: x.n_desde ? `Seguimiento ${x.n_desde + 1} desde su consulta` : 'Primer seguimiento', pills,
+          acciones: [wa(x, x.n_desde ? 'seg' : 'seg_primero', 'Escribir'), `<button type="button" class="btn chico hecho" data-seg-abrir="${i}">Anotar</button>`] });
+      });
+  }
+  const vis = filas.slice(0, S.limite), resto = filas.length - vis.length;
+  $('#seg-filas').innerHTML = filas.length ? vis.join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '')
+    : `<p class="vacio">${S.texto ? 'Nadie con ese nombre.' : 'Nada pendiente aquí ✓'}</p>`;
+}
+
+// ---------- COBROS: pagado, pendiente, paquetes, clínicas e informe de ventas
+const CB = { sec: 'por-cobrar', desde: null, hasta: null, pago: '', modalidad: '', prof: '', limite: 30 };
+const finales = c => Number(c.monto) || 0;
+const cobroCitas = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado));
+const SECCIONES_COBROS = [
+  ['por-cobrar', 'Por cobrar', 'Citas sin pagar o con pago parcial (25 %), de los últimos 90 días en adelante.', c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.estado !== 'No asistió' && c.fecha >= sumar(D.hoy, -90)],
+  ['parcial', 'Pagaron el 25 %', 'Falta el saldo, que se paga antes de la cita.', c => c.pago === 'Adelanto 25%'],
+  ['pagadas', 'Pagadas', 'Pagadas por la paciente (incluye cortesías).', c => ['Pagado', 'Cortesía'].includes(c.pago)],
+  ['clinicas', 'Clínicas por cobrar', 'Citas que paga una clínica a fin de mes. Marca «Clínica pagó» cuando la clínica deposite.', c => c.pago === 'Pendiente clínica'],
+  ['paquetes', 'Paquetes', 'Compras de varias citas: la primera lleva el pago, las demás van incluidas.', null],
+  ['ventas', 'Informe de ventas', 'Filtra y descarga en Excel.', null],
+];
+function filasCobro(c) {
+  const dcto = Number(c.descuento_pct) ? `<span class="pill gris">−${Number(c.descuento_pct)} %</span>` : '';
+  const acc = c.pago === 'Pendiente clínica' ? [boton('Clínica pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]
+    : ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? [wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Enviar datos de pago'), boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')] : [];
+  return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, cuando: [fechaCorta(c.fecha), esc(c.hora)],
+    quien: [esc(c.paciente), [fmtTel(c.telefono), c.servicio].filter(Boolean).map(esc).join(' · ')],
+    motivo: c.monto != null ? `S/${soles(c.monto)}${c.pagador ? ' · paga ' + esc(c.pagador) : ''}` : 'Falta elegir el servicio para saber cuánto cobrar',
+    pills: pillPago(c) + dcto + (c.paquete_id ? `<span class="pill azul">Paquete ${c.nro_paquete} de ${c.paquete_total}</span>` : ''), acciones: acc });
+}
+function ventasFiltradas() {
+  const mes = D.hoy.slice(0, 7);
+  const desde = CB.desde || mes + '-01', hasta = CB.hasta || sumar(mes + '-01', 40).slice(0, 7) + '-01';
+  return cobroCitas().filter(c => c.fecha >= desde && (CB.hasta ? c.fecha <= CB.hasta : c.fecha < hasta) &&
+    (!CB.pago || c.pago === CB.pago) && (!CB.modalidad || c.modalidad === CB.modalidad) && (!CB.prof || c.profesional === CB.prof));
+}
+// Ficha de la paciente de una cita: por teléfono y primer nombre, o por nombre exacto.
+function fichaDe(c) {
+  return D.pacientes.find(x => x.nombre === c.paciente && (!c.telefono || !x.telefono || x.telefono === c.telefono)) || {};
+}
+function descargarVentas() {
+  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente'];
+  const celda = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // que Excel no ejecute fórmulas
+    return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
+    c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', c.pago, c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
+    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente]);
+  const csv = '﻿sep=;\n' + [cab, ...filas].map(f => f.map(celda).join(';')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `ventas-vt-${D.hoy}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  aviso(`Descargado: ${filas.length} citas. Ábrelo con Excel.`);
+}
+function pintarCobros(soloLista) {
+  const citas = cobroCitas();
+  const cuenta = f => citas.filter(f).length;
+  if (!soloLista) {
+    $('#cob-menu').innerHTML = '<p class="grupo">Cobros</p>' + SECCIONES_COBROS.map(([k, n, , f], i) => (k === 'paquetes' ? '<p class="grupo">Paquetes e informes</p>' : '')
+      + `<button type="button" class="item" data-cob="${k}" aria-current="${CB.sec === k}"><span>${n}</span><b class="${k === 'por-cobrar' ? 'urge' : ''}">${f ? cuenta(f) || '' : k === 'paquetes' ? (D.paquetes || []).length || '' : ''}</b></button>`).join('');
+  }
+  const [, titulo, ayuda, filtro] = SECCIONES_COBROS.find(s => s[0] === CB.sec);
+  let cuerpo;
+  if (CB.sec === 'paquetes') {
+    const L = D.paquetes || [];
+    cuerpo = L.length ? L.map(q => filaLibre({ cuando: [`${q.usadas}/${q.total}`, 'citas'], quien: [esc(q.paciente), esc(fmtTel(q.telefono))], motivo: esc(q.servicio || 'Paquete'),
+      pills: `<span class="pill azul">Faltan ${q.total - q.usadas} citas</span>`,
+      acciones: [`<button type="button" class="btn chico hecho" data-agendar-nombre="${esc(q.paciente)}" data-agendar-tel="${esc(q.telefono || '')}">Agendar su cita ${q.usadas + 1}</button>`] })).join('')
+      : '<p class="vacio">Todavía no hay paquetes con citas por usar. Al agendar un paquete, aparece aquí.</p>';
+  } else if (CB.sec === 'ventas') {
+    const V = ventasFiltradas(), sum = f => V.filter(f).reduce((n, c) => n + finales(c), 0);
+    const cobrado = sum(c => ['Pagado'].includes(c.pago)) + sum(c => c.pago === 'Adelanto 25%') * .25;
+    const pend = sum(c => c.pago === 'Por pagar') + sum(c => c.pago === 'Adelanto 25%') * .75;
+    const mes = D.hoy.slice(0, 7);
+    cuerpo = `<div class="ventas-filtros">
+      <label>Desde<input type="date" class="cob-f" data-k="desde" value="${CB.desde || mes + '-01'}"></label>
+      <label>Hasta<input type="date" class="cob-f" data-k="hasta" value="${CB.hasta || ''}"></label>
+      <label>Pago<select class="cob-f" data-k="pago"><option value="">Todos</option>${PAGOS.map(x => `<option ${CB.pago === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      <label>Modalidad<select class="cob-f" data-k="modalidad"><option value="">Todas</option>${['Presencial', 'Virtual'].map(x => `<option ${CB.modalidad === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      <label>Profesional<select class="cob-f" data-k="prof"><option value="">Todas</option>${['Lic. Vanessa Tello', 'Nutricionista del equipo'].map(x => `<option ${CB.prof === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+      <button type="button" class="btn pri" data-descargar>Descargar Excel</button></div>
+      <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length ? ` <small>(${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
+      <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th></tr>
+      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
+  } else {
+    const L = citas.filter(filtro).sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
+    const vis = L.slice(0, CB.limite), resto = L.length - vis.length;
+    cuerpo = L.length ? vis.map(filasCobro).join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '') : '<p class="vacio">Nada por aquí ✓</p>';
+  }
+  $('#cob-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p></div>${cuerpo}`;
+}
+
+function pintar() {
+  for (const v of ['hoy', 'agenda', 'seguimiento', 'cobros']) $('#vista-' + v).hidden = vista !== v;
+  const segHoy = D.seguimiento.filter(x => x.estado === 'Activo' && tocaHoy(x)).length + D.operados.filter(o => !o.avisado).length;
+  const urgentes = seccionesHoy().filter(s => s.urge).reduce((n, s) => n + s.items.length, 0);
+  document.querySelectorAll('.tab').forEach(t => {
+    t.setAttribute('aria-selected', t.dataset.vista === vista);
+    const n = { hoy: urgentes, seguimiento: segHoy }[t.dataset.vista];
+    t.innerHTML = { hoy: 'Tareas', agenda: 'Calendario', seguimiento: 'Seguimiento', cobros: 'Cobros' }[t.dataset.vista] + (n ? `<b>${n}</b>` : '');
+  });
+  ({ hoy: pintarHoy, agenda: pintarAgenda, seguimiento: pintarSeguimiento, cobros: pintarCobros })[vista]();
+}
+
+// ---------- ficha de la cita
+const fc = $('#form-cita');
+const buscarCita = id => [...D.citas, ...D.sin_proxima, ...D.no_asistio, ...D.sin_marcar].find(c => c.id === Number(id));
+const modalidad = () => fc.querySelector('[name=modalidad]:checked')?.value || 'Virtual';
+
+function pintarTurnos() {
+  const fecha = fc.fecha.value, mod = modalidad(), prof = fc.profesional.value;
+  const caja = $('#turnos'), nota = $('#turnos-nota');
+  if (!fecha) { caja.innerHTML = ''; nota.textContent = 'Elige la fecha para ver los horarios.'; return; }
+  const ocupadas = prof === 'Lic. Vanessa Tello' ? D.citas.filter(c => c.fecha === fecha && c.profesional === prof && VIVOS.includes(c.estado) && c.id !== editando?.id) : [];   // el equipo son varias nutricionistas a la vez
+  const lista = turnos(AGENDA[mod][diaSemana(fecha)]);      // el equipo atiende en el mismo horario que Vanessa
+  caja.innerHTML = lista.map(h => {
+    const o = ocupadas.find(c => aMin(c.hora) < aMin(h) + DURACION && aMin(h) < aMin(c.hora) + (c.duracion_min || DURACION));
+    return `<button type="button" class="turno ${o ? 'ocupado' : ''}" data-hora="${h}" aria-pressed="${fc.hora.value === h}" title="${o ? esc('Ocupado: ' + o.paciente) : 'Libre'}"${o ? ` aria-label="${h}, ocupado"` : ''}>${h}</button>`;
+  }).join('');
+  const fuera = ocupadas.filter(c => !lista.includes(c.hora));
+  nota.textContent = !lista.length ? `${prof === 'Lic. Vanessa Tello' ? 'Vanessa' : 'El equipo'} no atiende ${mod.toLowerCase()} los ${DIAS[diaSemana(fecha)]}. Puedes escribir otra hora si ya se coordinó.`
+    : 'Toca un horario libre (tachado = ocupado).' + (fuera.length ? ' También ocupado: ' + fuera.map(c => c.hora).join(', ') + '.' : '');
+}
+// Precio de lista − descuento % = precio final (se puede corregir a mano).
+function pintarPrecio(desdeUsuario) {
+  const lista = Number(fc.precio_lista.value), d = Math.min(100, Math.max(0, Number(fc.descuento_pct.value) || 0));
+  if (desdeUsuario && fc.precio_lista.value !== '') fc.monto.value = String(Math.round(lista * (100 - d)) / 100);
+  $('#nota-precio').textContent = fc.precio_lista.value !== '' && d ? `${d} % de descuento sobre S/${soles(lista)} = S/${soles(fc.monto.value)}${d === 100 ? ' (cortesía)' : ''}` : '';
+  $('#pagador-campo').hidden = fc.pago.value !== 'Pendiente clínica';
+  if (desdeUsuario && d === 100 && fc.pago.value === 'Por pagar') fc.pago.value = 'Cortesía';
+}
+// Paquetes: comprar uno nuevo, o usar una cita del que la paciente ya tiene.
+function paqueteActivo() {
+  const q = quien({ telefono: fc.telefono.value, paciente: fc.paciente.value });
+  return (D.paquetes || []).find(x => quien({ telefono: x.telefono, paciente: x.paciente }) === q || sinTildes(x.paciente) === sinTildes(fc.paciente.value));
+}
+function pintarPaquete() {
+  const caja = $('#caja-paquete');
+  const llave = editando ? 'e' + editando.id : [paqueteActivo()?.id, fc.servicio.selectedOptions[0]?.dataset.citas].join('|');
+  if (caja.dataset.llave === llave && !caja.hidden) return;      // no pisar lo que la usuaria ya decidió
+  caja.dataset.llave = llave;
+  if (editando) {      // citas ya creadas: sólo informa a qué paquete pertenecen
+    caja.hidden = !editando.paquete_id;
+    caja.innerHTML = editando.paquete_id ? `Cita <b>${editando.nro_paquete} de ${editando.paquete_total}</b> de su paquete · no se cobra aparte.` : '';
+    return;
+  }
+  const activo = paqueteActivo(), n = Number(fc.servicio.selectedOptions[0]?.dataset.citas || 1);
+  if (activo) {
+    caja.hidden = false;
+    caja.innerHTML = `Tiene un paquete (${esc(activo.servicio || 'paquete')}): usó <b>${activo.usadas} de ${activo.total}</b> citas.
+      <label><input type="checkbox" id="usar-paquete" checked> Esta es su cita ${activo.usadas + 1} de ${activo.total} (no se cobra)</label>`;
+  } else if (n > 1) {
+    caja.hidden = false;
+    caja.innerHTML = `Es un paquete: esta es la primera cita y lleva el pago; las siguientes quedan incluidas.
+      <label>Citas del paquete <input type="number" id="paquete-total" min="2" max="12" value="${n}"></label>`;
+  } else { caja.hidden = true; caja.innerHTML = ''; }
+}
+function notaTipo() {
+  const recurrente = fc.tipo.value && fc.tipo.value !== 'Primera cita';
+  $('#nota-tipo').textContent = fc.tipo.value ? (recurrente ? 'Recurrente: paga el 25 % para reservar y el saldo antes de la cita.' : 'Paciente nueva: paga el 100 % para reservar.') : '';
+}
+
+function abrirCita(c, base = {}) {
+  editando = c || null;
+  fc.reset();
+  $('#servicio').innerHTML = '<option value="">—</option>' + SERVICIOS.map(([s, p, n]) => `<option value="${esc(s)}" data-precio="${p}" data-citas="${n}">${esc(s)} · S/${p}${n > 1 ? ' · ' + n + ' citas' : ''}</option>`).join('');
+  fc.estado.innerHTML = ESTADOS.map(x => `<option>${x}</option>`).join('');
+  fc.pago.innerHTML = PAGOS.map(x => `<option>${x}</option>`).join('');
+  fc.medio_pago.innerHTML = '<option value="">—</option>' + MEDIOS.map(x => `<option>${x}</option>`).join('');
+  fc.tipo_paciente.innerHTML = '<option value="">—</option>' + TIPOS_PACIENTE.map(x => `<option>${x}</option>`).join('');
+  $('#lista-llega').innerHTML = [...new Set(D.pacientes.map(x => x.llega_por).filter(Boolean))].sort().map(x => `<option value="${esc(x)}">`).join('');
+  const v = c ? { ...fichaDe(c), ...c } : { modalidad: 'Virtual', profesional: 'Lic. Vanessa Tello', estado: 'Por confirmar', pago: 'Por pagar', ...base };
+  for (const k of ['dni', 'llega_por', 'tipo_paciente', 'paciente', 'telefono', 'email', 'profesional', 'fecha', 'hora', 'tipo', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'servicio', 'precio_lista', 'descuento_pct', 'pagador']) {
+    if (!fc[k] || v[k] == null) continue;
+    if (fc[k].tagName === 'SELECT' && ![...fc[k].options].some(o => o.value === v[k])) fc[k].add(new Option(v[k], v[k]));
+    fc[k].value = v[k];
+  }
+  fc.querySelector(`[name=modalidad][value="${v.modalidad || 'Virtual'}"]`).checked = true;
+  $('#caja-paquete').dataset.llave = ''; $('#caja-paquete').hidden = true;
+  fc.dataset.leadId = v.lead_id || '';
+  fc.dataset.origenId = 'tablero-' + (crypto.randomUUID?.() || Date.now() + '-' + Math.random());
+  $('#cita-titulo').textContent = c ? c.paciente : base.paciente ? 'Nueva cita · ' + base.paciente : 'Nueva cita';
+  $('#cita-sub').textContent = c ? `${fechaLarga(c.fecha)} · ${c.hora} · ${c.estado} · ${c.pago}${c.actualizado_por ? ' · último cambio: ' + c.actualizado_por : ''}` : 'Escribe el nombre: si ya es paciente, elígela de la lista y se completan sus datos.';
+  const barra = $('#cita-barra');
+  barra.hidden = !c;
+  if (c) {
+    barra.innerHTML = `<span class="titulo">Marcar</span>` + [
+      c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
+      boton('Asistió', c.id, { estado: 'Asistió' }), boton('No asistió', c.id, { estado: 'No asistió' }),
+      ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? boton('Pagó todo', c.id, { pago: 'Pagado' }) : '',
+      `<button type="button" class="btn chico" data-liberar="${c.id}">Cancelar cita</button>`,
+      `<button type="button" class="btn chico" data-medir="${c.id}">${c.medicion ? 'Ver resultados' : 'Registrar resultados'}</button>`].join('')
+      + `<span class="titulo" style="margin-top:.3rem">Enviar por WhatsApp</span>` + [
+      wa(c, 'confirmar', 'Pedir confirmación (5–7 días)'), wa(c, 'recordatorio', 'Recordatorio (1 día antes)'),
+      wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Datos de pago'), wa(c, 'confirmada', 'Confirmada y condiciones')].join('');
+  }
+  $('#cita-error').hidden = true;
+  fc.notas.disabled = Boolean(c && c.notas == null && c.fecha < sumar(D.hoy, -60));   // el servidor no manda notas de citas viejas
+  fc.notas.placeholder = fc.notas.disabled ? 'Las notas de citas de hace más de 60 días no se editan aquí' : 'Lo que el resto del equipo tiene que saber';
+  fc.querySelector('.mas-datos').open = Boolean(c && (c.notas || c.enlace_zoom));
+  pintarHistorial(v); notaTipo(); pintarTurnos(); pintarPrecio(); pintarPaquete();
+  $('#zoom-campo').hidden = modalidad() !== 'Virtual';
+  $('#dlg-cita').showModal();
+}
+function pintarHistorial(v) {
+  const q = quien(v);
+  const otras = q ? D.citas.filter(c => quien(c) === q && c.id !== v.id) : [];
+  $('#historial').innerHTML = otras.length ? '<b>Otras citas de esta paciente</b><ul>' + otras.slice(-6).map(c =>
+    `<li>${fechaLarga(c.fecha)} ${c.hora} · ${esc(c.modalidad)} · ${esc(c.estado)}${c.medicion?.peso ? ' · ' + c.medicion.peso + ' kg' : ''}</li>`).join('') + '</ul>' : '';
+}
+fc.addEventListener('input', e => {
+  if (e.target.name === 'paciente') {
+    const p = D.pacientes.find(x => x.nombre === e.target.value);
+    if (p) {
+      fc.telefono.value = p.telefono || ''; fc.email.value = p.email || ''; fc.dni.value = p.dni || ''; fc.llega_por.value = p.llega_por || '';
+      fc.tipo_paciente.value = [...fc.tipo_paciente.options].some(o => o.value === p.tipo_paciente) ? p.tipo_paciente || '' : ''; fc.dataset.leadId = p.lead_id || '';
+      if (!editando && !fc.tipo.value) fc.tipo.value = p.recurrente ? 'Control' : 'Primera cita';
+      pintarHistorial({ paciente: p.nombre, telefono: p.telefono }); notaTipo();
+    } else if (!editando) fc.dataset.leadId = '';
+  }
+  if (e.target.name === 'tipo') notaTipo();
+  if (['fecha', 'modalidad', 'profesional', 'hora'].includes(e.target.name)) pintarTurnos();
+  if (e.target.name === 'modalidad') $('#zoom-campo').hidden = modalidad() !== 'Virtual';
+  if (e.target.name === 'servicio') { fc.precio_lista.value = e.target.selectedOptions[0]?.dataset.precio || fc.precio_lista.value; pintarPrecio(true); pintarPaquete(); }
+  if (['precio_lista', 'descuento_pct'].includes(e.target.name)) pintarPrecio(true);
+  if (e.target.name === 'monto' || e.target.name === 'pago') pintarPrecio(false);
+  if (['paciente', 'telefono'].includes(e.target.name)) pintarPaquete();
+});
+$('#turnos').addEventListener('click', e => { const b = e.target.closest('.turno'); if (b) { fc.hora.value = b.dataset.hora; pintarTurnos(); } });
+
+fc.addEventListener('submit', async e => {
+  if (e.submitter?.value !== 'guardar') return;
+  e.preventDefault();
+  if (!fc.checkValidity()) fc.querySelector('.mas-datos').open = true;   // el campo inválido puede estar ahí
+  if (!fc.reportValidity()) return;
+  if (fc.telefono.value.trim() && !telNorm(fc.telefono.value)) { $('#cita-error').textContent = 'Revisa el teléfono: escribe los 9 dígitos del celular (o el número con código de país).'; $('#cita-error').hidden = false; return; }
+  const campos = ['paciente', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente', 'profesional', 'tipo', 'servicio', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'precio_lista', 'descuento_pct', 'pagador'];
+  let p = Object.fromEntries(campos.map(k => [k, fc[k].value.trim()]));
+  p.modalidad = modalidad();
+  if (p.pago !== 'Pendiente clínica') p.pagador = '';
+  p.inicio = fc.fecha.value + 'T' + fc.hora.value;
+  if (fc.dataset.leadId) p.lead_id = fc.dataset.leadId;
+  if (editando) {
+    // Sólo lo que esta persona cambió: si otra marcó «Asistió» mientras esta
+    // ficha estaba abierta, guardar una nota no se lo pisa.
+    const antes = { ...fichaDe(editando), ...editando, inicio: editando.fecha + 'T' + editando.hora, monto: editando.monto == null ? '' : String(Number(editando.monto)),
+      precio_lista: editando.precio_lista == null ? '' : String(Number(editando.precio_lista)), descuento_pct: String(Number(editando.descuento_pct) || 0) };
+    if (p.descuento_pct === '') p.descuento_pct = '0';
+    p = Object.fromEntries(Object.entries(p).filter(([k, v]) => String(antes[k] ?? '') !== v));
+    if (!Object.keys(p).length) { $('#dlg-cita').close(); return; }
+    Object.assign(p, { accion: 'editar', id: editando.id });
+  } else {
+    Object.assign(p, { accion: 'crear', origen_id: fc.dataset.origenId });
+    const usar = $('#usar-paquete'), total = $('#paquete-total');
+    if (usar?.checked && paqueteActivo()) p.paquete_id = paqueteActivo().id;
+    else if (total && !$('#caja-paquete').hidden) p.paquete_total = total.value;
+  }
+  p.permitir_cruce = fc.permitir_cruce.checked;
+  await guardar(p, $('#cita-error'), $('#dlg-cita'), editando ? 'Cita actualizada.' : ['Por pagar', 'Adelanto 25%'].includes(p.pago) ? 'Cita creada. Aparece en «Cobrar» hasta que pague.' : 'Cita creada.');
+});
+
+async function guardar(p, error, dlg, ok) {
+  error.hidden = true;
+  const principal = dlg.querySelector('.btn.pri'), texto = principal.textContent;
+  dlg.querySelectorAll('button').forEach(b => b.disabled = true);
+  principal.textContent = 'Guardando…';
+  try {
+    const r = await enviar(p);
+    if (!r.ok) {
+      error.textContent = r.motivo || 'No se pudo guardar.'; error.hidden = false;
+      if (/compartido/.test(r.motivo || '')) dlg.querySelector('.mas-datos')?.setAttribute('open', '');
+      return false;
+    }
+    dlg.close(); aviso(ok); await cargar(); return true;
+  } catch (e) { error.textContent = 'Sin conexión. No se guardó; inténtalo otra vez.'; error.hidden = false; return false; }
+  finally { dlg.querySelectorAll('button').forEach(b => b.disabled = false); principal.textContent = texto; }
+}
+
+// ---------- resultados
+const fm = $('#form-med');
+function abrirMedicion(c) {
+  midiendo = c; fm.reset();
+  fm.fecha.value = c.fecha <= D.hoy ? c.fecha : D.hoy;
+  for (const k of ['peso', 'grasa_pct', 'musculo_kg', 'grasa_visceral', 'agua_pct', 'imc', 'recomendaciones']) if (c.medicion?.[k] != null) fm[k].value = c.medicion[k];
+  $('#med-sub').textContent = `${c.paciente} · cita del ${fechaLarga(c.fecha)} ${c.hora}`;
+  $('#med-error').hidden = true;
+  $('#dlg-med').showModal();
+}
+fm.addEventListener('submit', async e => {
+  if (e.submitter?.value !== 'guardar') return;
+  e.preventDefault();
+  const p = { accion: 'medicion', cita_id: midiendo.id };
+  for (const k of ['fecha', 'peso', 'grasa_pct', 'musculo_kg', 'grasa_visceral', 'agua_pct', 'imc', 'recomendaciones']) p[k] = fm[k].value.trim();
+  if (![p.peso, p.grasa_pct, p.musculo_kg, p.grasa_visceral, p.agua_pct, p.imc, p.recomendaciones].some(Boolean)) { $('#med-error').textContent = 'Anota al menos una medida o una recomendación.'; $('#med-error').hidden = false; return; }
+  await guardar(p, $('#med-error'), $('#dlg-med'), 'Resultados guardados.');
+});
+
+// ---------- registrar seguimiento
+const fs = $('#form-seg');
+function abrirSeg(x) {
+  siguiendo = x; fs.reset();
+  fs.fecha.value = D.hoy;
+  fs.adherencia.value = x.adherencia || ''; fs.estado.value = x.estado || 'Activo';
+  fs.riesgo.checked = x.riesgo === true; fs.objetivo.value = x.objetivo || ''; fs.notas.value = x.notas || '';
+  $('#seg-titulo').textContent = x.paciente;
+  $('#seg-sub').textContent = [x.telefono, x.ultima && 'consulta del ' + fechaLarga(x.ultima), x.proximo_seg && 'le toca ' + fechaLarga(x.proximo_seg), `${x.total || 0} seguimientos`].filter(Boolean).join(' · ');
+  $('#seg-barra').innerHTML = `<span class="titulo">1 · Escríbele</span>${wa(x, x.n_desde ? 'seg' : 'seg_primero')}<button type="button" class="btn chico" id="seg-agendar">Agendar control</button><span class="titulo" style="margin-top:.3rem">2 · Anota lo que contó y guarda</span>`;
+  $('#seg-historial').innerHTML = x.historial?.length ? '<b>Últimos seguimientos</b><ul>' + x.historial.map(h =>
+    `<li>${fechaLarga(h.fecha)} · ${h.respondio === false ? 'no respondió' : h.respondio ? 'respondió' : '—'}${h.resultado ? ' · ' + esc(h.resultado) : ''}${h.comentarios ? ' — ' + esc(h.comentarios) : ''}</li>`).join('') + '</ul>' : '';
+  $('#seg-error').hidden = true;
+  $('#dlg-seg').showModal();
+}
+fs.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); });
+fs.addEventListener('submit', async e => {
+  const modo = e.submitter?.value;
+  if (modo !== 'guardar' && modo !== 'ficha') return;
+  e.preventDefault();
+  if (modo === 'guardar' && !fs.reportValidity()) return;
+  const x = siguiendo;
+  const p = { accion: modo === 'guardar' ? 'seguimiento' : 'ficha', paciente: x.paciente, telefono: x.telefono || '',
+    adherencia: fs.adherencia.value, estado: fs.estado.value, riesgo: fs.riesgo.checked, objetivo: fs.objetivo.value.trim(), notas: fs.notas.value.trim() };
+  if (x.id) p.paciente_id = x.id;
+  if (!x.id && x.ultima) p.ultima_consulta = x.ultima;
+  if (modo === 'guardar') Object.assign(p, { fecha: fs.fecha.value, respondio: fs.respondio.value === 'true', comentarios: fs.comentarios.value.trim(), resultado: fs.resultado.value.trim() });
+  await guardar(p, $('#seg-error'), $('#dlg-seg'), modo === 'guardar' ? 'Seguimiento anotado.' : 'Ficha guardada.');
+});
+
+// ---------- clics
+async function accion(btn, pedido, ok) {
+  btn.disabled = true;
+  const r = await enviar(pedido).catch(() => ({ ok: false, motivo: 'Sin conexión.' }));
+  const dlg = btn.closest('dialog');
+  if (r.ok) { dlg?.close(); aviso(ok); await cargar(); return; }
+  btn.disabled = false;
+  if (dlg) { const er = dlg.querySelector('.error'); er.textContent = r.motivo || 'No se pudo guardar.'; er.hidden = false; }
+  else aviso(r.motivo || 'No se pudo guardar.');
+}
+document.addEventListener('click', async e => {
+  const t = e.target;
+  const tab = t.closest('.tab, [data-vista-ir]');
+  if (tab) { vista = tab.dataset.vista || tab.dataset.vistaIr; if (tab.dataset.vistaIr === 'agenda') { C.modo = 'dia'; C.fecha = D.hoy; } pintar(); scrollTo(0, 0); return; }
+  const ce = t.closest('[data-cerrar]'); if (ce) { ce.closest('dialog').close(); return; }
+  const ed = t.closest('[data-editar]');
+  if (ed) {
+    const campos = JSON.parse(ed.dataset.campos);
+    return accion(ed, { accion: 'editar', id: Number(ed.dataset.editar), ...campos },
+      campos.estado ? 'Marcada: ' + campos.estado : campos.pago ? 'Pago: ' + campos.pago : 'Anotado: ya se le escribió hoy.');
+  }
+  const lib = t.closest('[data-liberar]');
+  if (lib) {
+    const c = buscarCita(lib.dataset.liberar);
+    if (!confirm(`¿Cancelar la cita de ${c.paciente} del ${fechaLarga(c.fecha)} a las ${c.hora}? El horario queda libre para otra persona.`)) return;
+    return accion(lib, { accion: 'editar', id: c.id, estado: 'Cancelada' }, 'Cita cancelada: el horario quedó libre.');
+  }
+  const af = t.closest('[data-abrir-ficha]'); if (af) { abrirCita(buscarCita(af.dataset.abrirFicha)); return; }
+  if (t.closest('[data-demo-wa]')) { aviso('En práctica no se abre WhatsApp. En la versión real se abre con el mensaje ya escrito.'); return; }
+  const sec = t.closest('[data-sec]'); if (sec) { H.sec = sec.dataset.sec; H.limite = 30; pintarHoy(); if (innerWidth < 900) $('#hoy-lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  const nv = t.closest('[data-no-volvera]');
+  if (nv) {
+    const c = buscarCita(nv.dataset.noVolvera);
+    if (!confirm(`¿${c.paciente} no volverá? Sale de estas listas y su ficha de seguimiento queda inactiva.`)) return;
+    return accion(nv, { accion: 'ficha', paciente: c.paciente, telefono: c.telefono || '', estado: 'Inactivo' }, 'Listo: no volverá a aparecer.');
+  }
+  const av = t.closest('[data-aviso-cir]'); if (av) return accion(av, { accion: 'aviso_cirugia', id: Number(av.dataset.avisoCir), hito: av.dataset.hito }, 'Anotado.');
+  if (t.closest('[data-ver-mas]')) { if (vista === 'hoy') { H.limite += 50; pintarHoy(); } else if (vista === 'cobros') { CB.limite += 50; pintarCobros(true); } else { S.limite += 50; pintarSeguimiento(true); } return; }
+  const mv = t.closest('[data-cal-mover]');
+  if (mv) { const n = Number(mv.dataset.calMover); C.fecha = C.modo === 'dia' ? sumar(C.fecha, n) : C.modo === 'semana' ? sumar(C.fecha, 7 * n)
+      : (() => { const [y, m] = C.fecha.split('-').map(Number), d = new Date(Date.UTC(y, m - 1 + n, 1)); return d.toISOString().slice(0, 10); })(); pintarAgenda(); return; }
+  if (t.closest('[data-cal-hoy]')) { C.fecha = D.hoy; pintarAgenda(); return; }
+  const nd = t.closest('[data-nueva-en]'); if (nd) { const [fecha, hora] = nd.dataset.nuevaEn.split('T'); abrirCita(null, { fecha, hora }); return; }
+  const chip = t.closest('.chip-cita'); if (chip) { abrirCita(buscarCita(chip.dataset.abrir)); return; }
+  const idia = t.closest('[data-ir-dia]'); if (idia && !t.closest('[data-abrir]')) { C.fecha = idia.dataset.irDia; C.modo = 'dia'; pintarAgenda(); return; }
+  const cb = t.closest('[data-cob]'); if (cb) { CB.sec = cb.dataset.cob; CB.limite = 30; pintarCobros(); return; }
+  if (t.closest('[data-descargar]')) { descargarVentas(); return; }
+  const st = t.closest('[data-seg-toca]'); if (st) { S.toca = st.dataset.segToca; S.limite = 30; S.texto = ''; pintarSeguimiento(); return; }
+  const med = t.closest('[data-medir]'); if (med) { $('#dlg-cita').close(); abrirMedicion(buscarCita(med.dataset.medir)); return; }
+  const re = t.closest('[data-reagendar]');
+  if (re) { const c = buscarCita(re.dataset.reagendar); abrirCita(null, { paciente: c.paciente, telefono: c.telefono, email: c.email, lead_id: c.lead_id, modalidad: c.modalidad, tipo: 'Control' }); return; }
+  const ag = t.closest('[data-agendar-nombre]'); if (ag) { abrirCita(null, { paciente: ag.dataset.agendarNombre, telefono: ag.dataset.agendarTel, tipo: 'Post operación' }); return; }
+  if (t.id === 'seg-agendar') { const x = siguiendo; $('#dlg-seg').close(); abrirCita(null, { paciente: x.paciente, telefono: x.telefono, tipo: 'Control' }); return; }
+  const sa = t.closest('[data-seg-abrir]'); if (sa) { abrirSeg(D.seguimiento[sa.dataset.segAbrir]); return; }
+  if (t.closest('a, button, summary, input, select, label')) return;
+  const ab = t.closest('[data-abrir]'); if (ab) { abrirCita(buscarCita(ab.dataset.abrir)); return; }
+  const sg = t.closest('[data-seg]'); if (sg) abrirSeg(D.seguimiento[sg.dataset.seg]);
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.target.closest?.('a, button, input, select, textarea')) return;
+  const ab = e.target.closest?.('[data-abrir]'); if (ab) abrirCita(buscarCita(ab.dataset.abrir));
+  const sg = e.target.closest?.('[data-seg]'); if (sg) abrirSeg(D.seguimiento[sg.dataset.seg]);
+});
+$('#f-texto').addEventListener('input', e => { F.texto = e.target.value; pintarAgenda(); });
+document.querySelectorAll('[name=cal-prof]').forEach(r => r.addEventListener('change', e => { C.prof = e.target.value; pintarAgenda(); }));
+document.querySelectorAll('[name=cal-modo]').forEach(r => r.addEventListener('change', e => { C.modo = e.target.value; pintarAgenda(); }));
+let esperaCob; document.addEventListener('input', e => { const f = e.target.closest?.('.cob-f'); if (!f) return; CB[f.dataset.k] = f.value; clearTimeout(esperaCob);
+  esperaCob = setTimeout(() => { pintarCobros(true); document.querySelector(`.cob-f[data-k="${f.dataset.k}"]`)?.focus(); }, f.type === 'date' ? 700 : 0); });
+document.addEventListener('input', e => { if (e.target.id === 's-texto') { S.texto = e.target.value; S.limite = 30; pintarSeguimiento(true); } });
+$('#nueva').addEventListener('click', () => abrirCita(null));
+$('#consejo').hidden = guardado('consejo-visto') === '1';
+$('#consejo-ok').addEventListener('click', () => { guardado('consejo-visto', '1'); $('#consejo').hidden = true; });
+$('#recargar').addEventListener('click', () => cargar().then(ok => ok && aviso('Actualizado a las ' + horaLima() + '.')));
+
+const cargos = CARGOS.map(u => `<option>${u}</option>`).join('');
+$('#cargo').innerHTML = cargos; $('#cargo-acceso').innerHTML = '<option value="">Elige tu cargo</option>' + cargos;
+const cargoGuardado = CARGOS.includes(guardado('cargo')) ? guardado('cargo') : '';
+$('#cargo').value = cargoGuardado || CARGOS[0]; $('#cargo-acceso').value = cargoGuardado;
+$('#cargo').addEventListener('change', e => { guardado('cargo', e.target.value); vista = INICIO_POR_CARGO[e.target.value] || 'hoy'; pintar(); });
+$('#form-acceso').addEventListener('submit', e => {
+  e.preventDefault(); clave = $('#clave').value.trim();
+  guardado('clave', clave); guardado('cargo', $('#cargo-acceso').value); $('#cargo').value = $('#cargo-acceso').value;
+  vista = null; cargar();
+});
+
+// Prueba rápida: equipo.html?demo=1&selftest=1 (no toca la base).
+if (/selftest/.test(location.search)) {
+  const eq = (a, b, m) => console.assert(JSON.stringify(a) === JSON.stringify(b), m, a, b);
+  eq(turnos(LUNES), ['09:30', '10:15', '11:00', '11:45', '12:30'], 'lunes');
+  eq(turnos(MAR_JUE).length, 12, 'martes/jueves');
+  eq(turnos(MIERCOLES).at(-1), '18:00', 'miércoles termina 18:00');
+  eq(AGENDA.Presencial[diaSemana('2026-09-28')], undefined, 'lunes no hay presencial');
+  eq(sumar('2026-09-29', 5), '2026-10-04', 'sumar días');
+  eq(diasEntre('2026-09-29', '2026-10-04'), 5, 'días entre');
+  eq(telNorm('+51 987 654 321'), '987654321', 'teléfono peruano');
+  eq(telNorm('+34 612 345 678'), '34612345678', 'teléfono extranjero');
+  eq(quien({ telefono: '987654321', paciente: 'Luz María' }) === quien({ telefono: '987654321', paciente: 'Sol María' }), false, 'hermanas');
+  console.log('selftest terminado');
+}
+
+if (DEMO) { document.title += ' · práctica'; cargar(); }
+else if (clave) cargar(); else pedirAcceso();
+</script>
+</body>
+</html>

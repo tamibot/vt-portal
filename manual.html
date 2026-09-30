@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de la agenda · VT</title><meta name="robots" content="noindex">
+<link rel="icon" href="brand/VT-Verde.png">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--vo:#617618;--vp:#EEF4DE;--p:#F6F7F2;--t:#2F302A;--s:#6B6C62;--b:#E3E6D8;--wa:#187A43}
+*{box-sizing:border-box}
+body{margin:0;background:var(--p);color:var(--t);font:15px/1.6 Lato,system-ui,sans-serif}
+main{width:min(820px,100% - 32px);margin:0 auto;padding:28px 0 60px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+header img{height:28px}
+h1{font-size:24px;font-weight:900;margin:8px 0 4px}
+.intro{color:var(--s);margin:0 0 20px}
+nav.indice{display:flex;flex-wrap:wrap;gap:4px 14px;background:#fff;border:1px solid var(--b);border-radius:10px;padding:10px 14px;margin-bottom:22px;font-size:14px}
+nav.indice a{color:var(--vo);font-weight:700;text-decoration:none;white-space:nowrap}
+section{background:#fff;border:1px solid var(--b);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+h2{font-size:18px;font-weight:900;margin:0 0 8px;color:var(--vo)}
+h3{font-size:15px;font-weight:900;margin:14px 0 4px}
+p{margin:6px 0}
+ol,ul{margin:6px 0;padding-left:22px}
+li{margin:3px 0}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--b);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--s)}
+.btn{display:inline-block;border:1px solid var(--b);border-radius:6px;padding:0 7px;font-size:13px;font-weight:700;background:#fff;white-space:nowrap}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.pri{background:var(--vo);border-color:var(--vo);color:#fff}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.nota{background:var(--vp);border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0}
+.aviso{background:#FDEEE3;border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0}
+a{color:var(--vo)}
+@media (max-width:600px){ table{font-size:13px} section{padding:14px} }
+</style>
+</head>
+<body><main>
+<header><img src="brand/VT-Hoja-membretada.png" alt="VT Nutricionistas"></header>
+<h1>Manual de la Agenda del equipo</h1>
+<p class="intro">Todo lo que necesitas para usar la agenda en 5 minutos.</p>
+
+<nav class="indice"><a href="#entrar">1. Entrar</a><a href="#tareas">2. Tareas</a><a href="#mensajes">3. Mensajes</a><a href="#calendario">4. Calendario</a><a href="#cita">5. Crear una cita</a><a href="#cobros">6. Cobros</a><a href="#seguimiento">7. Seguimiento</a><a href="#reglas">8. Reglas</a><a href="#dudas">9. Dudas</a></nav>
+
+<section id="entrar">
+  <h2>1. Entrar</h2>
+  <ol>
+    <li>Abre <a href="equipo.html">tamibot.github.io/vt-portal/equipo.html</a> (en la computadora o en el celular).</li>
+    <li>Escribe la <b>clave del equipo</b> (te la pasan por privado; no la compartas).</li>
+    <li>Elige tu <b>cargo</b>. La asistente entra a <b>Tareas</b>; la nutricionista del equipo, a <b>Seguimiento</b>.</li>
+  </ol>
+  <p>Arriba tienes cuatro pestañas: <b>Tareas</b>, <b>Calendario</b>, <b>Seguimiento</b> y <b>Cobros</b>. El número rojo es lo que falta hacer. El botón <span class="btn">↻</span> trae los últimos cambios (también se actualiza solo cada 10 minutos).</p>
+</section>
+
+<section id="tareas">
+  <h2>2. Tareas: lo que hay que hacer hoy</h2>
+  <p>A la izquierda (en el celular, arriba) están las listas con pendientes. Eliges una y a la derecha salen las pacientes. Cada fila dice <b>cuándo</b>, <b>quién</b>, <b>por qué aparece</b> y <b>qué hacer</b>.</p>
+  <h3>Siempre son 3 pasos</h3>
+  <ol>
+    <li>Toca <span class="btn wa">WhatsApp</span>: se abre el chat con el mensaje <b>ya escrito</b>. Revísalo y envíalo.</li>
+    <li>Cuando la paciente responda, marca lo que pasó: <span class="btn">Confirmó ✓</span>, <span class="btn">Pagó ✓</span>, <span class="btn">Asistió ✓</span>…</li>
+    <li>Si todavía no responde, toca <span class="btn">Ya le escribí</span>: sale de la lista de hoy y nadie más le vuelve a escribir.</li>
+  </ol>
+  <table>
+    <tr><th>Lista</th><th>Para qué</th><th>Botones</th></tr>
+    <tr><td><b>Confirmar citas</b></td><td>De 5 a 7 días antes: pedir confirmación. Un día antes: recordatorio con indicaciones (dirección o Zoom).</td><td>Pedir confirmación / Enviar recordatorio · Chat · Confirmó · Ya le escribí</td></tr>
+    <tr><td><b>Cobrar</b></td><td>Citas sin pagar (48 horas para pagar). Dice cuánto si ya se eligió el servicio.</td><td>Enviar datos de pago · Chat · Pagó · Pagó 25 % · Liberar horario (si pasaron 48 h)</td></tr>
+    <tr><td><b>¿Vino a su cita?</b></td><td>Solo citas que estaban <b>confirmadas</b> y ya pasaron.</td><td>Asistió · No asistió</td></tr>
+    <tr><td><b>Sin confirmar o reprogramaron</b></td><td>No respondieron, su cita pasó sin confirmarse, o reprogramaron y no tienen nueva fecha. Se sigue con ellas aparte.</td><td>Insistir · Confirmó · Agendar</td></tr>
+    <tr><td><b>Reagendar (no vinieron)</b></td><td>Faltaron y no tienen otra cita.</td><td>WhatsApp · Agendar · No volverá</td></tr>
+    <tr><td><b>Invitar a su control</b></td><td>Vinieron hace 2 semanas a 4 meses y no volvieron a agendar.</td><td>WhatsApp · Ya le escribí · Agendar · No volverá</td></tr>
+    <tr><td><b>Reactivar pacientes</b></td><td>Vinieron hace 4 a 12 meses.</td><td>Igual que la anterior</td></tr>
+    <tr><td><b>Ventas sin cerrar</b></td><td>Llenaron «Descubre tu plan» o reservaron y no pagaron. Se trabajan en Kommo.</td><td>Abrir en Kommo</td></tr>
+    <tr><td><b>Revisar datos importados</b></td><td>Citas traídas del calendario con algo dudoso (la nota dice qué). Ábrela, corrige y borra la línea «[REVISAR]».</td><td>Clic en la fila</td></tr>
+  </table>
+  <div class="nota"><b>«Falta el precio»</b> o <b>«Falta el teléfono»</b> en lugar del botón verde: abre la ficha, completa el dato y guarda. <b>«No volverá»</b> saca a la paciente de todas las listas de recuperación.</div>
+</section>
+
+<section id="mensajes">
+  <h2>3. Los botones de WhatsApp y los mensajes</h2>
+  <p>En cada fila hay <b>dos botones</b>:</p>
+  <ul>
+    <li><span class="btn wa">Enviar recordatorio</span> (o «Pedir confirmación», «Enviar datos de pago»): abre WhatsApp con el <b>mensaje ya escrito</b> por Vanessa. Revísalo y envía.</li>
+    <li><span class="btn">Chat</span>: abre WhatsApp <b>sin mensaje</b>, para escribir lo que quieras a mano.</li>
+  </ul>
+  <table>
+    <tr><th>Mensaje</th><th>Cuándo</th></tr>
+    <tr><td><b>Pedir confirmación</b></td><td>De 5 a 7 días antes. Es igual para virtual y presencial. Dice que solo se puede reagendar hasta 3 días hábiles antes y que si no responde en 48 horas la cita queda confirmada.</td></tr>
+    <tr><td><b>Recordatorio</b></td><td>Un día antes. Cambia solo: virtual con la Lic. Vanessa, virtual con el equipo, presencial con la Lic. Vanessa y presencial con el equipo. El presencial incluye qué hacer si llega tarde (la cita puede empezar por teléfono).</td></tr>
+    <tr><td><b>Datos de pago</b></td><td>Cuando la cita está pendiente de pago. Tiene 48 horas y luego se libera el turno.</td></tr>
+  </table>
+  <div class="nota">Los mensajes están en la base de datos, no en la página: si Vanessa quiere cambiar una palabra, se cambia en un solo lugar y vale para todas.</div>
+  <div class="aviso"><b>Por ahora todo se envía a mano.</b> El envío automático (recordatorios solos, botones «Confirmo / Reprogramo» dentro del mensaje) necesita un número de WhatsApp Business y tiene un costo aproximado de S/100 al mes; está pendiente de decidir.</div>
+</section>
+
+<section id="calendario">
+  <h2>4. Calendario</h2>
+  <ul>
+    <li><b>Día</b>: todos los turnos del horario de Vanessa. Los libres tienen <span class="btn">+ Agendar aquí</span>.</li>
+    <li><b>Semana</b>: una columna por día. Toca el día para verlo completo.</li>
+    <li><b>Mes</b>: hasta 3 citas por día y «+N más». Toca el día para abrirlo.</li>
+    <li><span class="btn">‹</span> <span class="btn">Hoy</span> <span class="btn">›</span> para moverte. El buscador encuentra a una paciente por nombre o teléfono.</li>
+    <li><b>Todas · Lic. Vanessa · Equipo</b>: elige de quién ver la agenda. Las citas de las otras nutricionistas se llaman siempre «Nutricionista del equipo» (nunca por su nombre) y no ocupan los horarios de Vanessa.</li>
+  </ul>
+  <p>Colores: <span class="dot" style="background:#E9B949"></span>por confirmar · <span class="dot" style="background:#3B7DD8"></span>confirmada · <span class="dot" style="background:#6E9A22"></span>asistió · <span class="dot" style="background:#D14343"></span>no asistió. <b>P</b> = presencial, <b>V</b> = virtual. Las canceladas no se muestran.</p>
+  <p>Toca cualquier cita para abrir su <b>ficha</b>.</p>
+</section>
+
+<section id="cita">
+  <h2>5. Crear o editar una cita</h2>
+  <ol>
+    <li>Toca <span class="btn pri">+ Nueva cita</span> (o «+ Agendar aquí» en el calendario).</li>
+    <li><b>Nombre</b>: escribe y elige de la lista si ya es paciente (se llenan su teléfono y correo). Si no tenía teléfono, <b>escríbelo una vez</b>: queda guardado para siempre.</li>
+    <li><b>Presencial / Virtual</b>, <b>fecha</b> y toca un <b>horario libre</b> (los tachados están ocupados).</li>
+    <li><b>Servicio</b> (pone el precio de lista solo). Si hay descuento, escribe el <b>porcentaje</b> (100 % = cortesía): el precio final se calcula solo y se puede corregir.</li>
+    <li><b>Pago</b>: Por pagar, Adelanto 25 %, Pagado, Cortesía, Paquete o <b>Pendiente clínica</b> (la paga una clínica a fin de mes; escribe quién paga).</li>
+    <li><span class="btn pri">Guardar</span>. En «Más datos» están el enlace de Zoom, las notas y «permitir horario compartido» (dos familiares juntos).</li>
+  </ol>
+  <p>En la ficha de una cita existente tienes arriba los botones para marcar (<b>Confirmó, Asistió, No asistió, Pagó todo, Cancelar cita, Registrar resultados</b>) y los mensajes de WhatsApp: pedir confirmación, recordatorio con indicaciones, datos de pago y cita confirmada con condiciones.</p>
+  <div class="nota"><b>Registrar resultados</b>: peso, % grasa, músculo, grasa visceral, % agua, IMC y recomendaciones (una por línea). Al guardar, la cita queda como «Asistió».</div>
+  <div class="nota"><b>Paquetes:</b> si el servicio es un paquete, aparece «Es un paquete de N citas». La <b>primera cita lleva el pago</b>. Las siguientes quedan como «Paquete» (sin cobro) y se numeran «2 de 4», «3 de 4»… Cuando agendes a una paciente que ya tiene un paquete, te avisa «usó 2 de 4» y marcas «cita 3 de 4». Los paquetes con citas por usar están en <b>Cobros → Paquetes</b>.</div>
+  <div class="aviso">El sistema no deja poner dos citas de la Lic. Vanessa a la misma hora. Si de verdad van juntas, marca «permitir horario compartido» en «Más datos».</div>
+</section>
+
+<section id="cobros">
+  <h2>6. Cobros y ventas</h2>
+  <p>Cada lista tiene su propio lugar, para no mezclar pagos, citas y paquetes:</p>
+  <table>
+    <tr><th>Lista</th><th>Qué muestra</th></tr>
+    <tr><td><b>Por cobrar</b></td><td>Citas sin pagar o con pago parcial (25 %). Botones: datos de pago, Pagó.</td></tr>
+    <tr><td><b>Pagaron el 25 %</b></td><td>Falta el saldo, que se paga antes de la cita.</td></tr>
+    <tr><td><b>Pagadas</b></td><td>Lo ya pagado (incluye cortesías).</td></tr>
+    <tr><td><b>Clínicas por cobrar</b></td><td>Citas que paga una clínica. Cuando depositen, toca «Clínica pagó».</td></tr>
+    <tr><td><b>Paquetes</b></td><td>Quién tiene un paquete y cuántas citas le faltan. «Agendar su cita 3».</td></tr>
+    <tr><td><b>Informe de ventas</b></td><td>Filtra por fechas, pago, modalidad y profesional, ve el cobrado y lo pendiente, y toca <span class="btn pri">Descargar Excel</span>.</td></tr>
+  </table>
+  <p>Una cita <b>pagada no aparece en las listas de no pagadas</b>. Si ves una pagada en «Por cobrar», toca <span class="btn">Pagó ✓</span> y sale.</p>
+  <div class="nota"><b>«Falta elegir el servicio»</b> significa que la cita no tiene precio todavía: ábrela, elige el servicio y guarda.</div>
+</section>
+
+<section id="seguimiento">
+  <h2>7. Seguimiento nutricional</h2>
+  <p>Quien asiste a una cita entra sola a esta lista. Se le escribe <b>3 días</b> y <b>1 semana</b> después de su consulta, y luego <b>cada 2 semanas</b>.</p>
+  <ol>
+    <li>Elige <b>Le toca hoy</b> (también: próximos 7 días, en riesgo, adherencia baja, inactivos).</li>
+    <li>Toca <span class="btn wa">WhatsApp</span> y envía el mensaje.</li>
+    <li>Toca <span class="btn">Anotar</span>: ¿respondió?, qué contó, resultado, adherencia y si está en riesgo. <b>Anotar seguimiento</b> calcula la próxima fecha sola.</li>
+  </ol>
+  <p><b>Operados · 6 meses y 1 año</b>: pacientes a quienes se les cumple ese tiempo de su cirugía (dos semanas antes o después). WhatsApp → Ya le escribí → Agendar.</p>
+</section>
+
+<section id="reglas">
+  <h2>8. Reglas que ya aplica la agenda</h2>
+  <ul>
+    <li>Horario: lunes virtual 9:30–12:30 · martes y jueves presencial o virtual 8:15–17:30 (almuerzo 14:15–15:15) · miércoles virtual 14:15–18:00. Citas cada 45 minutos.</li>
+    <li>Paciente nueva paga el 100 % al reservar. Tienen 48 horas para pagar o se libera el turno. (El adelanto del 25 % sigue disponible para pacientes de seguimiento.)</li>
+    <li>Confirmaciones: de 5 a 7 días antes y 1 día antes (el viernes ya salen las del lunes). Solo se puede reagendar dentro de los 5 a 7 días.</li>
+    <li>La página de reservas solo ofrece horas libres de esta misma agenda, y cada reserva web aparece aquí sola.</li>
+    <li>Las citas quedan también en el lead de Kommo de la paciente.</li>
+  </ul>
+</section>
+
+<section id="dudas">
+  <h2>9. Dudas frecuentes</h2>
+  <h3>Me equivoqué al marcar algo</h3><p>Abre la ficha y corrige el pago (en «Pago») o el estado (en «Más datos») y guarda. Todo cambio queda registrado con el cargo de quien lo hizo.</p>
+  <h3>No aparece una paciente</h3><p>Búscala en <b>Calendario</b> (buscador). Si no tiene citas, créala con <b>+ Nueva cita</b>.</p>
+  <h3>Dice «No se pudo conectar»</h3><p>Revisa tu internet y toca <span class="btn">↻</span>. Si sigue, avisa a soporte.</p>
+</section>
+</main></body></html>
