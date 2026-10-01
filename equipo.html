@@ -888,7 +888,7 @@ function pintarDia() {
     if (tapado || f < D.hoy || (f === D.hoy && h < horaLima())) return '';
     return filaLibre({ clase: 'libre', cuando: [h, ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
   }).join('');
-  $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio.slice(0, 10) <= f && b.fin.slice(0, 10) >= f && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(b.inicio)} a ${esc(b.fin)} · ${esc(b.motivo)} <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Desbloquear</button></p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
+  $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(b.inicio)} a ${esc(b.fin)} · ${esc(b.motivo)} <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Desbloquear</button></p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
 }
 
 function pintarSemana() {
@@ -902,7 +902,7 @@ function pintarSemana() {
     const del = citas.filter(c => c.fecha === d);
     const atiende = AGENDA.Virtual[diaSemana(d)] || AGENDA.Presencial[diaSemana(d)];
     return `<div class="col"><button type="button" class="col-cab ${d === D.hoy ? 'hoy' : ''}" data-ir-dia="${d}">${DSEM[(diaSemana(d) + 6) % 7]}<b>${new Date(d + 'T12:00:00Z').getUTCDate()}</b>${del.length ? del.length + ' cita' + (del.length > 1 ? 's' : '') : ''}</button>
-      <div class="col-cuerpo">${del.map(chipCita).join('') || `<p class="libre">${atiende || C.prof === 'Nutricionista del equipo' ? 'Sin citas' : 'No atiende'}</p>`}</div></div>`;
+      <div class="col-cuerpo">${(D.bloqueos || []).filter(b => b.inicio < sumar(d, 1) + 'T00:00' && b.fin > d + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado · ${esc(b.motivo)}</p>`).join('')}${del.map(chipCita).join('') || `<p class="libre">${atiende || C.prof === 'Nutricionista del equipo' ? 'Sin citas' : 'No atiende'}</p>`}</div></div>`;
   }).join('') + '</div>';
 }
 
