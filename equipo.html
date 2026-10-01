@@ -644,7 +644,7 @@ function demoEnviar(p) {
   if (p.accion === 'crear' && p.paquete_total) D.paquetes.push({ id: Date.now(), paciente: p.paciente, telefono: p.telefono, servicio: p.servicio, total: Number(p.paquete_total), usadas: 1 });
   if (p.accion === 'crear') D.citas.push({ ...datos, id: Date.now(), creado: D.hoy + ' 12:00', duracion_min: 45, monto: datos.monto === '' ? null : Number(datos.monto),
     recurrente: D.pacientes.find(x => x.nombre === p.paciente)?.recurrente ?? (!!p.tipo && p.tipo !== 'Primera cita') });
-  else if (p.accion === 'editar') Object.assign(v, datos, { id: v.id }, 'monto' in datos ? { monto: datos.monto === '' ? null : Number(datos.monto) } : {});
+  else if (p.accion === 'editar') Object.assign(v, datos, p.pago === 'Pagado' ? { pago_por_revisar: false } : {}, { id: v.id }, 'monto' in datos ? { monto: datos.monto === '' ? null : Number(datos.monto) } : {});
   else if (p.accion === 'medicion') Object.assign(v, { estado: 'Asistió', medicion: datos });
   D.citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
   return { ok: true };
@@ -777,7 +777,7 @@ function seccionesHoyBase() {
     { id: 'por-reagendar', titulo: 'Por reagendar', ayuda: 'Pidieron mover la cita y todavía no tienen fecha. Su turno anterior queda libre.',
       items: D.citas.filter(c => permite(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c))).map(c => tarjeta(c, {
         motivo: 'Sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
-    { id: 'no-responde', titulo: 'No responde (sin cita)', ayuda: 'Conversaciones sin cita vigente que esperan respuesta de la paciente. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : ''),
+    { id: 'no-responde', titulo: 'No responde (sin cita)', ayuda: 'Conversaciones sin cita vigente que esperan respuesta de la paciente. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
       items: (D.conversaciones || []).filter(c => c.estado === 'No responde').map(c => filaLibre({ quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`] })) },
     { id: 'hoy', titulo: 'Citas de hoy', ayuda: 'Quién viene hoy.',
       items: hoy.map(c => tarjeta(c, { mostrarFecha: false, acciones: [wa(c, 'cita'),
@@ -809,6 +809,7 @@ function seccionesHoyBase() {
       items: D.sin_marcar.filter(c => permite(c) && c.estado === 'Confirmada').map(c => tarjeta(c, { acciones: [boton('Asistió ✓', c.id, { estado: 'Asistió' }, 'hecho'), boton('No asistió', c.id, { estado: 'No asistió' })] })) },
     { id: 'sin-confirmar', titulo: 'Sin confirmar', ayuda: 'Pacientes que no respondieron, cuya cita pasó sin confirmarse, o que reprogramaron y aún no tienen nueva cita. Sigue con ellas por separado.',
       items: sinConfirmar.filter(x => permite(x.c) && !esperando(x.c)).map(x => tarjeta(x.c, { motivo: x.motivo, acciones: x.acciones })) },
+    { id: 'revisar-pagos', titulo: 'Verificar pagos importados', ayuda: 'El calendario trajo un importe sin evidencia explícita del pago. Verifica el comprobante antes de darlo por cobrado.', items: D.citas.filter(c => permite(c) && c.pago_por_revisar).map(c => tarjeta(c, { motivo: 'Pago importado sin respaldo explícito', acciones: [boton('Pago verificado', c.id, { pago: 'Pagado' }, 'hecho')] })) },
     { id: 'revisar', titulo: 'Revisar datos importados', ayuda: 'Citas traídas del calendario y de Kommo con algo por confirmar. Ábrela, corrígela y borra la línea «[REVISAR]» de las notas.',
       items: D.citas.filter(c => permite(c) && porRevisar(c)).map(c => tarjeta(c, { motivo: esc((c.notas.match(/\[REVISAR\] ([^\n]*)/) || [])[1] || '') })) },
     { id: 'no-asistio', titulo: 'Reagendar (no vinieron)', ayuda: 'No vinieron a su última cita y no tienen otra.',
@@ -825,7 +826,7 @@ function seccionesHoyBase() {
 }
 
 const H = { sec: null, limite: 30, prof: '' };
-const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar']]];
+const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
   const secs = Object.fromEntries(seccionesHoy().map(s => [s.id, s]));
@@ -998,12 +999,12 @@ function fichaDe(c) {
   return D.pacientes.find(x => x.nombre === c.paciente && (!c.telefono || !x.telefono || x.telefono === c.telefono)) || {};
 }
 function descargarVentas() {
-  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita'];
+  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar'];
   const celda = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // que Excel no ejecute fórmulas
     return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
     c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', c.pago, c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
-    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado]);
+    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No']);
   const csv = '﻿sep=;\n' + [cab, ...filas].map(f => f.map(celda).join(';')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   a.download = `ventas-vt-${D.hoy}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -1026,7 +1027,7 @@ function pintarCobros(soloLista) {
       : '<p class="vacio">Todavía no hay paquetes con citas por usar. Al agendar un paquete, aparece aquí.</p>';
   } else if (CB.sec === 'ventas') {
     const V = ventasFiltradas(), sum = f => V.filter(f).reduce((n, c) => n + finales(c), 0);
-    const cobrado = sum(c => ['Pagado'].includes(c.pago)) + sum(c => c.pago === 'Adelanto 25%') * .25;
+    const cobrado = sum(c => c.pago === 'Pagado' && !c.pago_por_revisar) + sum(c => c.pago === 'Adelanto 25%') * .25;
     const pend = sum(c => c.pago === 'Por pagar') + sum(c => c.pago === 'Adelanto 25%') * .75;
     const mes = D.hoy.slice(0, 7);
     cuerpo = `<div class="ventas-filtros">
@@ -1039,9 +1040,9 @@ function pintarCobros(soloLista) {
       <label>Servicio<select class="cob-f" data-k="servicio"><option value="">Todos</option>${[...new Set(D.citas.map(c => c.servicio).filter(Boolean))].sort().map(x => `<option ${CB.servicio === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
       <button type="button" class="btn" data-periodo="semana">Esta semana</button><button type="button" class="btn" data-periodo="mes">Este mes</button>
       <button type="button" class="btn pri" data-descargar>Descargar Excel</button></div>
-      <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length ? ` <small>(${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
+      <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length ? ` <small>(${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Pagos por verificar <b>S/${soles(sum(c => c.pago_por_revisar))}</b></span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
       <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th></tr>
-      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
+      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}${c.pago_por_revisar ? ' · por verificar' : ''}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
   } else {
     const L = citas.filter(filtro).sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
     const vis = L.slice(0, CB.limite), resto = L.length - vis.length;
