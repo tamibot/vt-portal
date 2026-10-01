@@ -59,14 +59,17 @@ a{color:var(--vo)}
   <ol>
     <li>Toca <span class="btn wa">WhatsApp</span>: se abre el chat con el mensaje <b>ya escrito</b>. Revísalo y envíalo.</li>
     <li>Cuando la paciente responda, marca lo que pasó: <span class="btn">Confirmó ✓</span>, <span class="btn">Pagó ✓</span>, <span class="btn">Asistió ✓</span>…</li>
-    <li>Si todavía no responde, toca <span class="btn">Ya le escribí</span>: sale de la lista de hoy y nadie más le vuelve a escribir.</li>
+    <li>Si todavía no responde, toca <span class="btn">Ya le escribí</span>: sale de la lista principal y pasa a <b>Pendiente de respuesta</b>. Allí puedes marcar Respondió, Confirmó, Pagó, Por reagendar o Cancelar.</li>
   </ol>
   <table>
     <tr><th>Lista</th><th>Para qué</th><th>Botones</th></tr>
     <tr><td><b>Confirmar citas</b></td><td>De 5 a 7 días antes: pedir confirmación. Un día antes: recordatorio con indicaciones (dirección o Zoom).</td><td>Pedir confirmación / Enviar recordatorio · Chat · Confirmó · Ya le escribí</td></tr>
     <tr><td><b>Cobrar</b></td><td>Citas sin pagar (48 horas para pagar). Dice cuánto si ya se eligió el servicio.</td><td>Enviar datos de pago · Chat · Pagó · Pagó 25 % · Liberar horario (si pasaron 48 h)</td></tr>
     <tr><td><b>¿Vino a su cita?</b></td><td>Solo citas que estaban <b>confirmadas</b> y ya pasaron.</td><td>Asistió · No asistió</td></tr>
-    <tr><td><b>Sin confirmar o reprogramaron</b></td><td>No respondieron, su cita pasó sin confirmarse, o reprogramaron y no tienen nueva fecha. Se sigue con ellas aparte.</td><td>Insistir · Confirmó · Agendar</td></tr>
+    <tr><td><b>Sin confirmar</b></td><td>Su cita pasó sin confirmarse. Se sigue con ellas aparte.</td><td>Insistir · Confirmó · Agendar</td></tr>
+    <tr><td><b>Pendiente de respuesta</b></td><td>Ya se les escribió. La revisión de conversaciones actualiza las respuestas cada 3 horas; también puedes marcarlas manualmente.</td><td>Respondió · Confirmó · Pagó · Por reagendar</td></tr>
+    <tr><td><b>Por reagendar</b></td><td>Pidieron otra fecha y todavía no la conocen. El horario anterior queda libre.</td><td>Escribir · Agendar</td></tr>
+    <tr><td><b>No responde (sin cita)</b></td><td>Conversaciones que esperan respuesta y no tienen cita vigente.</td><td>Abrir conversación</td></tr>
     <tr><td><b>Reagendar (no vinieron)</b></td><td>Faltaron y no tienen otra cita.</td><td>WhatsApp · Agendar · No volverá</td></tr>
     <tr><td><b>Invitar a su control</b></td><td>Vinieron hace 2 semanas a 4 meses y no volvieron a agendar.</td><td>WhatsApp · Ya le escribí · Agendar · No volverá</td></tr>
     <tr><td><b>Reactivar pacientes</b></td><td>Vinieron hace 4 a 12 meses.</td><td>Igual que la anterior</td></tr>
@@ -85,7 +88,7 @@ a{color:var(--vo)}
   </ul>
   <table>
     <tr><th>Mensaje</th><th>Cuándo</th></tr>
-    <tr><td><b>Pedir confirmación</b></td><td>De 5 a 7 días antes. Es igual para virtual y presencial. Dice que solo se puede reagendar hasta 3 días hábiles antes y que si no responde en 48 horas la cita queda confirmada.</td></tr>
+    <tr><td><b>Pedir confirmación</b></td><td>De 5 a 7 días antes. Es igual para virtual y presencial. Dice que solo se puede reagendar hasta 3 días hábiles antes Las condiciones del mensaje se revisan con Vanessa; la cancelación automática a los 3 días sigue pendiente de definir qué citas alcanza.</td></tr>
     <tr><td><b>Recordatorio</b></td><td>Un día antes. Cambia solo: virtual con la Lic. Vanessa, virtual con el equipo, presencial con la Lic. Vanessa y presencial con el equipo. El presencial incluye qué hacer si llega tarde (la cita puede empezar por teléfono).</td></tr>
     <tr><td><b>Datos de pago</b></td><td>Cuando la cita está pendiente de pago. Tiene 48 horas y luego se libera el turno.</td></tr>
   </table>
@@ -94,7 +97,7 @@ a{color:var(--vo)}
 </section>
 
 <section id="calendario">
-  <h2>4. Calendario</h2>
+  <h2>4. Calendario</h2><p><b>Bloquear agenda</b> permite cerrar un turno o un día completo por profesional. Si tiene citas, primero debes reagendarlas. Los bloqueos también impiden reservas desde la web. Para retirarlos, abre ese día y toca <b>Desbloquear</b>.</p>
   <ul>
     <li><b>Día</b>: todos los turnos del horario de Vanessa. Los libres tienen <span class="btn">+ Agendar aquí</span>.</li>
     <li><b>Semana</b>: una columna por día. Toca el día para verlo completo.</li>
@@ -132,7 +135,7 @@ a{color:var(--vo)}
     <tr><td><b>Pagadas</b></td><td>Lo ya pagado (incluye cortesías).</td></tr>
     <tr><td><b>Clínicas por cobrar</b></td><td>Citas que paga una clínica. Cuando depositen, toca «Clínica pagó».</td></tr>
     <tr><td><b>Paquetes</b></td><td>Quién tiene un paquete y cuántas citas le faltan. «Agendar su cita 3».</td></tr>
-    <tr><td><b>Informe de ventas</b></td><td>Filtra por fechas, pago, modalidad y profesional, ve el cobrado y lo pendiente, y toca <span class="btn pri">Descargar Excel</span>.</td></tr>
+    <tr><td><b>Informe de ventas</b></td><td>Filtra por fechas, semana o mes, pago, estado de la cita, servicio, modalidad y profesional, ve el cobrado y lo pendiente, y toca <span class="btn pri">Descargar Excel</span>.</td></tr>
   </table>
   <p>Una cita <b>pagada no aparece en las listas de no pagadas</b>. Si ves una pagada en «Por cobrar», toca <span class="btn">Pagó ✓</span> y sale.</p>
   <div class="nota"><b>«Falta elegir el servicio»</b> significa que la cita no tiene precio todavía: ábrela, elige el servicio y guarda.</div>
@@ -163,7 +166,7 @@ a{color:var(--vo)}
 <section id="dudas">
   <h2>9. Dudas frecuentes</h2>
   <h3>Me equivoqué al marcar algo</h3><p>Abre la ficha y corrige el pago (en «Pago») o el estado (en «Más datos») y guarda. Todo cambio queda registrado con el cargo de quien lo hizo.</p>
-  <h3>No aparece una paciente</h3><p>Búscala en <b>Calendario</b> (buscador). Si no tiene citas, créala con <b>+ Nueva cita</b>.</p>
+  <h3>No aparece una paciente</h3><p>Búscala en <b>Calendario</b> (buscador). Usa <b>Pacientes</b> para crearla o corregir sus datos sin pedir fecha ni hora.</p>
   <h3>Dice «No se pudo conectar»</h3><p>Revisa tu internet y toca <span class="btn">↻</span>. Si sigue, avisa a soporte.</p>
 </section>
 </main></body></html>
