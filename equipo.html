@@ -253,7 +253,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <select id="cargo-acceso" required></select>
     <p class="error" id="error-acceso" role="alert" hidden></p>
     <button class="btn pri" type="submit">Entrar</button>
-    <p class="nota" style="margin-top:1rem"><a href="manual.html">Manual de uso</a> · <a href="https://tamibot.github.io/vt-descubre/reservar.html">Página de reservas</a></p>
+    <p class="nota" style="margin-top:1rem"><a href="manual.html">Manual de uso</a> · <a href="https://vt-descubre-production.up.railway.app/reservar.html">Página de reservas</a></p>
   </form>
 </div>
 
@@ -284,7 +284,8 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       </div>
       <div class="panel">
         <nav class="menu" id="hoy-menu" aria-label="Listas de trabajo"></nav>
-        <div class="lista" id="hoy-lista"></div>
+        <div><label class="nota" style="display:block;padding:12px">Confirmaciones: <select id="confirmaciones-periodo" class="cargo"><option value="semana">Próximos 7 días</option><option value="mes">Este mes</option></select></label>
+        <div class="lista" id="hoy-lista"></div></div>
       </div>
     </section>
 
@@ -525,36 +526,39 @@ const parte = (monto, f) => monto == null ? null : Number(monto) * f;
 // ---------- mensajes de WhatsApp (textos en la base: public.vt_plantillas)
 // Enlace para el recordatorio «registra tu peso, medidas y fotos»: el portal de la
 // paciente. Si se deja vacío, esa línea se omite del mensaje.
-const MEDIDAS_URL = 'https://tamibot.github.io/vt-portal/cliente.html';   // portal de la paciente: entra con su DNI y llena su cuadro de medidas
+const MEDIDAS_URL = 'https://vt-portal-production.up.railway.app/cliente.html';   // portal de la paciente: entra con su DNI y llena su cuadro de medidas
 const esEquipo = c => c.profesional && c.profesional !== 'Lic. Vanessa Tello';
 // Qué plantilla corresponde a cada momento de la cita (los 3 tipos de Vanessa).
 const plantilla = (c, tipo) => tipo === 'recordatorio'
   ? `dia_antes_${String(c.modalidad).toLowerCase()}_${esEquipo(c) ? 'equipo' : 'vanessa'}`
   : tipo === 'confirmar' ? 'confirmar_5_7' : tipo;
 function mensaje(clave, c) {
-  const p = D.plantillas?.[clave]; if (!p) return '';
+  const p = D.plantillas?.[clave]; if (!p || typeof p.texto !== 'string') return '';
   const precio = c.monto == null ? null : Number(c.monto);
   const valores = { nombre: nombreCorto(c), fecha: c.fecha ? fechaLarga(c.fecha) : '', hora: horaMensaje(c.hora),
     modalidad: String(c.modalidad || '').toLowerCase(), precio: soles(precio),
     adelanto: soles(parte(precio, .25)), saldo: soles(parte(precio, .75)),
     zoom: c.enlace_zoom || '(te lo enviamos por aquí antes de la cita)', medidas: MEDIDAS_URL };
-  const lineas = p.texto.split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
+  const lineas = p.texto.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
   return lineas.join('\n').replace(/\n+/g, '\n\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
 }
 // api.whatsapp.com recibe bien los emojis en Windows; wa.me los rompía (30-set).
 const waUrl = (tel, texto) => { const t = telNorm(tel); return `https://api.whatsapp.com/send?phone=${/^9\d{8}$/.test(t) ? '51' + t : t}` + (texto ? `&text=${encodeURIComponent(texto)}` : ''); };
 // Dos botones: el mensaje listo de ese momento, y «Chat» (WhatsApp sin mensaje, para escribir a mano).
 function wa(c, tipo, etiqueta = 'WhatsApp') {
+  if (tipo === 'cita') tipo = c.fecha >= D.hoy && viva(c) ? (diasRecordatorio().includes(c.fecha) || c.fecha === D.hoy ? 'recordatorio' : 'confirmar') : '';
   const t = telNorm(c.telefono);
   if (!t) return c.fecha && c.hora && c.id ? `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Agrega el teléfono en la ficha">Falta el teléfono</button>` : '<span class="pill gris">Sin teléfono</span>';
   const abrir = (texto, clase, rotulo, ayuda) => DEMO
     ? `<button type="button" class="btn chico ${clase}" data-demo-wa>${esc(rotulo)}</button>`
     : `<a class="btn chico ${clase}" href="${waUrl(c.telefono, texto)}" target="_blank" rel="noopener" title="${esc(ayuda)}">${esc(rotulo)}</a>`;
-  const chat = abrir('', tipo && tipo !== 'cita' ? '' : 'wa', tipo && tipo !== 'cita' ? 'Chat' : 'WhatsApp', 'Abrir WhatsApp sin mensaje, para escribir a mano');
-  if (!tipo || tipo === 'cita') return chat;
+  const chat = abrir('', tipo ? '' : 'wa', tipo ? 'Chat' : 'WhatsApp', 'Abrir WhatsApp sin mensaje, para escribir a mano');
+  if (!tipo) return chat;
   const clave = plantilla(c, tipo);
   if (/\{(precio|adelanto|saldo)\}/.test(D.plantillas?.[clave]?.texto || '') && !Number(c.monto) && c.fecha && c.hora) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Elige el servicio en la ficha">Falta el precio</button>` + chat;
-  return abrir(mensaje(clave, c), 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
+  const texto = mensaje(clave, c);
+  if (!texto.trim()) return '<span class="pill gris">Mensaje no disponible</span>' + chat;
+  return abrir(texto, 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
 }
 const boton = (texto, id, campos, clase = '') => `<button type="button" class="btn chico ${clase}" data-editar="${id}" data-campos="${esc(JSON.stringify(campos))}">${texto}</button>`;
 
@@ -716,7 +720,7 @@ function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true } = {}) {
   if (c.medicion && !SIMPLE) pills.push('<span class="pill">Con resultados</span>');
   if (c.recordado && (c.fecha >= D.hoy || c.recordado > c.fecha)) pills.push(`<span class="pill gris">${escritoHoy(c) ? 'Escrito hoy' : 'Escrito el ' + fechaCorta(c.recordado)}</span>`);
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
-    cuando: [esc(c.hora), mostrarFecha ? esc(cuando(c.fecha)) : ''],
+    cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(cuando(c.fecha)) : ''],
     quien: [esc(c.paciente), [c.modalidad, fmtTel(c.telefono)].map(esc).join(' · ')],
     motivo, pills: pills.join(''), acciones });
 }
@@ -741,7 +745,8 @@ function seccionesHoyBase() {
   const permite = c => !H.prof || c.profesional === H.prof;
   const vivasFuturas = D.citas.filter(c => permite(c) && !esperando(c) && futura(c) && viva(c));
   // 1 día antes: a todas (va con indicaciones). 5 días antes: una sola vez a las que no confirmaron.
-  const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= sumar(D.hoy, 7) &&
+  const hastaConfirmar = H.periodo === 'mes' ? sumar(sumar(D.hoy.slice(0, 7) + '-01', 40).slice(0, 7) + '-01', -1) : sumar(D.hoy, 7);
+  const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= hastaConfirmar &&
     (proximos.includes(c.fecha) ? !escritoHoy(c) : c.estado === 'Por confirmar' && !c.recordado));
   const conDeuda = c => ['Por pagar', 'Adelanto 25%'].includes(c.pago);
   // Saldo del 25 %: recién cuando la cita está a 3 días. Y quien ya asistió y debe, también.
@@ -825,7 +830,7 @@ function seccionesHoyBase() {
   ];
 }
 
-const H = { sec: null, limite: 30, prof: '' };
+const H = { sec: null, limite: 30, prof: '', periodo: 'semana' };
 const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
@@ -857,7 +862,7 @@ const lunes = iso => sumar(iso, -((diaSemana(iso) + 6) % 7));
 const DSEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
 const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
 const visibles = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado) && (!C.prof || c.profesional === C.prof));
-const chipCita = c => `<button type="button" class="chip-cita ${c.estado === 'No asistió' ? 'No-asistio' : esc(c.estado)}" data-abrir="${c.id}" title="${esc(c.paciente + ' · ' + c.modalidad + ' · ' + c.estado + ' · ' + c.pago)}"><b>${esc(c.hora)}</b>${esc(String(c.paciente).split(' ').slice(0, 2).join(' '))} · ${c.modalidad === 'Presencial' ? 'P' : 'V'}${esEquipo(c) ? ' · Eq' : ''}</button>`;
+const chipCita = c => `<button type="button" class="chip-cita ${c.estado === 'No asistió' ? 'No-asistio' : esc(c.estado)}" data-abrir="${c.id}" title="${esc(c.paciente + ' · ' + c.modalidad + ' · ' + c.estado + ' · ' + c.pago)}"><b>${esc(horaMensaje(c.hora))}</b>${esc(String(c.paciente).split(' ').slice(0, 2).join(' '))} · ${c.modalidad === 'Presencial' ? 'P' : 'V'}${esEquipo(c) ? ' · Eq' : ''}</button>`;
 
 function pintarAgenda() {
   C.fecha = C.fecha || D.hoy;
@@ -865,7 +870,7 @@ function pintarAgenda() {
   document.querySelector(`[name=cal-prof][value="${C.prof}"]`).checked = true;
   const texto = sinTildes(F.texto), dig = String(F.texto).replace(/\D/g, '');
   if (texto || dig.length >= 4) {          // buscar: lista de sus citas
-    const r = D.citas.filter(c => sinTildes(c.paciente).includes(texto) || (dig.length >= 4 && String(c.telefono || '').includes(dig.length >= 9 ? telNorm(dig) : dig))).reverse();
+    const r = D.citas.filter(c => (!C.prof || c.profesional === C.prof) && (sinTildes(c.paciente).includes(texto) || (dig.length >= 4 && String(c.telefono || '').includes(dig.length >= 9 ? telNorm(dig) : dig)))).reverse();
     $('#cal-titulo').textContent = `Búsqueda: ${r.length} cita${r.length === 1 ? '' : 's'}`;
     $('#lista').innerHTML = `<div class="lista">${r.length ? r.map(c => tarjeta(c, { acciones: [wa(c, 'cita')] })).join('') : '<p class="vacio">Nadie con ese nombre o teléfono en el último año ni en las próximas citas.</p>'}</div>`;
     return;
@@ -885,9 +890,9 @@ function pintarDia() {
     if (aqui.length) return aqui.map(c => tarjeta(c, { mostrarFecha: false, motivo: [c.servicio, c.monto != null && 'S/' + soles(c.monto)].filter(Boolean).map(esc).join(' · '),
       acciones: [wa(c, 'cita'), c.estado === 'Asistió' && !c.medicion ? `<button type="button" class="btn chico" data-medir="${c.id}">Resultados</button>` : ''] })).join('');
     const bloqueado = bloqueoEn(f, h, C.prof || 'Lic. Vanessa Tello');
-    if (bloqueado) return filaLibre({ cuando: [h, ''], quien: ['Bloqueado', esc(bloqueado.motivo)], acciones: [`<button class="btn chico" data-desbloquear="${bloqueado.id}" data-prof="${esc(bloqueado.profesional)}">Desbloquear</button>`] });
+    if (bloqueado) return filaLibre({ cuando: [horaMensaje(h), ''], quien: ['Bloqueado', esc(bloqueado.motivo)], acciones: [`<button class="btn chico" data-desbloquear="${bloqueado.id}" data-prof="${esc(bloqueado.profesional)}">Desbloquear</button>`] });
     if (tapado || f < D.hoy || (f === D.hoy && h < horaLima())) return '';
-    return filaLibre({ clase: 'libre', cuando: [h, ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
+    return filaLibre({ clase: 'libre', cuando: [horaMensaje(h), ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
   }).join('');
   $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(b.inicio)} a ${esc(b.fin)} · ${esc(b.motivo)} <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Desbloquear</button></p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
 }
@@ -983,7 +988,7 @@ function filasCobro(c) {
   const dcto = Number(c.descuento_pct) ? `<span class="pill gris">−${Number(c.descuento_pct)} %</span>` : '';
   const acc = c.pago === 'Pendiente clínica' ? [boton('Clínica pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]
     : ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? [wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Enviar datos de pago'), boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')] : [];
-  return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, cuando: [fechaCorta(c.fecha), esc(c.hora)],
+  return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, cuando: [fechaCorta(c.fecha), esc(horaMensaje(c.hora))],
     quien: [esc(c.paciente), [fmtTel(c.telefono), c.servicio].filter(Boolean).map(esc).join(' · ')],
     motivo: c.monto != null ? `S/${soles(c.monto)}${c.pagador ? ' · paga ' + esc(c.pagador) : ''}` : 'Falta elegir el servicio para saber cuánto cobrar',
     pills: pillPago(c) + dcto + (c.paquete_id ? `<span class="pill azul">Paquete ${c.nro_paquete} de ${c.paquete_total}</span>` : ''), acciones: acc });
@@ -1110,11 +1115,11 @@ function pintarTurnos() {
     const o = ocupadas.find(c => aMin(c.hora) < aMin(h) + DURACION && aMin(h) < aMin(c.hora) + (c.duracion_min || DURACION));
     const bloqueado = bloqueoEn(fecha, h, prof);
     if (bloqueado) return `<button type="button" class="turno ocupado" disabled title="${esc(bloqueado.motivo)}">${h} · bloqueado</button>`;
-    return `<button type="button" class="turno ${o ? 'ocupado' : ''}" data-hora="${h}" aria-pressed="${fc.hora.value === h}" title="${o ? esc('Ocupado: ' + o.paciente) : 'Libre'}"${o ? ` aria-label="${h}, ocupado"` : ''}>${h}</button>`;
+    return `<button type="button" class="turno ${o ? 'ocupado' : ''}" data-hora="${h}" aria-pressed="${fc.hora.value === h}" title="${o ? esc('Ocupado: ' + o.paciente) : 'Libre'}"${o ? ` aria-label="${horaMensaje(h)}, ocupado"` : ''}>${horaMensaje(h)}</button>`;
   }).join('');
   const fuera = ocupadas.filter(c => !lista.includes(c.hora));
   nota.textContent = !lista.length ? `${prof === 'Lic. Vanessa Tello' ? 'Vanessa' : 'El equipo'} no atiende ${mod.toLowerCase()} los ${DIAS[diaSemana(fecha)]}. Puedes escribir otra hora si ya se coordinó.`
-    : 'Toca un horario libre (tachado = ocupado).' + (fuera.length ? ' También ocupado: ' + fuera.map(c => c.hora).join(', ') + '.' : '');
+    : 'Toca un horario libre (tachado = ocupado).' + (fuera.length ? ' También ocupado: ' + fuera.map(c => horaMensaje(c.hora)).join(', ') + '.' : '');
 }
 // Precio de lista − descuento % = precio final (se puede corregir a mano).
 function pintarPrecio(desdeUsuario) {
@@ -1175,7 +1180,7 @@ function abrirCita(c, base = {}) {
   fc.dataset.leadId = v.lead_id || '';
   fc.dataset.origenId = 'tablero-' + (crypto.randomUUID?.() || Date.now() + '-' + Math.random());
   $('#cita-titulo').textContent = c ? c.paciente : base.paciente ? 'Nueva cita · ' + base.paciente : 'Nueva cita';
-  $('#cita-sub').textContent = c ? `${fechaLarga(c.fecha)} · ${c.hora} · ${c.estado} · ${c.pago}${c.actualizado_por ? ' · último cambio: ' + c.actualizado_por : ''}` : 'Puedes escribir una paciente nueva o elegir una existente. Para corregir solo sus datos, usa Pacientes.';
+  $('#cita-sub').textContent = c ? `${fechaLarga(c.fecha)} · ${horaMensaje(c.hora)} · ${c.estado} · ${c.pago}${c.actualizado_por ? ' · último cambio: ' + c.actualizado_por : ''}` : 'Puedes escribir una paciente nueva o elegir una existente. Para corregir solo sus datos, usa Pacientes.';
   const barra = $('#cita-barra');
   barra.hidden = !c;
   if (c) {
@@ -1202,7 +1207,7 @@ function pintarHistorial(v) {
   const q = quien(v);
   const otras = q ? D.citas.filter(c => quien(c) === q && c.id !== v.id) : [];
   $('#historial').innerHTML = otras.length ? '<b>Otras citas de esta paciente</b><ul>' + otras.slice(-6).map(c =>
-    `<li>${fechaLarga(c.fecha)} ${c.hora} · ${esc(c.modalidad)} · ${esc(c.estado)}${c.medicion?.peso ? ' · ' + c.medicion.peso + ' kg' : ''}</li>`).join('') + '</ul>' : '';
+    `<li>${fechaLarga(c.fecha)} ${horaMensaje(c.hora)} · ${esc(c.modalidad)} · ${esc(c.estado)}${c.medicion?.peso ? ' · ' + c.medicion.peso + ' kg' : ''}</li>`).join('') + '</ul>' : '';
 }
 fc.addEventListener('input', e => {
   if (e.target.name === 'paciente') {
@@ -1278,7 +1283,7 @@ function abrirMedicion(c) {
   midiendo = c; fm.reset();
   fm.fecha.value = c.fecha <= D.hoy ? c.fecha : D.hoy;
   for (const k of ['peso', 'grasa_pct', 'musculo_kg', 'grasa_visceral', 'agua_pct', 'imc', 'recomendaciones']) if (c.medicion?.[k] != null) fm[k].value = c.medicion[k];
-  $('#med-sub').textContent = `${c.paciente} · cita del ${fechaLarga(c.fecha)} ${c.hora}`;
+  $('#med-sub').textContent = `${c.paciente} · cita del ${fechaLarga(c.fecha)} ${horaMensaje(c.hora)}`;
   $('#med-error').hidden = true;
   $('#dlg-med').showModal();
 }
@@ -1351,7 +1356,7 @@ document.addEventListener('click', async e => {
   const lib = t.closest('[data-liberar]');
   if (lib) {
     const c = buscarCita(lib.dataset.liberar);
-    if (!confirm(`¿Cancelar la cita de ${c.paciente} del ${fechaLarga(c.fecha)} a las ${c.hora}? El horario queda libre para otra persona.`)) return;
+    if (!confirm(`¿Cancelar la cita de ${c.paciente} del ${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)}? El horario queda libre para otra persona.`)) return;
     return accion(lib, { accion: 'editar', id: c.id, estado: 'Cancelada' }, 'Cita cancelada: el horario quedó libre.');
   }
   const af = t.closest('[data-abrir-ficha]'); if (af) { abrirCita(buscarCita(af.dataset.abrirFicha)); return; }
@@ -1391,6 +1396,7 @@ document.addEventListener('keydown', e => {
   const sg = e.target.closest?.('[data-seg]'); if (sg) abrirSeg(D.seguimiento[sg.dataset.seg]);
 });
 $('#tareas-prof').addEventListener('change', e => { H.prof = e.target.value; H.sec = null; pintar(); });
+$('#confirmaciones-periodo').addEventListener('change', e => { H.periodo = e.target.value; H.sec = 'confirmar'; H.limite = 30; pintar(); });
 $('#f-texto').addEventListener('input', e => { F.texto = e.target.value; pintarAgenda(); });
 document.querySelectorAll('[name=cal-prof]').forEach(r => r.addEventListener('change', e => { C.prof = e.target.value; pintarAgenda(); }));
 document.querySelectorAll('[name=cal-modo]').forEach(r => r.addEventListener('change', e => { C.modo = e.target.value; pintarAgenda(); }));
