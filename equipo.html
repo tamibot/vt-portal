@@ -48,7 +48,8 @@ main{padding:16px 0 60px}
 .consejo button{margin-left:auto;border:0;background:none;cursor:pointer;color:var(--s);font-size:18px;line-height:1}
 
 /* panel: menú de listas + lista */
-.panel{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+.panel{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+.panel>div{min-width:0}
 .menu{position:sticky;top:68px;background:#fff;border:1px solid var(--b);border-radius:10px;padding:6px}
 .menu .grupo{margin:10px 8px 4px;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--s)}
 .menu .grupo:first-child{margin-top:4px}
@@ -208,7 +209,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   .fila{grid-template-columns:64px minmax(120px,1fr) minmax(120px,1fr) 300px}
 }
 @media (max-width:900px){
-  .panel{grid-template-columns:1fr}
+  .panel{grid-template-columns:minmax(0,1fr)}
   .menu{position:static;display:flex;gap:4px;overflow-x:auto;padding:4px;scrollbar-width:none}
   .menu .grupo{display:none}
   .item{width:auto;flex:0 0 auto;white-space:nowrap}
@@ -226,8 +227,8 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   .celda .cuenta{display:block}
   header.top{position:static}
   header.top .wrap{height:auto;flex-wrap:wrap;padding:8px 0;gap:6px}
-  .tabs{order:3;width:100%;height:40px;border-top:1px solid var(--l)}
-  .tab{flex:1;justify-content:center}
+  .tabs{order:3;width:100%;min-width:0;height:40px;border-top:1px solid var(--l)}
+  .tab{flex:1;justify-content:center;min-width:0;padding:0 6px;gap:3px;font-size:13px}
   .cargo{max-width:150px}
   .fila{grid-template-columns:52px 1fr;grid-template-areas:"cuando quien" "cuando detalle" "acciones acciones";padding:10px 12px}
   .c-cuando{grid-area:cuando;align-self:start}
@@ -285,7 +286,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <div class="panel">
         <nav class="menu" id="hoy-menu" aria-label="Listas de trabajo"></nav>
         <div><label class="nota" style="display:block;padding:12px">Citas por confirmar y por pagar: <select id="confirmaciones-periodo" class="cargo"><option value="mes">Este mes</option><option value="semana">Próximos 7 días</option></select></label>
-        <div class="lista" id="hoy-lista"></div></div>
+        <div class="nota" style="padding:0 12px 12px"><label>Orden <select id="tareas-orden"><option value="recientes">Citas más recientes primero</option><option value="proximas">Citas próximas primero</option></select></label> <input id="tareas-buscar" type="search" placeholder="Buscar paciente" aria-label="Buscar paciente en tareas"></div><div class="lista" id="hoy-lista"></div></div>
       </div>
     </section>
 
@@ -307,6 +308,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
           <label><input type="radio" name="cal-prof" value="Lic. Vanessa Tello">Lic. Vanessa</label>
           <label><input type="radio" name="cal-prof" value="Nutricionista del equipo">Equipo</label>
         </div>
+        <button type="button" class="btn" data-abrir-horario>Abrir horario</button>
         <button type="button" class="btn" data-bloquear>Bloquear agenda</button>
         <input id="f-texto" type="search" placeholder="Buscar paciente" aria-label="Buscar paciente">
       </div>
@@ -315,7 +317,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     </section>
 
     <section id="vista-seguimiento" role="tabpanel" hidden>
-      <div class="titular"><h1>Seguimiento nutricional</h1><p>3 días y 1 semana después de su última consulta; luego cada 2 semanas.</p></div>
+      <div class="titular"><h1>Seguimiento nutricional</h1><p>Tres seguimientos por consulta (3, 7 y 14 días) y fechas adicionales elegidas por Ximena. Consultas atendidas desde el 1 de octubre.</p></div>
       <div class="panel">
         <nav class="menu" id="seg-menu" aria-label="Listas de seguimiento"></nav>
         <div class="lista" id="seg-lista"></div>
@@ -392,6 +394,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <label>Pago<select name="pago"></select></label>
       <label id="pagador-campo" hidden>¿Quién paga?<input name="pagador" placeholder="Clínica Avendaño"></label>
       <label>Medio de pago<select name="medio_pago"></select></label>
+      <label>Fecha real del pago<input type="date" name="fecha_pago"><small>Adelanto o pago que registras ahora; conserva las fechas anteriores.</small></label>
     </div>
     <p class="nota" id="nota-precio"></p>
     <div class="caja-paquete" id="caja-paquete" hidden></div>
@@ -432,9 +435,12 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   <h3 id="seg-titulo"></h3>
   <p class="sub" id="seg-sub"></p>
   <div class="barra" id="seg-barra"></div>
+  <div class="campos"><label class="ancho">Mensaje de seguimiento (puedes personalizarlo)<textarea id="seg-mensaje" rows="4"></textarea></label></div>
+  <button type="button" class="btn" data-seg-mensaje>Abrir WhatsApp con este texto</button>
+  <p class="nota">El texto inicial queda editable hasta recibir la versión de Ximena. Abrir el chat no marca el contacto como realizado.</p>
   <div class="campos">
     <label>Fecha<input name="fecha" type="date" required></label>
-    <label>¿Respondió?<select name="respondio" required><option value="">Elige</option><option value="true">Sí</option><option value="false">No</option></select></label>
+    <label>¿Respondió?<select name="respondio" required><option value="">Elige</option><option value="true">Sí</option><option value="false">No</option><option value="pendiente">Respuesta pendiente</option></select></label>
     <label class="ancho">Qué contó<textarea name="comentarios" placeholder="Cómo va con el plan, dudas, síntomas"></textarea></label>
     <label class="ancho">Resultado<input name="resultado" list="resultados-seg" placeholder="Le va bien, tiene dudas, quiere agendar…"></label>
     <label>Adherencia<select name="adherencia"><option value="">—</option><option>Alta</option><option>Media</option><option>Baja</option></select></label>
@@ -452,6 +458,25 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
 <datalist id="objetivos-seg"><option>Perder peso</option><option>Perder peso, Bariátrico</option><option>Mejorar hábitos alimenticios</option><option>Ganar músculo y perder grasa</option><option>Ganar masa muscular</option></datalist>
 <datalist id="lista-pacientes"></datalist>
 <datalist id="lista-llega"></datalist>
+<dialog id="dlg-programar" aria-labelledby="programar-titulo"><form method="dialog" id="form-programar">
+<h3 id="programar-titulo">Agendar seguimiento nutricional</h3><p class="sub" id="programar-sub"></p>
+<div class="campos"><label>Seguimiento<select name="nro_seg"></select></label><label>Fecha elegida<input type="date" name="fecha_programada" required></label></div>
+<p class="nota">Es una tarea de seguimiento; no ocupa una cita médica.</p><p class="error" id="programar-error" hidden role="alert"></p>
+<div class="pie"><button class="btn pri" value="guardar">Guardar fecha</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></form></dialog>
+<dialog id="dlg-apertura" aria-labelledby="apertura-titulo"><form method="dialog" id="form-apertura">
+<h3 id="apertura-titulo">Abrir horario extraordinario</h3><div class="campos">
+<label>Profesional<select name="profesional"><option>Lic. Vanessa Tello</option><option>Nutricionista del equipo</option></select></label>
+<label>Modalidad<select name="modalidad"><option>Ambas</option><option>Virtual</option><option>Presencial</option></select></label>
+<label>Desde<input type="datetime-local" name="inicio" required></label><label>Hasta<input type="datetime-local" name="fin" required></label>
+<label class="ancho">Motivo<input name="motivo" placeholder="Atención extraordinaria"></label></div>
+<p class="nota">Ofrece turnos de 45 minutos hasta esta hora. Las citas y los bloqueos tienen prioridad.</p><p class="error" id="apertura-error" hidden role="alert"></p>
+<div class="pie"><button class="btn pri" value="guardar">Guardar apertura</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></form></dialog>
+<dialog id="dlg-pago" aria-labelledby="pago-titulo"><form method="dialog" id="form-pago">
+<h3 id="pago-titulo">Registrar pago</h3><p class="sub" id="pago-sub"></p><div class="campos">
+<label>Fecha real del pago<input type="date" name="fecha_pago" required></label><label>Medio de pago<select name="medio_pago"></select></label></div>
+<p class="nota">Revisa el comprobante. La fecha no se deduce del día de la cita.</p><p class="error" id="pago-error" hidden role="alert"></p>
+<div class="pie"><button class="btn pri" value="guardar">Guardar pago</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></form></dialog>
+<dialog id="dlg-reserva-info" aria-labelledby="reserva-info-titulo" style="padding:16px 18px 0"><h3 id="reserva-info-titulo">Cita guardada</h3><p id="reserva-info-sub"></p><div class="barra" id="reserva-info-acciones"></div><p class="nota">Sheila puede enviar ahora los datos de cita y pago. El recordatorio de confirmación conserva su función.</p><div class="pie"><button type="button" class="btn" data-cerrar>Cerrar</button></div></dialog>
 <div class="aviso" id="aviso" hidden role="status"></div>
 
 <script>
@@ -501,6 +526,11 @@ const aMin = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; 
 const aHora = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 const turnos = tramos => (tramos || []).flatMap(([i, f]) => { const o = []; for (let m = aMin(i); m <= aMin(f); m += DURACION) o.push(aHora(m)); return o; });
 
+function turnosDia(fecha, mod, prof) {
+  const extra=(D?.aperturas || []).filter(a=>a.profesional===prof && (a.modalidad===mod || a.modalidad==='Ambas') && a.inicio.slice(0,10)===fecha)
+    .flatMap(a=>{const out=[];for(let m=aMin(a.inicio.slice(11,16));m+DURACION<=aMin(a.fin.slice(11,16));m+=DURACION)out.push(aHora(m));return out;});
+  return [...new Set([...turnos(AGENDA[mod][diaSemana(fecha)]),...extra])].sort();
+}
 // ---------- utilidades
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -535,16 +565,25 @@ const esEquipo = c => c.profesional && c.profesional !== 'Lic. Vanessa Tello';
 const plantilla = (c, tipo) => tipo === 'recordatorio'
   ? `dia_antes_${String(c.modalidad).toLowerCase()}_${esEquipo(c) ? 'equipo' : 'vanessa'}`
   : tipo === 'confirmar' ? 'confirmar_5_7' : tipo;
+const saldoCita = c => c.monto==null ? null : Math.max(0,Number(c.monto)-Number(c.monto_adelanto ?? parte(c.monto,.25)));
 function mensaje(clave, c) {
+  if (clave === 'reserva_inicial') {
+    const requiere = ['Por pagar','Adelanto 25%'].includes(c.pago);
+    const importe = c.pago === 'Adelanto 25%' ? saldoCita(c) : c.recurrente ? parte(c.monto,.25) : c.monto;
+    const pago = requiere ? mensaje(c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', c) : '';
+    return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó reservada para el ${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)} · ${String(c.modalidad).toLowerCase()}.` +
+      (requiere ? `\n\n${c.pago === 'Adelanto 25%' ? 'Saldo pendiente' : c.recurrente ? 'Adelanto del 25 %' : 'Pago del 100 %'}: S/${soles(importe)}. El plazo de pago es de hasta 48 horas desde la reserva y siempre antes de la cita.\n\n${pago}` : '');
+  }
   const p = D.plantillas?.[clave]; if (!p || typeof p.texto !== 'string') return '';
   const precio = c.monto == null ? null : Number(c.monto);
   const valores = { nombre: nombreCorto(c), fecha: c.fecha ? fechaLarga(c.fecha) : '', hora: horaMensaje(c.hora),
     modalidad: String(c.modalidad || '').toLowerCase(), precio: soles(precio),
-    adelanto: soles(parte(precio, .25)), saldo: soles(parte(precio, .75)),
+    adelanto: soles(parte(precio, .25)), saldo: soles(saldoCita(c)),
     zoom: c.enlace_zoom || '(te lo enviamos por aquí antes de la cita)', medidas: MEDIDAS_URL };
   const datosCita = ['pago', 'saldo'].includes(clave) && c.fecha && c.hora && !['{fecha}', '{hora}'].every(k => p.texto.includes(k))
     ? `Datos de tu cita: {fecha} a las {hora} · {modalidad}.\n\n` : '';
-  const lineas = (datosCita + p.texto).replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
+  const textoPago = clave==='pago' && c.recurrente ? p.texto.replace(/pago del 100%/g,'adelanto del 25%') : p.texto;
+  const lineas = (datosCita + textoPago).replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
   return lineas.join('\n').replace(/\n+/g, '\n\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
 }
 // api.whatsapp.com recibe bien los emojis en Windows; wa.me los rompía (30-set).
@@ -561,6 +600,7 @@ function wa(c, tipo, etiqueta = 'WhatsApp') {
   if (!tipo) return chat;
   const clave = plantilla(c, tipo);
   if (/\{(precio|adelanto|saldo)\}/.test(D.plantillas?.[clave]?.texto || '') && !Number(c.monto) && c.fecha && c.hora) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Elige el servicio en la ficha">Falta el precio</button>` + chat;
+  if (tipo==='reserva_inicial' && ['Por pagar','Adelanto 25%'].includes(c.pago) && !Number(c.monto)) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}">Falta el precio</button>`+chat;
   const texto = mensaje(clave, c);
   if (!texto.trim()) return '<span class="pill gris">Mensaje no disponible</span>' + chat;
   return abrir(texto, 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
@@ -606,9 +646,11 @@ function datosDemo() {
     por_cerrar: [{ lead_id: 1, nombre: 'Andrea Flores', etapa: 'Llenó el formulario', desde: sumar(hoy, -2), servicio: null }] };
 }
 // Lo que en la versión real calcula la base (vt_citas_datos), acá en memoria.
+function actualizarPendienteDemo(x) { const p=x.tareas.filter(t=>!t.realizado).sort((a,b)=>a.fecha.localeCompare(b.fecha) || a.nro-b.nro)[0]; x.proximo_seg=p?.fecha || null;x.proximo_nro=p?.nro || null; }
 function demoListas() {
   const ultima = {};
   for (const c of D.citas) if (!['Cancelada', 'Reprogramada'].includes(c.estado)) { const q = quien(c); if (!ultima[q] || c.fecha + c.hora > ultima[q].fecha + ultima[q].hora) ultima[q] = c; }
+  for(const x of D.seguimiento) { if(!x.tareas){const c=D.citas.filter(c=>c.estado==='Asistió' && quien(c)===quien(x)).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0]; x.cita_id=c?.id || 10000+D.seguimiento.indexOf(x);x.nro_consulta=1; x.tareas=[3,7,14].map((n,i)=>({nro:i+1,fecha:sumar(x.ultima,n),realizado:i<(x.n_desde || 0)})); actualizarPendienteDemo(x);} }
   const inactivos = new Set(D.seguimiento.filter(x => x.estado === 'Inactivo').map(quien));
   D.sin_proxima = Object.values(ultima).filter(c => c.estado === 'Asistió' && !inactivos.has(quien(c)));
   D.no_asistio = Object.values(ultima).filter(c => c.estado === 'No asistió');
@@ -633,6 +675,24 @@ function botonesBloqueo(b) {
   return `<button class="btn chico" data-editar-bloqueo="${b.id}">Editar</button> <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Quitar este bloqueo</button>` + (b.serie_id ? ` <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}" data-serie="true">Quitar serie</button>` : '');
 }
 function demoEnviar(p) {
+  if (['abrir_horario','editar_apertura'].includes(p.accion)) {
+    if (!p.inicio || !p.fin || p.inicio.slice(0,10)!==p.fin.slice(0,10) || aMin(p.fin.slice(11,16))-aMin(p.inicio.slice(11,16))<45) return {ok:false,motivo:'Elige al menos 45 minutos dentro del mismo día.'};
+    const a=(D.aperturas ||= []).find(x=>x.id===p.id);if(a)Object.assign(a,p);else D.aperturas.push({...p,id:Date.now()});return {ok:true};
+  }
+  if(p.accion==='cerrar_apertura'){D.aperturas=D.aperturas.filter(a=>a.id!==p.id);return {ok:true};}
+  if(p.accion==='programar_seguimiento') {
+    const x=D.seguimiento.find(x=>x.cita_id===p.cita_id);if(!x)return {ok:false,motivo:'Falta la consulta.'};
+    const n=Number(p.nro_seg)||Math.max(3,...(x.tareas||[]).map(t=>t.nro))+1;
+    const t=(x.tareas ||= []).find(t=>t.nro===n);if(t?.realizado)return {ok:false,motivo:'Ya realizado.'};
+    if(t)Object.assign(t,{fecha:p.fecha_programada,manual:true});else x.tareas.push({nro:n,fecha:p.fecha_programada,manual:true,adicional:true,realizado:false});
+    actualizarPendienteDemo(x);return {ok:true,nro_seg:n};
+  }
+  if(p.accion==='editar' && ['Pagado','Adelanto 25%'].includes(p.pago)) {
+    const c=D.citas.find(c=>c.id===p.id); if(p.fecha_pago) {
+      if(p.pago==='Adelanto 25%')Object.assign(c,{fecha_adelanto:p.fecha_pago,monto_adelanto:parte(c.monto,.25),monto_pagado:parte(c.monto,.25)});
+      else Object.assign(c,{fecha_pago:p.fecha_pago,...(c.pago==='Adelanto 25%' ? {fecha_saldo:p.fecha_pago,monto_saldo:parte(c.monto,.75)} : {}),monto_pagado:Number(c.monto)});
+    }
+  }
   if (p.accion === 'paciente') {
     const viejo = D.pacientes.find(x => x.id === p.id), key = viejo && quien({ paciente: viejo.nombre, telefono: viejo.telefono });
     if (viejo) { D.citas.filter(c => quien(c) === key).forEach(c => Object.assign(c, { paciente: p.nombre, telefono: p.telefono, email: p.email })); Object.assign(viejo, p); }
@@ -656,7 +716,7 @@ function demoEnviar(p) {
     Object.assign(x, { id: x.id || Date.now(), adherencia: p.adherencia || null, estado: p.estado, riesgo: p.riesgo, objetivo: p.objetivo, notas: p.notas });
     if (p.accion === 'seguimiento') {
       x.historial.unshift({ fecha: p.fecha, respondio: p.respondio, comentarios: p.comentarios, resultado: p.resultado, responsable: p.usuario });
-      x.total++; x.n_desde++; x.ultimo_seg = p.fecha; x.proximo_seg = x.n_desde === 1 ? sumar(x.ultima, 7) : sumar(p.fecha, 14);
+      x.total++; x.n_desde++; x.ultimo_seg=p.fecha; if (x.tareas) { const t=x.tareas.find(t=>t.nro===p.nro_seg); if(t)t.realizado=true; actualizarPendienteDemo(x); } else x.proximo_seg=x.n_desde<3 ? sumar(x.ultima,[3,7,14][x.n_desde]) : null;
     }
     if (x.estado !== 'Activo') { x.proximo_seg = null; D.sin_proxima = D.sin_proxima.filter(c => quien(c) !== quien(x)); }
     return { ok: true };
@@ -679,7 +739,7 @@ function demoEnviar(p) {
   else if (p.accion === 'editar') Object.assign(v, datos, p.pago === 'Pagado' ? { pago_por_revisar: false } : {}, { id: v.id }, 'monto' in datos ? { monto: datos.monto === '' ? null : Number(datos.monto) } : {});
   else if (p.accion === 'medicion') Object.assign(v, { estado: 'Asistió', medicion: datos });
   D.citas.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
-  return { ok: true };
+  return { ok: true, cita:p.accion==='crear' ? D.citas.find(c=>c.origen_id===p.origen_id) || D.citas.find(c=>c.fecha===fecha&&c.hora===hora&&c.paciente===p.paciente) : v };
 }
 
 // ---------- carga y envío. La clave va en el cuerpo del POST, nunca en la URL.
@@ -770,7 +830,7 @@ const contactar = (c, motivo) => `<button type="button" class="btn chico" data-c
 const porReagendar = c => boton('Por reagendar', c.id, { estado: 'Reprogramada' });
 function seccionesHoyBase() {
   const proximos = diasRecordatorio();
-  const permite = c => !H.prof || c.profesional === H.prof;
+  const permite = c => (!H.prof || c.profesional === H.prof) && (!H.texto || sinTildes(c.paciente).includes(sinTildes(H.texto)));
   const vivasFuturas = D.citas.filter(c => permite(c) && !esperando(c) && futura(c) && viva(c));
   // 1 día antes: a todas (va con indicaciones). 5 días antes: una sola vez a las que no confirmaron.
   const hastaConfirmar = H.periodo === 'mes' ? sumar(sumar(D.hoy.slice(0, 7) + '-01', 40).slice(0, 7) + '-01', -1) : sumar(D.hoy, 7);
@@ -781,7 +841,7 @@ function seccionesHoyBase() {
   const cobrar = D.citas.filter(c => permite(c) && !esperando(c) && conDeuda(c) && (
       (futura(c) && viva(c) && c.fecha <= hastaConfirmar && (H.periodo === 'mes' || c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
       (c.estado === 'Asistió' && c.fecha >= (H.periodo === 'mes' ? D.hoy.slice(0, 7) + '-01' : sumar(D.hoy, -30)))))
-    .sort((a, b) => (vencida(b) - vencida(a)) || (escritoHoy(a) - escritoHoy(b)) || (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+    .sort((a, b) => (vencida(b) - vencida(a)) || (escritoHoy(a) - escritoHoy(b)) || (H.orden==='recientes' ? (b.fecha+b.hora).localeCompare(a.fecha+a.hora) : (a.fecha+a.hora).localeCompare(b.fecha+b.hora)));
   const hoy = D.citas.filter(c => permite(c) && c.fecha === D.hoy && !['Cancelada', 'Reprogramada'].includes(c.estado));
   const recientes = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) >= 14 && diasEntre(c.fecha, D.hoy) <= 120);
   const antiguos = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) > 120);
@@ -831,7 +891,7 @@ function seccionesHoyBase() {
       items: cobrar.map(c => {
         const nueva = c.recurrente === false || c.tipo === 'Primera cita';
         const [motivo, plantillaPago, acciones] = c.pago === 'Adelanto 25%'
-          ? [`Falta el saldo: S/${soles(parte(c.monto, .75))}`, 'saldo', [boton('Pagó el saldo ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
+          ? [`Falta el saldo: S/${soles(saldoCita(c))}`, 'saldo', [boton('Pagó el saldo ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
           : nueva ? [`Nueva · paga el 100 %: S/${soles(c.monto)}`, 'pago', [boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
           : [`Seguimiento · falta el pago: S/${soles(c.monto)}`, 'pago', [boton('Pagó todo ✓', c.id, { pago: 'Pagado' }, 'hecho'), boton('Pagó el 25 %', c.id, { pago: 'Adelanto 25%' })]];
         const extra = c.estado === 'Asistió' ? ' · ya asistió' : '';
@@ -858,7 +918,7 @@ function seccionesHoyBase() {
   ];
 }
 
-const H = { sec: null, limite: 30, prof: '', periodo: 'mes' };
+const H = { texto:'', orden:'recientes', sec: null, limite: 30, prof: '', periodo: 'mes' };
 const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
@@ -910,7 +970,7 @@ function pintarAgenda() {
 function pintarDia() {
   const f = C.fecha, del = visibles().filter(c => c.fecha === f);
   $('#cal-titulo').textContent = fechaLarga(f).replace(/^./, m => m.toUpperCase()) + (f === D.hoy ? ' · hoy' : '');
-  const horario = C.prof === 'Nutricionista del equipo' ? [] : [...new Set([...turnos(AGENDA.Virtual[diaSemana(f)]), ...turnos(AGENDA.Presencial[diaSemana(f)])])].sort();
+  const horario = [...new Set([...turnosDia(f,'Virtual',C.prof || 'Lic. Vanessa Tello'),...turnosDia(f,'Presencial',C.prof || 'Lic. Vanessa Tello')])].sort();
   const horas = [...new Set([...horario, ...del.map(c => c.hora)])].sort();
   const filas = horas.map(h => {
     const aqui = del.filter(c => c.hora === h);
@@ -922,7 +982,7 @@ function pintarDia() {
     if (tapado || f < D.hoy || (f === D.hoy && h < horaLima())) return '';
     return filaLibre({ clase: 'libre', cuando: [horaMensaje(h), ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
   }).join('');
-  $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(fechaLarga(b.inicio.slice(0,10)))} ${esc(horaMensaje(b.inicio.slice(11,16)))} a ${esc(fechaLarga(b.fin.slice(0,10)))} ${esc(horaMensaje(b.fin.slice(11,16)))} · ${esc(b.motivo)} ${b.repeticion && b.repeticion !== 'no' ? ' · ' + esc(b.repeticion) + ' hasta ' + esc(b.repetir_hasta) : ''} ${botonesBloqueo(b)}</p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
+  $('#lista').innerHTML = aperturasDia(f) + (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(fechaLarga(b.inicio.slice(0,10)))} ${esc(horaMensaje(b.inicio.slice(11,16)))} a ${esc(fechaLarga(b.fin.slice(0,10)))} ${esc(horaMensaje(b.fin.slice(11,16)))} · ${esc(b.motivo)} ${b.repeticion && b.repeticion !== 'no' ? ' · ' + esc(b.repeticion) + ' hasta ' + esc(b.repetir_hasta) : ''} ${botonesBloqueo(b)}</p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
 }
 
 function pintarSemana() {
@@ -934,9 +994,9 @@ function pintarSemana() {
   $('#cal-titulo').textContent = `${fechaCorta(ini)} – ${fechaCorta(fin)}`;
   $('#lista').innerHTML = `<div class="semana" style="--cols:${mostrar.length}">` + mostrar.map(d => {
     const del = citas.filter(c => c.fecha === d);
-    const atiende = AGENDA.Virtual[diaSemana(d)] || AGENDA.Presencial[diaSemana(d)];
+    const atiende = turnosDia(d,'Virtual',C.prof || 'Lic. Vanessa Tello').length || turnosDia(d,'Presencial',C.prof || 'Lic. Vanessa Tello').length;
     return `<div class="col"><button type="button" class="col-cab ${d === D.hoy ? 'hoy' : ''}" data-ir-dia="${d}">${DSEM[(diaSemana(d) + 6) % 7]}<b>${new Date(d + 'T12:00:00Z').getUTCDate()}</b>${del.length ? del.length + ' cita' + (del.length > 1 ? 's' : '') : ''}</button>
-      <div class="col-cuerpo">${(D.bloqueos || []).filter(b => b.inicio < sumar(d, 1) + 'T00:00' && b.fin > d + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado · ${esc(b.motivo)}</p>`).join('')}${del.map(chipCita).join('') || `<p class="libre">${atiende || C.prof === 'Nutricionista del equipo' ? 'Sin citas' : 'No atiende'}</p>`}</div></div>`;
+      <div class="col-cuerpo">${aperturasDia(d)}${(D.bloqueos || []).filter(b => b.inicio < sumar(d, 1) + 'T00:00' && b.fin > d + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado · ${esc(b.motivo)}</p>`).join('')}${del.map(chipCita).join('') || `<p class="libre">${atiende || C.prof === 'Nutricionista del equipo' ? 'Sin citas' : 'No atiende'}</p>`}</div></div>`;
   }).join('') + '</div>';
 }
 
@@ -956,18 +1016,20 @@ function pintarMes() {
 }
 
 // ---------- SEGUIMIENTO
-const tocaHoy = x => x.proximo_seg && x.proximo_seg <= D.hoy;
+const operativoSeg = x => x.operativo ?? (x.ultima >= '2026-10-01');
+const tocaHoy = x => operativoSeg(x) && x.proximo_seg && x.proximo_seg <= D.hoy;
 const MENU_SEG = [['hoy', 'Le toca hoy', 'Pacientes a quienes toca escribir hoy o están atrasados.'],
   ['semana', 'Próximos 7 días', 'Les toca escribir en los próximos 7 días.'], ['riesgo', 'En riesgo', 'Marcados en riesgo de abandonar.'],
   ['baja', 'Adherencia baja', 'Con adherencia baja al plan.'], ['todos', 'Todos los activos', 'Todos los pacientes en seguimiento.'],
+  ['primero','Primer seguimiento','Primer contacto de su consulta.'], ['segundo','Segundo seguimiento','Segundo contacto de su consulta.'], ['tercero','Tercer seguimiento','Tercer contacto de su consulta.'], ['adicionales','Adicionales','Fechas elegidas por Ximena.'], ['historial','Historial anterior','Fichas anteriores al 1 de octubre, conservadas para consultar.'],
   ['inactivos', 'Inactivos', 'Ya no reciben seguimiento.'], ['operados', 'Operados · 6 meses y 1 año', 'Se cumplen 6 meses o 1 año de su cirugía (dos semanas antes o después). Escríbeles para su control.']];
-const FILTRO_SEG = { hoy: x => tocaHoy(x), semana: x => x.proximo_seg && x.proximo_seg <= sumar(D.hoy, 7), riesgo: x => x.riesgo, baja: x => x.adherencia === 'Baja', todos: () => true };
+const FILTRO_SEG = { primero:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===1), segundo:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===2), tercero:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===3), adicionales:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro>3), historial:()=>true, hoy: x => tocaHoy(x), semana: x => x.proximo_seg && x.proximo_seg <= sumar(D.hoy, 7), riesgo: x => x.riesgo, baja: x => x.adherencia === 'Baja', todos: () => true };
 function pintarSeguimiento(soloFilas) {
-  const act = D.seguimiento.filter(x => x.estado === 'Activo');
-  const cuenta = k => k === 'inactivos' ? D.seguimiento.length - act.length : k === 'operados' ? D.operados.filter(o => !o.avisado).length : act.filter(FILTRO_SEG[k]).length;
+  const act = D.seguimiento.filter(x => x.estado === 'Activo' && operativoSeg(x));
+  const cuenta = k => k === 'historial' ? D.seguimiento.filter(x=>!operativoSeg(x)).length : k === 'inactivos' ? D.seguimiento.filter(x=>x.estado==='Inactivo').length : k === 'operados' ? D.operados.filter(o => !o.avisado).length : act.filter(FILTRO_SEG[k]).length;
   const [, titulo, ayuda] = MENU_SEG.find(m => m[0] === S.toca);
   if (!soloFilas) {
-    $('#seg-menu').innerHTML = '<p class="grupo">Seguimiento</p>' + MENU_SEG.map(([k, n], i) => (i === 6 ? '<p class="grupo">Operados</p>' : '')
+    $('#seg-menu').innerHTML = '<p class="grupo">Seguimiento</p>' + MENU_SEG.map(([k, n], i) => (k === 'operados' ? '<p class="grupo">Operados</p>' : '')
       + `<button type="button" class="item" data-seg-toca="${k}" aria-current="${S.toca === k}"><span>${k === 'operados' ? '6 meses y 1 año' : n}</span><b class="${(k === 'hoy' || k === 'operados') && cuenta(k) ? 'urge' : ''}">${cuenta(k) || ''}</b></button>`).join('');
     $('#seg-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p>${S.toca === 'operados' ? '' : `<input id="s-texto" type="search" placeholder="Buscar paciente en toda la lista" value="${esc(S.texto)}" aria-label="Buscar paciente">`}</div><div id="seg-filas"></div>`;
   }
@@ -980,10 +1042,10 @@ function pintarSeguimiento(soloFilas) {
         `<button type="button" class="btn chico" data-agendar-nombre="${esc(o.paciente)}" data-agendar-tel="${esc(o.telefono || '')}">Agendar</button>`] }));
   } else {
     const t = sinTildes(S.texto);
-    filas = D.seguimiento.filter(x => t ? sinTildes(x.paciente).includes(t) : S.toca === 'inactivos' ? x.estado === 'Inactivo' : x.estado === 'Activo' && FILTRO_SEG[S.toca](x))
+    filas = D.seguimiento.filter(x => (!t || sinTildes(x.paciente).includes(t)) && (S.toca === 'historial' ? !operativoSeg(x) : S.toca === 'inactivos' ? x.estado === 'Inactivo' : operativoSeg(x) && x.estado === 'Activo' && FILTRO_SEG[S.toca](x)))
       .sort((a, b) => (a.proximo_seg || '9999').localeCompare(b.proximo_seg || '9999') || String(a.paciente).localeCompare(b.paciente))
       .map(x => {
-        const i = D.seguimiento.indexOf(x), atraso = tocaHoy(x) ? diasEntre(x.proximo_seg, D.hoy) : 0;
+        const i = D.seguimiento.indexOf(x); x=contextoSeg(x); const atraso = tocaHoy(x) ? diasEntre(x.proximo_seg, D.hoy) : 0;
         const pills = [atraso ? `<span class="pill rojo">Atrasado ${nDias(atraso)}</span>` : '',
           x.adherencia ? `<span class="pill ${{ Alta: '', Media: 'amarillo', Baja: 'rojo' }[x.adherencia]}">Adherencia ${esc(x.adherencia.toLowerCase())}</span>` : '',
           x.riesgo ? '<span class="pill rojo">En riesgo</span>' : '', x.estado === 'Inactivo' ? '<span class="pill gris">Inactivo</span>' : '',
@@ -991,8 +1053,8 @@ function pintarSeguimiento(soloFilas) {
         return filaLibre({ attrs: `data-seg="${i}" tabindex="0"`, clase: x.estado === 'Inactivo' ? 'apagada' : '',
           cuando: [x.proximo_seg ? esc(cuando(x.proximo_seg)) : '—', x.proximo_seg ? 'le toca' : ''],
           quien: [esc(x.paciente), [x.objetivo || 'sin objetivo anotado', x.ultima && 'consulta del ' + fechaCorta(x.ultima)].filter(Boolean).map(esc).join(' · ')],
-          motivo: x.n_desde ? `Seguimiento ${x.n_desde + 1} desde su consulta` : 'Primer seguimiento', pills,
-          acciones: [wa(x, x.n_desde ? 'seg' : 'seg_primero', 'Escribir'), `<button type="button" class="btn chico hecho" data-seg-abrir="${i}">Anotar</button>`] });
+          motivo: x.proximo_nro ? `Seguimiento ${x.proximo_nro} de consulta ${x.nro_consulta || '—'}` : 'Ciclo inicial completado · puedes agendar más seguimiento', pills,
+          acciones: [`<button type="button" class="btn chico" data-seg-abrir="${i}" data-seg-nro="${x.proximo_nro || ''}">Escribir / anotar</button>`, x.cita_id ? `<button type="button" class="btn chico" data-programar-seg="${i}">Agendar seguimiento</button>` : ''] });
       });
   }
   const vis = filas.slice(0, S.limite), resto = filas.length - vis.length;
@@ -1001,7 +1063,7 @@ function pintarSeguimiento(soloFilas) {
 }
 
 // ---------- COBROS: pagado, pendiente, paquetes, clínicas e informe de ventas
-const CB = { periodo: 'mes', estado: '', servicio: '', sec: 'por-cobrar', desde: null, hasta: null, pago: '', modalidad: '', prof: '', limite: 30 };
+const CB = { texto:'', periodo: 'mes', estado: '', servicio: '', sec: 'por-cobrar', desde: null, hasta: null, pago: '', modalidad: '', prof: '', limite: 30 };
 const finales = c => Number(c.monto) || 0;
 const cobroCitas = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado) && (CB.periodo === 'todas' || c.fecha.slice(0, 7) === D.hoy.slice(0, 7)));
 const SECCIONES_COBROS = [
@@ -1011,6 +1073,7 @@ const SECCIONES_COBROS = [
   ['clinicas', 'Clínicas por cobrar', 'Citas que paga una clínica a fin de mes. Marca «Clínica pagó» cuando la clínica deposite.', c => c.pago === 'Pendiente clínica'],
   ['paquetes', 'Paquetes', 'Compras de varias citas: la primera lleva el pago, las demás van incluidas.', null],
   ['ventas', 'Informe de ventas', 'Filtra y descarga en Excel.', null],
+  ['banco','Conciliación de pagos','Movimientos con fecha real de pago; las fechas históricas desconocidas no se inventan.',null],
 ];
 function filasCobro(c) {
   const dcto = Number(c.descuento_pct) ? `<span class="pill gris">−${Number(c.descuento_pct)} %</span>` : '';
@@ -1019,7 +1082,7 @@ function filasCobro(c) {
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, cuando: [fechaCorta(c.fecha), esc(horaMensaje(c.hora))],
     quien: [esc(c.paciente), [fmtTel(c.telefono), c.servicio].filter(Boolean).map(esc).join(' · ')],
     motivo: c.monto != null ? `S/${soles(c.monto)}${c.pagador ? ' · paga ' + esc(c.pagador) : ''}` : 'Falta elegir el servicio para saber cuánto cobrar',
-    pills: pillPago(c) + dcto + (c.paquete_id ? `<span class="pill azul">Paquete ${c.nro_paquete} de ${c.paquete_total}</span>` : ''), acciones: acc });
+    pills: pillPago(c) + dcto + (c.paquete_id ? `<span class="pill azul">Paquete ${c.nro_paquete} de ${c.paquete_total}</span>` : ''), acciones: [...acc,...(['Pagado','Adelanto 25%'].includes(c.pago) && !(c.fecha_pago || c.fecha_adelanto) ? [boton('Registrar fecha de pago',c.id,{pago:c.pago})] : [])] });
 }
 function ventasFiltradas() {
   const mes = D.hoy.slice(0, 7);
@@ -1032,19 +1095,39 @@ function fichaDe(c) {
   return D.pacientes.find(x => x.nombre === c.paciente && (!c.telefono || !x.telefono || x.telefono === c.telefono)) || {};
 }
 function descargarVentas() {
-  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar'];
+  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar','Fecha de pago','Fecha de adelanto','Importe de adelanto','Fecha de saldo','Importe de saldo','Importe pagado registrado'];
   const celda = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // que Excel no ejecute fórmulas
     return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
     c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', c.pago, c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
-    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No']);
+    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,c.monto_adelanto,c.fecha_saldo,c.monto_saldo,c.monto_pagado]);
   const csv = '﻿sep=;\n' + [cab, ...filas].map(f => f.map(celda).join(';')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   a.download = `ventas-vt-${D.hoy}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   aviso(`Descargado: ${filas.length} citas. Ábrelo con Excel.`);
 }
+function movimientosPago(c) {
+  const m=[];
+  if(c.fecha_adelanto && c.monto_adelanto!=null)m.push({c,fecha:c.fecha_adelanto,importe:Number(c.monto_adelanto),medio:c.medio_adelanto || c.medio_pago,concepto:'Adelanto'});
+  if(c.fecha_saldo && c.monto_saldo!=null)m.push({c,fecha:c.fecha_saldo,importe:Number(c.monto_saldo),medio:c.medio_saldo || c.medio_pago,concepto:'Saldo'});
+  else if(c.fecha_pago && c.monto_pagado!=null)m.push({c,fecha:c.fecha_pago,importe:Number(c.monto_pagado),medio:c.medio_pagado || c.medio_pago,concepto:'Pago completo'});
+  return m;
+}
+function pagosFiltrados() {
+ const desde=CB.desde || D.hoy.slice(0,7)+'-01',hasta=CB.hasta || sumar(sumar(D.hoy.slice(0,7)+'-01',40).slice(0,7)+'-01',-1);
+ return D.citas.filter(c=>(!CB.prof || c.profesional===CB.prof) && (!CB.texto || sinTildes(c.paciente).includes(sinTildes(CB.texto)))).flatMap(movimientosPago)
+  .filter(p=>p.fecha>=desde && p.fecha<=hasta).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+}
+function descargarPagos() {
+ const cab=['Fecha de pago','Paciente','Concepto','Importe','Medio de pago','Fecha de cita','Profesional'];
+ const filas=pagosFiltrados().map(p=>[p.fecha,p.c.paciente,p.concepto,p.importe,p.medio,p.c.fecha,p.c.profesional]);
+ const celda=v=>{let s=String(v ?? '');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+ const csv='\ufeffsep=;\n'+[cab,...filas].map(f=>f.map(celda).join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`pagos-vt-${D.hoy}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+ aviso(`Descargado: ${filas.length} movimientos de pago.`);
+}
 function pintarCobros(soloLista) {
-  const citas = cobroCitas();
+  const citas = cobroCitas().filter(c=>(!CB.prof || c.profesional===CB.prof) && (!CB.texto || sinTildes(c.paciente).includes(sinTildes(CB.texto))));
   const cuenta = f => citas.filter(f).length;
   if (!soloLista) {
     $('#cob-menu').innerHTML = '<p class="grupo">Cobros</p>' + SECCIONES_COBROS.map(([k, n, , f], i) => (k === 'paquetes' ? '<p class="grupo">Paquetes e informes</p>' : '')
@@ -1058,6 +1141,11 @@ function pintarCobros(soloLista) {
       pills: `<span class="pill azul">Faltan ${q.total - q.usadas} citas</span>`,
       acciones: [`<button type="button" class="btn chico hecho" data-agendar-nombre="${esc(q.paciente)}" data-agendar-tel="${esc(q.telefono || '')}">Agendar su cita ${q.usadas + 1}</button>`] })).join('')
       : '<p class="vacio">Todavía no hay paquetes con citas por usar. Al agendar un paquete, aparece aquí.</p>';
+  } else if (CB.sec === 'banco') {
+    const mov=pagosFiltrados();
+    cuerpo=`<div class="ventas-filtros"><label>Pago desde<input type="date" class="cob-f" data-k="desde" value="${CB.desde || D.hoy.slice(0,7)+'-01'}"></label><label>Pago hasta<input type="date" class="cob-f" data-k="hasta" value="${CB.hasta || ''}"></label><button type="button" class="btn pri" data-descargar-pagos>Descargar pagos para Excel</button></div>
+    <p class="nota">${mov.length} movimientos · S/${soles(mov.reduce((n,p)=>n+p.importe,0))}. Los pagos sin fecha quedan pendientes de conciliación.</p>
+    <div class="tabla-ventas"><table><tr><th>Fecha de pago</th><th>Paciente</th><th>Concepto</th><th>Importe</th><th>Medio</th><th>Fecha de cita</th></tr>${mov.map(p=>`<tr data-abrir="${p.c.id}"><td>${fechaCorta(p.fecha)}</td><td>${esc(p.c.paciente)}</td><td>${p.concepto}</td><td>S/${soles(p.importe)}</td><td>${esc(p.medio || '—')}</td><td>${fechaCorta(p.c.fecha)}</td></tr>`).join('')}</table></div>`;
   } else if (CB.sec === 'ventas') {
     const V = ventasFiltradas(), sum = f => V.filter(f).reduce((n, c) => n + finales(c), 0);
     const cobrado = sum(c => c.pago === 'Pagado' && !c.pago_por_revisar) + sum(c => c.pago === 'Adelanto 25%') * .25;
@@ -1074,14 +1162,14 @@ function pintarCobros(soloLista) {
       <button type="button" class="btn" data-periodo="semana">Esta semana</button><button type="button" class="btn" data-periodo="mes">Este mes</button>
       <button type="button" class="btn pri" data-descargar>Descargar Excel</button></div>
       <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length ? ` <small>(${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Pagos por verificar <b>S/${soles(sum(c => c.pago_por_revisar))}</b></span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
-      <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th></tr>
-      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}${c.pago_por_revisar ? ' · por verificar' : ''}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
+      <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th><th>Fecha de pago</th></tr>
+      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}${c.pago_por_revisar ? ' · por verificar' : ''}</td><td>${c.fecha_pago ? fechaCorta(c.fecha_pago) : c.fecha_adelanto ? fechaCorta(c.fecha_adelanto)+' · adelanto' : '—'}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
   } else {
     const L = citas.filter(filtro).sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
     const vis = L.slice(0, CB.limite), resto = L.length - vis.length;
     cuerpo = L.length ? vis.map(filasCobro).join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '') : '<p class="vacio">Nada por aquí ✓</p>';
   }
-  $('#cob-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p></div>${cuerpo}`;
+  $('#cob-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p><input type="search" class="cob-f" data-k="texto" placeholder="Buscar paciente" value="${esc(CB.texto)}" aria-label="Buscar paciente en cobros"></div>${cuerpo}`;
 }
 
 function pintar() {
@@ -1149,7 +1237,7 @@ function pintarTurnos() {
   const caja = $('#turnos'), nota = $('#turnos-nota');
   if (!fecha) { caja.innerHTML = ''; nota.textContent = 'Elige la fecha para ver los horarios.'; return; }
   const ocupadas = prof === 'Lic. Vanessa Tello' ? D.citas.filter(c => c.fecha === fecha && c.profesional === prof && VIVOS.includes(c.estado) && c.id !== editando?.id) : [];   // el equipo son varias nutricionistas a la vez
-  const lista = turnos(AGENDA[mod][diaSemana(fecha)]);      // el equipo atiende en el mismo horario que Vanessa
+  const lista = turnosDia(fecha,mod,prof);      // el equipo atiende en el mismo horario que Vanessa
   caja.innerHTML = lista.map(h => {
     const o = ocupadas.find(c => aMin(c.hora) < aMin(h) + DURACION && aMin(h) < aMin(c.hora) + (c.duracion_min || DURACION));
     const bloqueado = bloqueoEn(fecha, h, prof);
@@ -1209,7 +1297,8 @@ function abrirCita(c, base = {}) {
   fc.tipo_paciente.innerHTML = '<option value="">—</option>' + TIPOS_PACIENTE.map(x => `<option>${x}</option>`).join('');
   $('#lista-llega').innerHTML = [...new Set(D.pacientes.map(x => x.llega_por).filter(Boolean))].sort().map(x => `<option value="${esc(x)}">`).join('');
   const v = c ? { ...fichaDe(c), ...c } : { modalidad: 'Virtual', profesional: 'Lic. Vanessa Tello', estado: 'Por confirmar', pago: 'Por pagar', tipo: 'Primera cita', ...base };
-  for (const k of ['dni', 'llega_por', 'tipo_paciente', 'paciente', 'telefono', 'email', 'profesional', 'fecha', 'hora', 'tipo', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'servicio', 'precio_lista', 'descuento_pct', 'pagador']) {
+  fc.fecha_pago.max=D.hoy;
+  for (const k of ['fecha_pago','dni', 'llega_por', 'tipo_paciente', 'paciente', 'telefono', 'email', 'profesional', 'fecha', 'hora', 'tipo', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'servicio', 'precio_lista', 'descuento_pct', 'pagador']) {
     if (!fc[k] || v[k] == null) continue;
     if (fc[k].tagName === 'SELECT' && ![...fc[k].options].some(o => o.value === v[k])) fc[k].add(new Option(v[k], v[k]));
     fc[k].value = v[k];
@@ -1274,7 +1363,7 @@ fc.addEventListener('submit', async e => {
   if (!fc.checkValidity()) fc.querySelector('.mas-datos').open = true;   // el campo inválido puede estar ahí
   if (!fc.reportValidity()) return;
   if (fc.telefono.value.trim() && !telNorm(fc.telefono.value)) { $('#cita-error').textContent = 'Revisa el teléfono: escribe los 9 dígitos del celular (o el número con código de país).'; $('#cita-error').hidden = false; return; }
-  const campos = ['paciente', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente', 'profesional', 'tipo', 'servicio', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'precio_lista', 'descuento_pct', 'pagador'];
+  const campos = ['paciente', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente', 'profesional', 'tipo', 'servicio', 'estado', 'pago', 'monto', 'medio_pago', 'fecha_pago', 'enlace_zoom', 'notas', 'precio_lista', 'descuento_pct', 'pagador'];
   let p = Object.fromEntries(campos.map(k => [k, fc[k].value.trim()]));
   p.modalidad = modalidad();
   if (p.pago !== 'Pendiente clínica') p.pagador = '';
@@ -1295,6 +1384,9 @@ fc.addEventListener('submit', async e => {
     if (usar?.checked && paqueteActivo()) p.paquete_id = paqueteActivo().id;
     else if (total && !$('#caja-paquete').hidden) p.paquete_total = total.value;
   }
+  if (['Pagado','Adelanto 25%'].includes(p.pago) && Number(p.monto || editando?.monto)>0 && !p.fecha_pago) { $('#cita-error').textContent='Indica la fecha real del pago.'; $('#cita-error').hidden=false; return; }
+  if (!p.fecha_pago) delete p.fecha_pago;
+  if (!p.pago) delete p.fecha_pago;
   p.permitir_cruce = fc.permitir_cruce.checked;
   await guardar(p, $('#cita-error'), $('#dlg-cita'), editando ? 'Cita actualizada.' : ['Por pagar', 'Adelanto 25%'].includes(p.pago) ? 'Cita creada. Aparece en «Cobrar» hasta que pague.' : 'Cita creada.');
 });
@@ -1311,7 +1403,7 @@ async function guardar(p, error, dlg, ok) {
       if (/compartido/.test(r.motivo || '')) dlg.querySelector('.mas-datos')?.setAttribute('open', '');
       return false;
     }
-    dlg.close(); aviso(ok); await cargar(); return true;
+    dlg.close(); aviso(ok); if(['abrir_horario','editar_apertura'].includes(p.accion)){C.fecha=p.inicio.slice(0,10);C.modo='dia';} await cargar(); if (p.accion==='crear' && r.cita) mostrarReserva(r.cita); return true;
   } catch (e) { error.textContent = 'Sin conexión. No se guardó; inténtalo otra vez.'; error.hidden = false; return false; }
   finally { dlg.querySelectorAll('button').forEach(b => b.disabled = false); principal.textContent = texto; }
 }
@@ -1337,16 +1429,18 @@ fm.addEventListener('submit', async e => {
 
 // ---------- registrar seguimiento
 const fs = $('#form-seg');
-function abrirSeg(x) {
+function contextoSeg(x,nro) { const elegido=nro ? Number(nro) : ({primero:1,segundo:2,tercero:3})[S.toca]; const t=(x.tareas||[]).filter(t=>!t.realizado && (S.toca==='adicionales' && !elegido ? t.nro>3 : t.nro===(elegido || x.proximo_nro))).sort((a,b)=>a.fecha.localeCompare(b.fecha))[0]; return t ? {...x,proximo_nro:t.nro,proximo_seg:t.fecha} : x; }
+function abrirSeg(x,nro) {
+  x=contextoSeg(x,nro);
   siguiendo = x; fs.reset();
-  fs.fecha.value = D.hoy;
+  fs.fecha.value = D.hoy; fs.fecha.max = D.hoy; fs.dataset.nro = x.proximo_nro || ''; $('#seg-mensaje').value = mensaje(x.proximo_nro===1 ? 'seg_primero' : 'seg',x);
   fs.adherencia.value = x.adherencia || ''; fs.estado.value = x.estado || 'Activo';
   fs.riesgo.checked = x.riesgo === true; fs.objetivo.value = x.objetivo || ''; fs.notas.value = x.notas || '';
   $('#seg-titulo').textContent = x.paciente;
-  $('#seg-sub').textContent = [x.telefono, x.ultima && 'consulta del ' + fechaLarga(x.ultima), x.proximo_seg && 'le toca ' + fechaLarga(x.proximo_seg), `${x.total || 0} seguimientos`].filter(Boolean).join(' · ');
-  $('#seg-barra').innerHTML = `<span class="titulo">1 · Escríbele</span>${wa(x, x.n_desde ? 'seg' : 'seg_primero')}<button type="button" class="btn chico" id="seg-agendar">Agendar control</button><span class="titulo" style="margin-top:.3rem">2 · Anota lo que contó y guarda</span>`;
+  $('#seg-sub').textContent = [x.proximo_nro && `Seguimiento ${x.proximo_nro} de consulta ${x.nro_consulta || '—'}`,x.telefono, x.ultima && 'consulta del ' + fechaLarga(x.ultima), x.proximo_seg && 'le toca ' + fechaLarga(x.proximo_seg), `${x.total || 0} contactos registrados`].filter(Boolean).join(' · ');
+  $('#seg-barra').innerHTML = `<span class="titulo">1 · Escríbele</span>${x.cita_id ? '<button type="button" class="btn chico" data-programar-actual>Agendar seguimiento</button>' : ''}<button type="button" class="btn chico" id="seg-agendar">Agendar control</button><span class="titulo" style="margin-top:.3rem">2 · Anota lo que contó y guarda</span>`;
   $('#seg-historial').innerHTML = x.historial?.length ? '<b>Últimos seguimientos</b><ul>' + x.historial.map(h =>
-    `<li>${fechaLarga(h.fecha)} · ${h.respondio === false ? 'no respondió' : h.respondio ? 'respondió' : '—'}${h.resultado ? ' · ' + esc(h.resultado) : ''}${h.comentarios ? ' — ' + esc(h.comentarios) : ''}</li>`).join('') + '</ul>' : '';
+    `<li>${fechaLarga(h.fecha)} · ${h.respondio === false ? 'no respondió' : h.respondio ? 'respondió' : '—'}${h.nro_seg ? ' · seguimiento '+h.nro_seg : ' · contacto histórico'}${h.resultado ? ' · ' + esc(h.resultado) : ''}${h.comentarios ? ' — ' + esc(h.comentarios) : ''}</li>`).join('') + '</ul>' : '';
   $('#seg-error').hidden = true;
   $('#dlg-seg').showModal();
 }
@@ -1361,10 +1455,55 @@ fs.addEventListener('submit', async e => {
     adherencia: fs.adherencia.value, estado: fs.estado.value, riesgo: fs.riesgo.checked, objetivo: fs.objetivo.value.trim(), notas: fs.notas.value.trim() };
   if (x.id) p.paciente_id = x.id;
   if (!x.id && x.ultima) p.ultima_consulta = x.ultima;
-  if (modo === 'guardar') Object.assign(p, { fecha: fs.fecha.value, respondio: fs.respondio.value === 'true', comentarios: fs.comentarios.value.trim(), resultado: fs.resultado.value.trim() });
+  if (modo === 'guardar') Object.assign(p, { fecha: fs.fecha.value, respondio: fs.respondio.value === 'pendiente' ? null : fs.respondio.value === 'true', comentarios: fs.comentarios.value.trim(), resultado: fs.resultado.value.trim() });
+  if (modo==='guardar' && x.cita_id) { if (!x.proximo_nro) { $('#seg-error').textContent='Agenda un seguimiento adicional antes de anotarlo.'; $('#seg-error').hidden=false; return; } Object.assign(p,{cita_id:x.cita_id,nro_seg:x.proximo_nro}); }
   await guardar(p, $('#seg-error'), $('#dlg-seg'), modo === 'guardar' ? 'Seguimiento anotado.' : 'Ficha guardada.');
 });
 
+function mostrarReserva(raw) {
+  const local=raw.inicio ? new Date(raw.inicio).toLocaleString('sv-SE',{timeZone:'America/Lima'}) : '';
+  const c=buscarCita(raw.id) || {...raw,fecha:raw.fecha || local.slice(0,10),hora:raw.hora || local.slice(11,16)};
+  $('#reserva-info-sub').textContent=`${c.paciente} · ${fechaLarga(c.fecha)} · ${horaMensaje(c.hora)}`;
+  $('#reserva-info-acciones').innerHTML=wa(c,'reserva_inicial','Enviar información de cita y pago');
+  $('#dlg-reserva-info').showModal();
+}
+const fpg=$('#form-programar'), fap=$('#form-apertura'), fpa=$('#form-pago');
+let programando=null,pagando=null;
+function abrirProgramar(x) {
+  if($('#dlg-seg').open)$('#dlg-seg').close();
+  programando=x; fpg.reset();
+  fpg.nro_seg.innerHTML='<option value="">Nuevo seguimiento adicional</option>'+(x.tareas || []).filter(t=>!t.realizado).map(t=>`<option value="${t.nro}">Cambiar fecha del seguimiento ${t.nro}</option>`).join('');
+  fpg.fecha_programada.value=x.proximo_seg && x.proximo_seg>D.hoy ? x.proximo_seg : D.hoy;
+  fpg.fecha_programada.min=x.ultima; $('#programar-sub').textContent=`${x.paciente} · consulta ${x.nro_consulta} del ${fechaLarga(x.ultima)}`;
+  $('#programar-error').hidden=true; $('#dlg-programar').showModal();
+}
+fpg.addEventListener('submit',async e=>{e.preventDefault();if(!fpg.reportValidity())return;
+  await guardar({accion:'programar_seguimiento',cita_id:programando.cita_id,paciente:programando.paciente,telefono:programando.telefono,nro_seg:fpg.nro_seg.value || undefined,fecha_programada:fpg.fecha_programada.value},$('#programar-error'),$('#dlg-programar'),'Seguimiento programado.');
+});
+function abrirApertura(id) {
+  fap.reset();delete fap.dataset.id;
+  const a=(D.aperturas || []).find(x=>x.id===Number(id)),d=C.fecha || D.hoy;
+  fap.profesional.value=a?.profesional || C.prof || 'Lic. Vanessa Tello';fap.profesional.disabled=!!a;
+  fap.modalidad.value=a?.modalidad || 'Ambas';fap.inicio.value=a?.inicio || d+'T09:00';fap.fin.value=a?.fin || d+'T12:00';fap.motivo.value=a?.motivo || '';
+  if(a)fap.dataset.id=a.id;$('#apertura-error').hidden=true;$('#dlg-apertura').showModal();
+}
+fap.addEventListener('submit',async e=>{e.preventDefault();if(!fap.reportValidity())return;
+  await guardar({accion:fap.dataset.id ? 'editar_apertura':'abrir_horario',id:Number(fap.dataset.id)||undefined,profesional:fap.profesional.value,modalidad:fap.modalidad.value,inicio:fap.inicio.value,fin:fap.fin.value,motivo:fap.motivo.value.trim()},$('#apertura-error'),$('#dlg-apertura'),'Horario abierto.');
+});
+function abrirPago(c,pago) {
+  if(!Number(c.monto)){aviso('Elige el servicio y su importe antes de registrar el pago.');abrirCita(c);return;}
+  if($('#dlg-cita').open)$('#dlg-cita').close();
+  pagando={c,pago};fpa.reset();fpa.fecha_pago.value='';fpa.fecha_pago.max=D.hoy;
+  fpa.medio_pago.innerHTML='<option value="">—</option>'+MEDIOS.map(x=>`<option>${x}</option>`).join('');fpa.medio_pago.value=c.medio_pago || '';
+  $('#pago-sub').textContent=`${c.paciente} · ${pago} · S/${soles(pago==='Adelanto 25%' ? parte(c.monto,.25) : c.pago==='Adelanto 25%' ? saldoCita(c) : c.monto)}`;
+  $('#pago-error').hidden=true;$('#dlg-pago').showModal();
+}
+fpa.addEventListener('submit',async e=>{e.preventDefault();if(!fpa.reportValidity())return;
+  await guardar({accion:'editar',id:pagando.c.id,pago:pagando.pago,fecha_pago:fpa.fecha_pago.value,medio_pago:fpa.medio_pago.value},$('#pago-error'),$('#dlg-pago'),'Pago y fecha registrados.');
+});
+function aperturasDia(f) {
+  return (D.aperturas || []).filter(a=>a.inicio.slice(0,10)===f && (!C.prof || C.prof===a.profesional)).map(a=>`<p class="nota">Horario extraordinario · ${esc(a.profesional)} · ${esc(a.modalidad)} · ${horaMensaje(a.inicio.slice(11,16))} a ${horaMensaje(a.fin.slice(11,16))} <button class="btn chico" data-editar-apertura="${a.id}">Editar</button> <button class="btn chico" data-cerrar-apertura="${a.id}" data-prof="${esc(a.profesional)}">Retirar apertura</button></p>`).join('');
+}
 // ---------- clics
 async function accion(btn, pedido, ok) {
   btn.disabled = true;
@@ -1383,6 +1522,12 @@ document.addEventListener('click', async e => {
   const ct = t.closest('[data-contactar]'); if (ct) return accion(ct, { accion: 'contactar', id: Number(ct.dataset.contactar), motivo: ct.dataset.motivo }, 'Movida a Pendiente de respuesta.');
   if (t.closest('[data-pacientes]')) { abrirPaciente(); return; }
   const pc = t.closest('[data-paciente-cita]'); if (pc) { const c = buscarCita(pc.dataset.pacienteCita); $('#dlg-cita').close(); abrirPaciente(fichaDe(c)); return; }
+  if (t.closest('[data-abrir-horario]')) { abrirApertura(); return; }
+  const ae=t.closest('[data-editar-apertura]'); if(ae){abrirApertura(ae.dataset.editarApertura);return;}
+  const ac=t.closest('[data-cerrar-apertura]'); if(ac) return accion(ac,{accion:'cerrar_apertura',id:Number(ac.dataset.cerrarApertura),profesional:ac.dataset.prof},'Apertura retirada. Las citas existentes se conservan.');
+  const ps=t.closest('[data-programar-seg]'); if(ps){abrirProgramar(D.seguimiento[ps.dataset.programarSeg]);return;}
+  if(t.closest('[data-programar-actual]')){abrirProgramar(siguiendo);return;}
+  if(t.closest('[data-seg-mensaje]')) { const texto=$('#seg-mensaje').value.trim(); if(!texto || !telNorm(siguiendo.telefono)){aviso('Escribe el mensaje y revisa el teléfono.');return;} if(DEMO){aviso('Práctica: no se envió ningún mensaje.');return;} window.open(waUrl(siguiendo.telefono,texto),'_blank','noopener');return; }
   if (t.closest('[data-bloquear]')) { abrirBloqueo(); return; }
   const eb = t.closest('[data-editar-bloqueo]'); if (eb) { abrirBloqueo(eb.dataset.editarBloqueo); return; }
   const db = t.closest('[data-desbloquear]'); if (db) return accion(db, { accion: 'desbloquear', id: Number(db.dataset.desbloquear), profesional: db.dataset.prof, serie: db.dataset.serie === 'true' }, 'Horario disponible otra vez.');
@@ -1390,6 +1535,7 @@ document.addEventListener('click', async e => {
   const ed = t.closest('[data-editar]');
   if (ed) {
     const campos = JSON.parse(ed.dataset.campos);
+    if (['Pagado','Adelanto 25%'].includes(campos.pago)) { abrirPago(buscarCita(ed.dataset.editar),campos.pago); return; }
     return accion(ed, { accion: 'editar', id: Number(ed.dataset.editar), ...campos },
       campos.estado ? 'Marcada: ' + campos.estado : campos.pago ? 'Pago: ' + campos.pago : 'Anotado: ya se le escribió hoy.');
   }
@@ -1418,6 +1564,7 @@ document.addEventListener('click', async e => {
   const chip = t.closest('.chip-cita'); if (chip) { abrirCita(buscarCita(chip.dataset.abrir)); return; }
   const idia = t.closest('[data-ir-dia]'); if (idia && !t.closest('[data-abrir]')) { C.fecha = idia.dataset.irDia; C.modo = 'dia'; pintarAgenda(); return; }
   const cb = t.closest('[data-cob]'); if (cb) { CB.sec = cb.dataset.cob; CB.limite = 30; pintarCobros(); return; }
+  if(t.closest('[data-descargar-pagos]')){descargarPagos();return;}
   if (t.closest('[data-descargar]')) { descargarVentas(); return; }
   const st = t.closest('[data-seg-toca]'); if (st) { S.toca = st.dataset.segToca; S.limite = 30; S.texto = ''; pintarSeguimiento(); return; }
   const med = t.closest('[data-medir]'); if (med) { $('#dlg-cita').close(); abrirMedicion(buscarCita(med.dataset.medir)); return; }
@@ -1425,7 +1572,7 @@ document.addEventListener('click', async e => {
   if (re) { const c = buscarCita(re.dataset.reagendar); abrirCita(null, { paciente: c.paciente, telefono: c.telefono, email: c.email, lead_id: c.lead_id, modalidad: c.modalidad, tipo: 'Control' }); return; }
   const ag = t.closest('[data-agendar-nombre]'); if (ag) { abrirCita(null, { paciente: ag.dataset.agendarNombre, telefono: ag.dataset.agendarTel, tipo: 'Post operación' }); return; }
   if (t.id === 'seg-agendar') { const x = siguiendo; $('#dlg-seg').close(); abrirCita(null, { paciente: x.paciente, telefono: x.telefono, tipo: 'Control' }); return; }
-  const sa = t.closest('[data-seg-abrir]'); if (sa) { abrirSeg(D.seguimiento[sa.dataset.segAbrir]); return; }
+  const sa = t.closest('[data-seg-abrir]'); if (sa) { abrirSeg(D.seguimiento[sa.dataset.segAbrir],sa.dataset.segNro); return; }
   if (t.closest('a, button, summary, input, select, label')) return;
   const ab = t.closest('[data-abrir]'); if (ab) { abrirCita(buscarCita(ab.dataset.abrir)); return; }
   const sg = t.closest('[data-seg]'); if (sg) abrirSeg(D.seguimiento[sg.dataset.seg]);
@@ -1437,6 +1584,8 @@ document.addEventListener('keydown', e => {
 });
 $('#tareas-prof').addEventListener('change', e => { H.prof = e.target.value; H.sec = null; pintar(); });
 $('#cobros-periodo').addEventListener('change', e => { CB.periodo = e.target.value; CB.limite = 30; pintarCobros(); });
+$('#tareas-orden').addEventListener('change',e=>{H.orden=e.target.value;H.limite=30;pintarHoy();});
+$('#tareas-buscar').addEventListener('input',e=>{H.texto=e.target.value;H.limite=30;pintarHoy();});
 $('#confirmaciones-periodo').addEventListener('change', e => { H.periodo = e.target.value; H.limite = 30; pintar(); });
 $('#f-texto').addEventListener('input', e => { F.texto = e.target.value; pintarAgenda(); });
 document.querySelectorAll('[name=cal-prof]').forEach(r => r.addEventListener('change', e => { C.prof = e.target.value; pintarAgenda(); }));
@@ -1449,7 +1598,8 @@ $('#consejo').hidden = guardado('consejo-visto') === '1';
 $('#consejo-ok').addEventListener('click', () => { guardado('consejo-visto', '1'); $('#consejo').hidden = true; });
 $('#recargar').addEventListener('click', () => cargar().then(ok => ok && aviso('Actualizado a las ' + horaLima() + '.')));
 
-const cargos = CARGOS.map(u => `<option>${u}</option>`).join('');
+const nombreCargo = u => ({'Asistente de la nutricionista':'Asistencia comercial · citas y cobros (Sheila)','Nutricionista del equipo':'Seguimiento nutricional (Ximena)'})[u] || u;
+const cargos = CARGOS.map(u => `<option value="${esc(u)}">${esc(nombreCargo(u))}</option>`).join('');
 $('#cargo').innerHTML = cargos; $('#cargo-acceso').innerHTML = '<option value="">Elige tu cargo</option>' + cargos;
 const cargoGuardado = CARGOS.includes(guardado('cargo')) ? guardado('cargo') : '';
 $('#cargo').value = cargoGuardado || CARGOS[0]; $('#cargo-acceso').value = cargoGuardado;

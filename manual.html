@@ -117,7 +117,7 @@ a{color:var(--vo)}
     <li><b>Presencial / Virtual</b>, <b>fecha</b> y toca un <b>horario libre</b> (los tachados están ocupados).</li>
     <li><b>Servicio</b> (pone el precio de lista solo). Si hay descuento, escribe el <b>porcentaje</b> (100 % = cortesía): el precio final se calcula solo y se puede corregir.</li>
     <li><b>Pago</b>: Por pagar, Adelanto 25 %, Pagado, Cortesía, Paquete o <b>Pendiente clínica</b> (la paga una clínica a fin de mes; escribe quién paga).</li>
-    <li><span class="btn pri">Guardar</span>. En «Más datos» están el enlace de Zoom, las notas y «permitir horario compartido» (dos familiares juntos).</li>
+    <li><span class="btn pri">Guardar</span>. Al crear una cita aparece <b>Enviar información de cita y pago</b>, para que Sheila envíe los datos inmediatamente. Registrar un pago exige su fecha real. En «Más datos» están el enlace de Zoom, las notas y «permitir horario compartido» (dos familiares juntos).</li>
   </ol>
   <p>En la ficha de una cita existente tienes arriba los botones para marcar (<b>Confirmó, Asistió, No asistió, Pagó todo, Cancelar cita, Registrar resultados</b>) y los mensajes de WhatsApp: pedir confirmación, recordatorio con indicaciones, datos de pago y cita confirmada con condiciones.</p>
   <div class="nota"><b>Registrar resultados</b>: peso, % grasa, músculo, grasa visceral, % agua, IMC y recomendaciones (una por línea). Al guardar, la cita queda como «Asistió».</div>
@@ -136,6 +136,7 @@ a{color:var(--vo)}
     <tr><td><b>Clínicas por cobrar</b></td><td>Citas que paga una clínica. Cuando depositen, toca «Clínica pagó».</td></tr>
     <tr><td><b>Paquetes</b></td><td>Quién tiene un paquete y cuántas citas le faltan. «Agendar su cita 3».</td></tr>
     <tr><td><b>Verificar pagos importados</b></td><td>Importes del calendario que no prueban un pago. Verifica el comprobante y marca Pago verificado. Se muestran separados del cobrado en el informe.</td><td>Pago verificado · Abrir ficha</td></tr>
+    <tr><td><b>Conciliación de pagos</b></td><td>Filtra por fecha bancaria y descarga adelantos y saldos separados. Una cita de noviembre puede tener un adelanto en octubre. Los pagos históricos sin fecha no se inventan; registra su fecha revisando el comprobante.</td></tr>
     <tr><td><b>Informe de ventas</b></td><td>Filtra por fechas, semana o mes, pago, estado de la cita, servicio, modalidad y profesional, ve el cobrado y lo pendiente, y toca <span class="btn pri">Descargar Excel</span>.</td></tr>
   </table>
   <p>Una cita <b>pagada no aparece en las listas de no pagadas</b>. Si ves una pagada en «Por cobrar», toca <span class="btn">Pagó ✓</span> y sale.</p>
@@ -144,12 +145,13 @@ a{color:var(--vo)}
 
 <section id="seguimiento">
   <h2>7. Seguimiento nutricional</h2>
-  <p>Quien asiste a una cita entra sola a esta lista. Se le escribe <b>3 días</b> y <b>1 semana</b> después de su consulta, y luego <b>cada 2 semanas</b>.</p>
+  <p>La lista operativa empieza con consultas atendidas desde el <b>1 de octubre de 2026</b>. Cada consulta inicia tres seguimientos a los <b>3, 7 y 14 días</b>. El historial anterior se conserva en su propia lista.</p>
   <ol>
     <li>Elige <b>Le toca hoy</b> (también: próximos 7 días, en riesgo, adherencia baja, inactivos).</li>
-    <li>Toca <span class="btn wa">WhatsApp</span> y envía el mensaje.</li>
-    <li>Toca <span class="btn">Anotar</span>: ¿respondió?, qué contó, resultado, adherencia y si está en riesgo. <b>Anotar seguimiento</b> calcula la próxima fecha sola.</li>
+    <li>Toca <span class="btn">Escribir / anotar</span>, personaliza el texto y abre WhatsApp. Revisa que estés usando el número de seguimiento de Ximena.</li>
+    <li>Toca <span class="btn">Anotar</span>: ¿respondió?, qué contó, resultado, adherencia y si está en riesgo. <b>Anotar seguimiento</b> completa ese contacto de su consulta. Puedes registrar contactos anteriores indicando la fecha real; abrir WhatsApp no los completa.</li>
   </ol>
+  <p><b>Agendar seguimiento</b> permite cambiar la fecha de un contacto pendiente o crear adicionales. Estas tareas no ocupan citas médicas. Los filtros primero, segundo, tercero y adicionales muestran el contacto correspondiente y su consulta.</p>
   <p><b>Operados · 6 meses y 1 año</b>: pacientes a quienes se les cumple ese tiempo de su cirugía (dos semanas antes o después). WhatsApp → Ya le escribí → Agendar.</p>
 </section>
 
@@ -159,6 +161,7 @@ a{color:var(--vo)}
     <li>Horario: lunes virtual 9:30–12:30 · martes y jueves presencial o virtual 8:15–17:30 (almuerzo 14:15–15:15) · miércoles virtual 14:15–18:00. Citas cada 45 minutos.</li>
     <li>Paciente nueva paga el 100 % al reservar. Tienen 48 horas para pagar o se libera el turno. (El adelanto del 25 % sigue disponible para pacientes de seguimiento.)</li>
     <li>Confirmaciones: de 5 a 7 días antes y 1 día antes (el viernes ya salen las del lunes). Solo se puede reagendar dentro de los 5 a 7 días.</li>
+    <li><b>Calendario → Abrir horario</b> habilita atención extraordinaria por fecha, profesional y modalidad, incluyendo viernes. El fin es la hora a la que termina el último turno de 45 minutos. Los bloqueos y citas existentes conservan prioridad; retirar una apertura no borra citas.</li>
     <li>La página de reservas solo ofrece horas libres de esta misma agenda, y cada reserva web aparece aquí sola.</li>
     <li>Las citas quedan también en el lead de Kommo de la paciente.</li>
   </ul>
@@ -166,7 +169,7 @@ a{color:var(--vo)}
 
 <section id="dudas">
   <h2>9. Dudas frecuentes</h2>
-  <h3>Me equivoqué al marcar algo</h3><p>Abre la ficha y corrige el pago (en «Pago») o el estado (en «Más datos») y guarda. Todo cambio queda registrado con el cargo de quien lo hizo.</p>
+  <h3>Me equivoqué al marcar algo</h3><p>Abre la ficha y corrige el estado o los datos y guarda. Un pago con fecha bancaria registrada no se convierte automáticamente en una deuda; para corregir un pago acreditado, avisa a soporte y conserva el comprobante. Todo cambio queda registrado con el cargo de quien lo hizo.</p>
   <h3>No aparece una paciente</h3><p>Búscala en <b>Calendario</b> (buscador). Usa <b>Pacientes</b> para crearla o corregir sus datos sin pedir fecha ni hora.</p>
   <h3>Dice «No se pudo conectar»</h3><p>Revisa tu internet y toca <span class="btn">↻</span>. Si sigue, avisa a soporte.</p>
 </section>
