@@ -1017,16 +1017,17 @@ function pintarMes() {
 
 // ---------- SEGUIMIENTO
 const operativoSeg = x => x.operativo ?? (x.ultima >= '2026-10-01');
+const consultasPorValidar = () => (D.sin_marcar || []).filter(c=>c.fecha>='2026-10-01');
 const tocaHoy = x => operativoSeg(x) && x.proximo_seg && x.proximo_seg <= D.hoy;
 const MENU_SEG = [['hoy', 'Le toca hoy', 'Pacientes a quienes toca escribir hoy o están atrasados.'],
   ['semana', 'Próximos 7 días', 'Les toca escribir en los próximos 7 días.'], ['riesgo', 'En riesgo', 'Marcados en riesgo de abandonar.'],
   ['baja', 'Adherencia baja', 'Con adherencia baja al plan.'], ['todos', 'Todos los activos', 'Todos los pacientes en seguimiento.'],
-  ['primero','Primer seguimiento','Primer contacto de su consulta.'], ['segundo','Segundo seguimiento','Segundo contacto de su consulta.'], ['tercero','Tercer seguimiento','Tercer contacto de su consulta.'], ['adicionales','Adicionales','Fechas elegidas por Ximena.'], ['historial','Historial anterior','Fichas anteriores al 1 de octubre, conservadas para consultar.'],
+  ['validar','Consultas por validar','Confirma si asistieron; solo las consultas atendidas generan seguimiento.'], ['primero','Primer seguimiento','Primer contacto de su consulta.'], ['segundo','Segundo seguimiento','Segundo contacto de su consulta.'], ['tercero','Tercer seguimiento','Tercer contacto de su consulta.'], ['adicionales','Adicionales','Fechas elegidas por Ximena.'], ['historial','Historial anterior','Fichas anteriores al 1 de octubre, conservadas para consultar.'],
   ['inactivos', 'Inactivos', 'Ya no reciben seguimiento.'], ['operados', 'Operados · 6 meses y 1 año', 'Se cumplen 6 meses o 1 año de su cirugía (dos semanas antes o después). Escríbeles para su control.']];
 const FILTRO_SEG = { primero:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===1), segundo:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===2), tercero:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro===3), adicionales:x=>(x.tareas||[]).some(t=>!t.realizado&&t.nro>3), historial:()=>true, hoy: x => tocaHoy(x), semana: x => x.proximo_seg && x.proximo_seg <= sumar(D.hoy, 7), riesgo: x => x.riesgo, baja: x => x.adherencia === 'Baja', todos: () => true };
 function pintarSeguimiento(soloFilas) {
   const act = D.seguimiento.filter(x => x.estado === 'Activo' && operativoSeg(x));
-  const cuenta = k => k === 'historial' ? D.seguimiento.filter(x=>!operativoSeg(x)).length : k === 'inactivos' ? D.seguimiento.filter(x=>x.estado==='Inactivo').length : k === 'operados' ? D.operados.filter(o => !o.avisado).length : act.filter(FILTRO_SEG[k]).length;
+  const cuenta = k => k === 'validar' ? consultasPorValidar().length : k === 'historial' ? D.seguimiento.filter(x=>!operativoSeg(x)).length : k === 'inactivos' ? D.seguimiento.filter(x=>x.estado==='Inactivo').length : k === 'operados' ? D.operados.filter(o => !o.avisado).length : act.filter(FILTRO_SEG[k]).length;
   const [, titulo, ayuda] = MENU_SEG.find(m => m[0] === S.toca);
   if (!soloFilas) {
     $('#seg-menu').innerHTML = '<p class="grupo">Seguimiento</p>' + MENU_SEG.map(([k, n], i) => (k === 'operados' ? '<p class="grupo">Operados</p>' : '')
@@ -1034,7 +1035,9 @@ function pintarSeguimiento(soloFilas) {
     $('#seg-lista').innerHTML = `<div class="lista-cab"><h2>${titulo}</h2><p>${ayuda}</p>${S.toca === 'operados' ? '' : `<input id="s-texto" type="search" placeholder="Buscar paciente en toda la lista" value="${esc(S.texto)}" aria-label="Buscar paciente">`}</div><div id="seg-filas"></div>`;
   }
   let filas;
-  if (S.toca === 'operados') {
+  if (S.toca === 'validar') {
+    filas = consultasPorValidar().filter(c=>!S.texto || sinTildes(c.paciente).includes(sinTildes(S.texto))).sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(c=>tarjeta(c,{acciones:[boton('Asistió ✓',c.id,{estado:'Asistió'},'hecho'),boton('No asistió',c.id,{estado:'No asistió'})]}));
+  } else if (S.toca === 'operados') {
     filas = D.operados.map(o => filaLibre({ clase: o.avisado ? 'apagada' : '', cuando: [esc(cuando(o.fecha_hito)), o.hito === '6m' ? '6 meses' : '1 año'],
       quien: [esc(o.paciente), esc(fmtTel(o.telefono))], motivo: `${esc(o.procedimiento || 'Cirugía')} · ${fechaCorta(o.fecha)} ${o.fecha.slice(0, 4)}`,
       pills: o.avisado ? `<span class="pill gris">Escrito el ${fechaCorta(o.avisado)}</span>` : '',
@@ -1059,7 +1062,7 @@ function pintarSeguimiento(soloFilas) {
   }
   const vis = filas.slice(0, S.limite), resto = filas.length - vis.length;
   $('#seg-filas').innerHTML = filas.length ? vis.join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '')
-    : `<p class="vacio">${S.texto ? 'Nadie con ese nombre.' : 'Nada pendiente aquí ✓'}</p>`;
+    : `<p class="vacio">${S.texto ? 'Nadie con ese nombre.' : consultasPorValidar().length && S.toca!=='historial' ? 'Hay '+consultasPorValidar().length+' consultas pendientes de validar asistencia. Revisa «Consultas por validar».' : 'Nada pendiente aquí ✓'}</p>`;
 }
 
 // ---------- COBROS: pagado, pendiente, paquetes, clínicas e informe de ventas
