@@ -284,7 +284,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       </div>
       <div class="panel">
         <nav class="menu" id="hoy-menu" aria-label="Listas de trabajo"></nav>
-        <div><label class="nota" style="display:block;padding:12px">Confirmaciones: <select id="confirmaciones-periodo" class="cargo"><option value="semana">Próximos 7 días</option><option value="mes">Este mes</option></select></label>
+        <div><label class="nota" style="display:block;padding:12px">Citas por confirmar y por pagar: <select id="confirmaciones-periodo" class="cargo"><option value="mes">Este mes</option><option value="semana">Próximos 7 días</option></select></label>
         <div class="lista" id="hoy-lista"></div></div>
       </div>
     </section>
@@ -326,7 +326,8 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <div class="titular"><h1>Cobros y ventas</h1><p>Lo pagado, lo pendiente, los paquetes y las clínicas.</p></div>
       <div class="panel">
         <nav class="menu" id="cob-menu" aria-label="Cobros"></nav>
-        <div class="lista" id="cob-lista"></div>
+        <div><label class="nota" style="display:block;padding:12px">Citas: <select id="cobros-periodo" class="cargo"><option value="mes">Este mes</option><option value="todas">Todas las fechas</option></select></label>
+        <div class="lista" id="cob-lista"></div></div>
       </div>
     </section>
   </main>
@@ -349,7 +350,9 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <label>Profesional<select name="profesional"><option>Lic. Vanessa Tello</option><option>Nutricionista del equipo</option></select></label>
     <label>Motivo<input name="motivo" value="No disponible" required></label>
     <label>Desde<input name="inicio" type="datetime-local" required></label><label>Hasta<input name="fin" type="datetime-local" required></label>
-  </div><p class="nota">Puedes bloquear un turno o un día completo. Si hay citas, primero debes reagendarlas.</p>
+    <label>Repetición<select name="repeticion"><option value="no">Una sola vez</option><option value="semanal">Cada semana</option><option value="mensual">Mismo día y semana del mes</option></select></label>
+    <label>Repetir hasta<input name="repetir_hasta" type="date"></label>
+  </div><p class="nota">La repetición mensual conserva el día de la semana y su posición (por ejemplo, primer jueves). Elige un fin dentro de un año. Editar un bloqueo repetido modifica su serie. Puedes bloquear un turno o un día completo. Si hay citas, primero debes reagendarlas.</p>
   <p class="error" id="bloqueo-error" role="alert" hidden></p><div class="pie"><button class="btn pri">Bloquear</button><button type="button" class="btn" data-cerrar>Cerrar</button></div>
 </form></dialog>
 <!-- Cita: nueva o ficha -->
@@ -539,7 +542,9 @@ function mensaje(clave, c) {
     modalidad: String(c.modalidad || '').toLowerCase(), precio: soles(precio),
     adelanto: soles(parte(precio, .25)), saldo: soles(parte(precio, .75)),
     zoom: c.enlace_zoom || '(te lo enviamos por aquí antes de la cita)', medidas: MEDIDAS_URL };
-  const lineas = p.texto.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
+  const datosCita = ['pago', 'saldo'].includes(clave) && c.fecha && c.hora && !['{fecha}', '{hora}'].every(k => p.texto.includes(k))
+    ? `Datos de tu cita: {fecha} a las {hora} · {modalidad}.\n\n` : '';
+  const lineas = (datosCita + p.texto).replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
   return lineas.join('\n').replace(/\n+/g, '\n\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
 }
 // api.whatsapp.com recibe bien los emojis en Windows; wa.me los rompía (30-set).
@@ -609,6 +614,24 @@ function demoListas() {
   D.no_asistio = Object.values(ultima).filter(c => c.estado === 'No asistió');
   D.sin_marcar = D.citas.filter(c => viva(c) && (c.fecha < D.hoy || (c.fecha === D.hoy && c.hora < horaLima())));
 }
+function intervalosBloqueo(p) {
+  const rep = p.repeticion || 'no', dia = p.inicio.slice(0,10), fin = rep === 'no' ? dia : p.repetir_hasta;
+  const duracion = new Date(p.fin) - new Date(p.inicio), origen = new Date(dia + 'T12:00');
+  if (!['no','semanal','mensual'].includes(rep) || !fin || fin < dia || fin > sumar(dia,366) || duracion <= 0 || (rep !== 'no' && duracion > 86400000)) throw new Error('Revisa el intervalo y el fin de repetición (máximo un año).');
+  const intervalos = [];
+  for (let d = dia, i = 0; d <= fin; d = sumar(d,1), i++) {
+    const fecha = new Date(d + 'T12:00');
+    if (rep === 'no' || (rep === 'semanal' && i % 7 === 0) || (rep === 'mensual' && fecha.getDay() === origen.getDay() && Math.floor((fecha.getDate()-1)/7) === Math.floor((origen.getDate()-1)/7))) {
+      const inicio = d + p.inicio.slice(10), hasta = new Date(new Date(inicio).getTime() + duracion);
+      const local = n => String(n).padStart(2,'0');
+      intervalos.push({inicio,fin: hasta.getFullYear()+'-'+local(hasta.getMonth()+1)+'-'+local(hasta.getDate())+'T'+local(hasta.getHours())+':'+local(hasta.getMinutes())});
+    }
+  }
+  return intervalos;
+}
+function botonesBloqueo(b) {
+  return `<button class="btn chico" data-editar-bloqueo="${b.id}">Editar</button> <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Quitar este bloqueo</button>` + (b.serie_id ? ` <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}" data-serie="true">Quitar serie</button>` : '');
+}
 function demoEnviar(p) {
   if (p.accion === 'paciente') {
     const viejo = D.pacientes.find(x => x.id === p.id), key = viejo && quien({ paciente: viejo.nombre, telefono: viejo.telefono });
@@ -616,12 +639,17 @@ function demoEnviar(p) {
     else D.pacientes.push({ ...p, id: Date.now() });
     return { ok: true };
   }
-  if (p.accion === 'bloquear') {
-    if (p.fin <= p.inicio) return { ok: false, motivo: 'El fin debe ser posterior al inicio.' };
-    if (D.citas.some(c => VIVOS.includes(c.estado) && c.profesional === p.profesional && c.fecha + 'T' + c.hora < p.fin && c.fecha + 'T' + aHora(aMin(c.hora) + (c.duracion_min || 45)) > p.inicio)) return { ok: false, motivo: 'Hay citas en ese intervalo. Reagéndalas antes de bloquear.' };
-    (D.bloqueos ||= []).push({ ...p, id: Date.now() }); return { ok: true };
+  if (['bloquear', 'editar_bloqueo'].includes(p.accion)) {
+    let intervalos; try { intervalos = intervalosBloqueo(p); } catch(e) { return {ok:false, motivo:e.message}; }
+    if (intervalos.some(b => D.citas.some(c => VIVOS.includes(c.estado) && c.profesional === p.profesional && c.fecha + 'T' + c.hora < b.fin && c.fecha + 'T' + aHora(aMin(c.hora) + (c.duracion_min || 45)) > b.inicio))) return { ok: false, motivo: 'Hay citas en alguno de los intervalos. Reagéndalas antes de bloquear.' };
+    const viejo = (D.bloqueos || []).find(b => b.id === p.id);
+    if (p.accion === 'editar_bloqueo' && !viejo) return {ok:false,motivo:'No encontré ese bloqueo.'};
+    if (viejo) D.bloqueos = D.bloqueos.filter(b => b.id !== viejo.id && (!viejo.serie_id || b.serie_id !== viejo.serie_id));
+    const serie = p.repeticion !== 'no' ? crypto.randomUUID() : null;
+    (D.bloqueos ||= []).push(...intervalos.map((b,i) => ({...p,...b,id:Date.now()+i,serie_id:serie})));
+    return {ok:true,cantidad:intervalos.length};
   }
-  if (p.accion === 'desbloquear') { D.bloqueos = D.bloqueos.filter(x => x.id !== p.id); return { ok: true }; }
+  if (p.accion === 'desbloquear') { const b = D.bloqueos.find(b => b.id === p.id); D.bloqueos = D.bloqueos.filter(x => x.id !== p.id && !(p.serie && b?.serie_id && x.serie_id === b.serie_id)); return { ok: true }; }
 
   if (p.accion === 'seguimiento' || p.accion === 'ficha') {
     const x = D.seguimiento.find(s => (p.paciente_id && s.id === p.paciente_id) || s.paciente === p.paciente) || (D.seguimiento.push({ paciente: p.paciente, telefono: p.telefono, historial: [], total: 0, n_desde: 0 }), D.seguimiento.at(-1));
@@ -749,10 +777,10 @@ function seccionesHoyBase() {
   const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= hastaConfirmar &&
     (proximos.includes(c.fecha) ? !escritoHoy(c) : c.estado === 'Por confirmar' && !c.recordado));
   const conDeuda = c => ['Por pagar', 'Adelanto 25%'].includes(c.pago);
-  // Saldo del 25 %: recién cuando la cita está a 3 días. Y quien ya asistió y debe, también.
+  // Vista mensual: incluye los saldos del mes. La vista semanal conserva el aviso a tres días.
   const cobrar = D.citas.filter(c => permite(c) && !esperando(c) && conDeuda(c) && (
-      (futura(c) && viva(c) && (c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
-      (c.estado === 'Asistió' && c.fecha >= sumar(D.hoy, -30))))
+      (futura(c) && viva(c) && c.fecha <= hastaConfirmar && (H.periodo === 'mes' || c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
+      (c.estado === 'Asistió' && c.fecha >= (H.periodo === 'mes' ? D.hoy.slice(0, 7) + '-01' : sumar(D.hoy, -30)))))
     .sort((a, b) => (vencida(b) - vencida(a)) || (escritoHoy(a) - escritoHoy(b)) || (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
   const hoy = D.citas.filter(c => permite(c) && c.fecha === D.hoy && !['Cancelada', 'Reprogramada'].includes(c.estado));
   const recientes = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) >= 14 && diasEntre(c.fecha, D.hoy) <= 120);
@@ -830,7 +858,7 @@ function seccionesHoyBase() {
   ];
 }
 
-const H = { sec: null, limite: 30, prof: '', periodo: 'semana' };
+const H = { sec: null, limite: 30, prof: '', periodo: 'mes' };
 const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
@@ -890,11 +918,11 @@ function pintarDia() {
     if (aqui.length) return aqui.map(c => tarjeta(c, { mostrarFecha: false, motivo: [c.servicio, c.monto != null && 'S/' + soles(c.monto)].filter(Boolean).map(esc).join(' · '),
       acciones: [wa(c, 'cita'), c.estado === 'Asistió' && !c.medicion ? `<button type="button" class="btn chico" data-medir="${c.id}">Resultados</button>` : ''] })).join('');
     const bloqueado = bloqueoEn(f, h, C.prof || 'Lic. Vanessa Tello');
-    if (bloqueado) return filaLibre({ cuando: [horaMensaje(h), ''], quien: ['Bloqueado', esc(bloqueado.motivo)], acciones: [`<button class="btn chico" data-desbloquear="${bloqueado.id}" data-prof="${esc(bloqueado.profesional)}">Desbloquear</button>`] });
+    if (bloqueado) return filaLibre({ cuando: [horaMensaje(h), ''], quien: ['Bloqueado', esc(bloqueado.motivo)], acciones: [botonesBloqueo(bloqueado)] });
     if (tapado || f < D.hoy || (f === D.hoy && h < horaLima())) return '';
     return filaLibre({ clase: 'libre', cuando: [horaMensaje(h), ''], quien: ['Libre', ''], acciones: [`<button type="button" class="btn chico" data-nueva-en="${f}T${h}">+ Agendar aquí</button>`] });
   }).join('');
-  $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(b.inicio)} a ${esc(b.fin)} · ${esc(b.motivo)} <button class="btn chico" data-desbloquear="${b.id}" data-prof="${esc(b.profesional)}">Desbloquear</button></p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
+  $('#lista').innerHTML = (D.bloqueos || []).filter(b => b.inicio < sumar(f, 1) + 'T00:00' && b.fin > f + 'T00:00' && (!C.prof || C.prof === b.profesional)).map(b => `<p class="nota">Bloqueado: ${esc(b.profesional)} · ${esc(fechaLarga(b.inicio.slice(0,10)))} ${esc(horaMensaje(b.inicio.slice(11,16)))} a ${esc(fechaLarga(b.fin.slice(0,10)))} ${esc(horaMensaje(b.fin.slice(11,16)))} · ${esc(b.motivo)} ${b.repeticion && b.repeticion !== 'no' ? ' · ' + esc(b.repeticion) + ' hasta ' + esc(b.repetir_hasta) : ''} ${botonesBloqueo(b)}</p>`).join('') + `<div class="lista dia-vista">${filas || `<p class="vacio">${C.prof === 'Nutricionista del equipo' ? 'Sin citas del equipo este día.' : horario.length ? 'Sin citas.' : 'Vanessa no atiende este día.'}</p>`}</div>`;
 }
 
 function pintarSemana() {
@@ -973,11 +1001,11 @@ function pintarSeguimiento(soloFilas) {
 }
 
 // ---------- COBROS: pagado, pendiente, paquetes, clínicas e informe de ventas
-const CB = { estado: '', servicio: '', sec: 'por-cobrar', desde: null, hasta: null, pago: '', modalidad: '', prof: '', limite: 30 };
+const CB = { periodo: 'mes', estado: '', servicio: '', sec: 'por-cobrar', desde: null, hasta: null, pago: '', modalidad: '', prof: '', limite: 30 };
 const finales = c => Number(c.monto) || 0;
-const cobroCitas = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado));
+const cobroCitas = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado) && (CB.periodo === 'todas' || c.fecha.slice(0, 7) === D.hoy.slice(0, 7)));
 const SECCIONES_COBROS = [
-  ['por-cobrar', 'Por cobrar', 'Citas sin pagar o con pago parcial (25 %), de los últimos 90 días en adelante.', c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.estado !== 'No asistió' && c.fecha >= sumar(D.hoy, -90)],
+  ['por-cobrar', 'Por cobrar', 'Citas sin pagar o con pago parcial (25 %), según el período elegido.', c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.estado !== 'No asistió' && c.fecha >= sumar(D.hoy, -90)],
   ['parcial', 'Pagaron el 25 %', 'Falta el saldo, que se paga antes de la cita.', c => c.pago === 'Adelanto 25%'],
   ['pagadas', 'Pagadas', 'Pagadas por la paciente (incluye cortesías).', c => ['Pagado', 'Cortesía'].includes(c.pago)],
   ['clinicas', 'Clínicas por cobrar', 'Citas que paga una clínica a fin de mes. Marca «Clínica pagó» cuando la clínica deposite.', c => c.pago === 'Pendiente clínica'],
@@ -1090,11 +1118,22 @@ fp.addEventListener('submit', async e => {
   for (const k of ['nombre', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente']) p[k] = fp[k].value.trim();
   await guardar(p, $('#paciente-error'), $('#dlg-paciente'), 'Datos de paciente guardados.');
 });
-function abrirBloqueo() {
-  fb.reset(); fb.profesional.value = C.prof || 'Lic. Vanessa Tello'; const dia = C.fecha || D.hoy;
-  fb.inicio.value = dia + 'T00:00'; fb.fin.value = sumar(dia, 1) + 'T00:00'; $('#bloqueo-error').hidden = true; $('#dlg-bloqueo').showModal();
+function abrirBloqueo(id) {
+  fb.reset(); delete fb.dataset.id; fb.profesional.disabled = false;
+  let b = (D.bloqueos || []).find(b => b.id === Number(id));
+  if (b?.serie_id) b = D.bloqueos.filter(x => x.serie_id === b.serie_id).sort((a,b) => a.inicio.localeCompare(b.inicio))[0];
+  const dia = C.fecha || D.hoy;
+  fb.profesional.value = b?.profesional || C.prof || 'Lic. Vanessa Tello';
+  fb.inicio.value = b?.inicio || dia + 'T00:00'; fb.fin.value = b?.fin || sumar(dia,1) + 'T00:00';
+  fb.repeticion.value = b?.repeticion || 'no'; fb.repetir_hasta.value = b?.repetir_hasta || ''; fb.motivo.value = b?.motivo || 'No disponible';
+  if (b) { fb.dataset.id = b.id; fb.profesional.disabled = true; }
+  $('#bloqueo-titulo').textContent = b ? 'Editar bloqueo' : 'Bloquear agenda';
+  fb.repetir_hasta.required = fb.repeticion.value !== 'no'; $('#bloqueo-error').hidden = true; $('#dlg-bloqueo').showModal();
 }
-fb.addEventListener('submit', async e => { e.preventDefault(); await guardar({ accion: 'bloquear', profesional: fb.profesional.value, motivo: fb.motivo.value.trim(), inicio: fb.inicio.value, fin: fb.fin.value }, $('#bloqueo-error'), $('#dlg-bloqueo'), 'Agenda bloqueada.'); });
+fb.repeticion.addEventListener('change', () => { fb.repetir_hasta.required = fb.repeticion.value !== 'no'; });
+fb.addEventListener('submit', async e => {
+  e.preventDefault(); await guardar({accion:fb.dataset.id ? 'editar_bloqueo' : 'bloquear', id: Number(fb.dataset.id) || undefined, profesional:fb.profesional.value, motivo:fb.motivo.value.trim(), inicio:fb.inicio.value, fin:fb.fin.value, repeticion:fb.repeticion.value, repetir_hasta:fb.repetir_hasta.value}, $('#bloqueo-error'), $('#dlg-bloqueo'), 'Bloqueo guardado.');
+});
 
 // ---------- ficha de la cita
 const fc = $('#form-cita');
@@ -1114,7 +1153,7 @@ function pintarTurnos() {
   caja.innerHTML = lista.map(h => {
     const o = ocupadas.find(c => aMin(c.hora) < aMin(h) + DURACION && aMin(h) < aMin(c.hora) + (c.duracion_min || DURACION));
     const bloqueado = bloqueoEn(fecha, h, prof);
-    if (bloqueado) return `<button type="button" class="turno ocupado" disabled title="${esc(bloqueado.motivo)}">${h} · bloqueado</button>`;
+    if (bloqueado) return `<button type="button" class="turno ocupado" disabled title="${esc(bloqueado.motivo)}">${horaMensaje(h)} · bloqueado</button>`;
     return `<button type="button" class="turno ${o ? 'ocupado' : ''}" data-hora="${h}" aria-pressed="${fc.hora.value === h}" title="${o ? esc('Ocupado: ' + o.paciente) : 'Libre'}"${o ? ` aria-label="${horaMensaje(h)}, ocupado"` : ''}>${horaMensaje(h)}</button>`;
   }).join('');
   const fuera = ocupadas.filter(c => !lista.includes(c.hora));
@@ -1345,7 +1384,8 @@ document.addEventListener('click', async e => {
   if (t.closest('[data-pacientes]')) { abrirPaciente(); return; }
   const pc = t.closest('[data-paciente-cita]'); if (pc) { const c = buscarCita(pc.dataset.pacienteCita); $('#dlg-cita').close(); abrirPaciente(fichaDe(c)); return; }
   if (t.closest('[data-bloquear]')) { abrirBloqueo(); return; }
-  const db = t.closest('[data-desbloquear]'); if (db) return accion(db, { accion: 'desbloquear', id: Number(db.dataset.desbloquear), profesional: db.dataset.prof }, 'Horario disponible otra vez.');
+  const eb = t.closest('[data-editar-bloqueo]'); if (eb) { abrirBloqueo(eb.dataset.editarBloqueo); return; }
+  const db = t.closest('[data-desbloquear]'); if (db) return accion(db, { accion: 'desbloquear', id: Number(db.dataset.desbloquear), profesional: db.dataset.prof, serie: db.dataset.serie === 'true' }, 'Horario disponible otra vez.');
   const periodo = t.closest('[data-periodo]'); if (periodo) { CB.desde = periodo.dataset.periodo === 'semana' ? lunes(D.hoy) : D.hoy.slice(0, 7) + '-01'; CB.hasta = periodo.dataset.periodo === 'semana' ? sumar(CB.desde, 6) : sumar(sumar(CB.desde, 40).slice(0, 7) + '-01', -1); pintarCobros(); return; }
   const ed = t.closest('[data-editar]');
   if (ed) {
@@ -1396,7 +1436,8 @@ document.addEventListener('keydown', e => {
   const sg = e.target.closest?.('[data-seg]'); if (sg) abrirSeg(D.seguimiento[sg.dataset.seg]);
 });
 $('#tareas-prof').addEventListener('change', e => { H.prof = e.target.value; H.sec = null; pintar(); });
-$('#confirmaciones-periodo').addEventListener('change', e => { H.periodo = e.target.value; H.sec = 'confirmar'; H.limite = 30; pintar(); });
+$('#cobros-periodo').addEventListener('change', e => { CB.periodo = e.target.value; CB.limite = 30; pintarCobros(); });
+$('#confirmaciones-periodo').addEventListener('change', e => { H.periodo = e.target.value; H.limite = 30; pintar(); });
 $('#f-texto').addEventListener('input', e => { F.texto = e.target.value; pintarAgenda(); });
 document.querySelectorAll('[name=cal-prof]').forEach(r => r.addEventListener('change', e => { C.prof = e.target.value; pintarAgenda(); }));
 document.querySelectorAll('[name=cal-modo]').forEach(r => r.addEventListener('change', e => { C.modo = e.target.value; pintarAgenda(); }));
