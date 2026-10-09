@@ -286,7 +286,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <div class="panel">
         <nav class="menu" id="hoy-menu" aria-label="Listas de trabajo"></nav>
         <div><label class="nota" style="display:block;padding:12px">Citas por confirmar y por pagar: <select id="confirmaciones-periodo" class="cargo"><option value="mes">Este mes</option><option value="semana">Próximos 7 días</option></select></label>
-        <div class="nota" style="padding:0 12px 12px"><label>Orden <select id="tareas-orden"><option value="recientes">Citas más recientes primero</option><option value="proximas">Citas próximas primero</option></select></label> <input id="tareas-buscar" type="search" placeholder="Buscar paciente" aria-label="Buscar paciente en tareas"></div><div class="lista" id="hoy-lista"></div></div>
+        <div class="nota" style="padding:0 12px 12px"><label>Orden <select id="tareas-orden"><option value="proximas">Fecha de cita: de menor a mayor</option><option value="recientes">Fecha de cita: de mayor a menor</option></select></label> <input id="tareas-buscar" type="search" placeholder="Buscar paciente" aria-label="Buscar paciente en tareas"></div><div class="lista" id="hoy-lista"></div></div>
       </div>
     </section>
 
@@ -476,7 +476,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
 <label>Fecha real del pago<input type="date" name="fecha_pago" required></label><label>Medio de pago<select name="medio_pago"></select></label></div>
 <p class="nota">Revisa el comprobante. La fecha no se deduce del día de la cita.</p><p class="error" id="pago-error" hidden role="alert"></p>
 <div class="pie"><button class="btn pri" value="guardar">Guardar pago</button><button type="button" class="btn" data-cerrar>Cerrar</button></div></form></dialog>
-<dialog id="dlg-reserva-info" aria-labelledby="reserva-info-titulo" style="padding:16px 18px 0"><h3 id="reserva-info-titulo">Cita guardada</h3><p id="reserva-info-sub"></p><div class="barra" id="reserva-info-acciones"></div><p class="nota">Sheila puede enviar ahora los datos de cita y pago. El recordatorio de confirmación conserva su función.</p><div class="pie"><button type="button" class="btn" data-cerrar>Cerrar</button></div></dialog>
+<dialog id="dlg-reserva-info" aria-labelledby="reserva-info-titulo" style="padding:16px 18px 0"><h3 id="reserva-info-titulo">Cita guardada</h3><p id="reserva-info-sub"></p><div class="barra" id="reserva-info-acciones"></div><p class="nota" id="reserva-info-nota">Sheila puede enviar ahora los datos de cita y pago. El recordatorio de confirmación conserva su función.</p><div class="pie"><button type="button" class="btn" data-cerrar>Cerrar</button></div></dialog>
 <div class="aviso" id="aviso" hidden role="status"></div>
 
 <script>
@@ -555,6 +555,13 @@ const horaMensaje = h => { if (!/^\d{2}:\d{2}$/.test(h || '')) return h || ''; c
 const horaLima = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' });
 const soles = n => n == null || n === '' || isNaN(n) ? '…' : Number(n).toLocaleString('es-PE', Number.isInteger(Number(n)) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const parte = (monto, f) => monto == null ? null : Number(monto) * f;
+// El tipo de cita decide si se cobra; no convertir un pago histórico en cortesía.
+const sinCobro = c => /^(pre|post)(operacion|operatori[oa])?$/.test(sinTildes(c.tipo).replace(/[ -]/g,'')) ||
+  /^cita (pre|post) operacion$/.test(sinTildes(c.servicio)) ||
+  /^(pre|pos|post)\s*-/.test(sinTildes(c.tipo_paciente ?? (c.paciente ? fichaDe(c).tipo_paciente : '')));
+const conDeuda = c => !sinCobro(c) && ['Por pagar','Adelanto 25%'].includes(c.pago);
+const pagoVisible = c => sinCobro(c) && ['Por pagar','Adelanto 25%'].includes(c.pago) ? 'Solo recordatorio' : c.pago;
+const ordenCitas = (a,b,orden='proximas') => ((a.fecha+(a.hora || '')).localeCompare(b.fecha+(b.hora || '')) || Number(a.id || 0)-Number(b.id || 0)) * (orden==='recientes' ? -1 : 1);
 
 // ---------- mensajes de WhatsApp (textos en la base: public.vt_plantillas)
 // Enlace para el recordatorio «registra tu peso, medidas y fotos»: el portal de la
@@ -567,8 +574,9 @@ const plantilla = (c, tipo) => tipo === 'recordatorio'
   : tipo === 'confirmar' ? 'confirmar_5_7' : tipo;
 const saldoCita = c => c.monto==null ? null : Math.max(0,Number(c.monto)-Number(c.monto_adelanto ?? parte(c.monto,.25)));
 function mensaje(clave, c) {
+  if(sinCobro(c) && ['pago','saldo'].includes(clave)) return '';
   if (clave === 'reserva_inicial') {
-    const requiere = ['Por pagar','Adelanto 25%'].includes(c.pago);
+    const requiere = conDeuda(c);
     const importe = c.pago === 'Adelanto 25%' ? saldoCita(c) : c.recurrente ? parte(c.monto,.25) : c.monto;
     const pago = requiere ? mensaje(c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', c) : '';
     return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó reservada para el ${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)} · ${String(c.modalidad).toLowerCase()}.` +
@@ -590,6 +598,7 @@ function mensaje(clave, c) {
 const waUrl = (tel, texto) => { const t = telNorm(tel); return `https://api.whatsapp.com/send?phone=${/^9\d{8}$/.test(t) ? '51' + t : t}` + (texto ? `&text=${encodeURIComponent(texto)}` : ''); };
 // Dos botones: el mensaje listo de ese momento, y «Chat» (WhatsApp sin mensaje, para escribir a mano).
 function wa(c, tipo, etiqueta = 'WhatsApp') {
+  if(sinCobro(c) && ['pago','saldo'].includes(tipo)) return '';
   if (tipo === 'cita') tipo = c.fecha >= D.hoy && viva(c) ? (diasRecordatorio().includes(c.fecha) || c.fecha === D.hoy ? 'recordatorio' : 'confirmar') : '';
   const t = telNorm(c.telefono);
   if (!t) return c.fecha && c.hora && c.id ? `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Agrega el teléfono en la ficha">Falta el teléfono</button>` : '<span class="pill gris">Sin teléfono</span>';
@@ -600,7 +609,7 @@ function wa(c, tipo, etiqueta = 'WhatsApp') {
   if (!tipo) return chat;
   const clave = plantilla(c, tipo);
   if (/\{(precio|adelanto|saldo)\}/.test(D.plantillas?.[clave]?.texto || '') && !Number(c.monto) && c.fecha && c.hora) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Elige el servicio en la ficha">Falta el precio</button>` + chat;
-  if (tipo==='reserva_inicial' && ['Por pagar','Adelanto 25%'].includes(c.pago) && !Number(c.monto)) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}">Falta el precio</button>`+chat;
+  if (tipo==='reserva_inicial' && conDeuda(c) && !Number(c.monto)) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}">Falta el precio</button>`+chat;
   const texto = mensaje(clave, c);
   if (!texto.trim()) return '<span class="pill gris">Mensaje no disponible</span>' + chat;
   return abrir(texto, 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
@@ -787,12 +796,12 @@ const futura = c => c.fecha >= D.hoy;
 const viva = c => ['Por confirmar', 'Confirmada'].includes(c.estado);
 const porRevisar = c => /\[REVISAR\]/.test(c.notas || '') && c.estado !== 'Cancelada';
 // 48 h para pagar desde la reserva (lámina 5); lo importado no tiene fecha real de reserva.
-const vencida = c => c.pago === 'Por pagar' && ['Reserva web', 'Tablero'].includes(c.origen) && c.creado && (Date.now() - new Date(c.creado.replace(' ', 'T') + ':00-05:00')) > 48 * 3600e3;
+const vencida = c => conDeuda(c) && c.pago === 'Por pagar' && ['Reserva web', 'Tablero'].includes(c.origen) && c.creado && (Date.now() - new Date(c.creado.replace(' ', 'T') + ':00-05:00')) > 48 * 3600e3;
 // En fin de semana cuenta como «escrito hoy» lo que se escribió el viernes.
 const escritoHoy = c => c.recordado && c.recordado >= sumar(D.hoy, -({ 6: 1, 0: 2 }[diaSemana(D.hoy)] || 0));
 
 const pillEstado = e => `<span class="pill ${{ 'Por confirmar': 'amarillo', Confirmada: 'azul', 'Asistió': '', 'No asistió': 'rojo', Cancelada: 'gris', Reprogramada: 'gris' }[e] ?? 'gris'}">${esc(e)}</span>`;
-const pillPago = c => `<span class="pill ${c.pago === 'Por pagar' ? (vencida(c) ? 'rojo' : 'naranja') : c.pago === 'Adelanto 25%' ? 'amarillo' : ''}">${esc(c.pago)}${vencida(c) ? ' · pasaron 48 h' : ''}</span>`;
+const pillPago = c => sinCobro(c) && pagoVisible(c)==='Solo recordatorio' ? '<span class="pill gris">Solo recordatorio</span>' : `<span class="pill ${c.pago === 'Por pagar' ? (vencida(c) ? 'rojo' : 'naranja') : c.pago === 'Adelanto 25%' ? 'amarillo' : ''}">${esc(c.pago)}${vencida(c) ? ' · pasaron 48 h' : ''}</span>`;
 
 // Una fila: cuándo · quién · por qué aparece · qué hacer.
 const filaLibre = ({ attrs = '', clase = '', cuando = ['', ''], quien = ['', ''], motivo = '', pills = '', acciones = [] }) =>
@@ -801,14 +810,14 @@ const filaLibre = ({ attrs = '', clase = '', cuando = ['', ''], quien = ['', '']
     <div class="c-detalle">${motivo ? `<span class="motivo">${motivo}</span>` : ''}<span class="pills">${pills}</span></div>
     <div class="c-acciones">${acciones.join('')}</div></div>`;
 let SIMPLE = false;   // en Tareas la lista ya dice de qué se trata: sin etiquetas repetidas
-function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true } = {}) {
-  const pills = SIMPLE ? [] : [pillEstado(c.estado), ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? pillPago(c) : ''];
+function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true, fechaExacta = false } = {}) {
+  const pills = SIMPLE ? [] : [pillEstado(c.estado), conDeuda(c) || sinCobro(c) ? pillPago(c) : ''];
   if (c.recurrente === false && !SIMPLE) pills.push('<span class="pill azul">Nueva</span>');
   if (esEquipo(c)) pills.push('<span class="pill gris">Equipo</span>');
   if (c.medicion && !SIMPLE) pills.push('<span class="pill">Con resultados</span>');
   if (c.recordado && (c.fecha >= D.hoy || c.recordado > c.fecha)) pills.push(`<span class="pill gris">${escritoHoy(c) ? 'Escrito hoy' : 'Escrito el ' + fechaCorta(c.recordado)}</span>`);
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
-    cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(cuando(c.fecha)) : ''],
+    cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(fechaExacta ? fechaCorta(c.fecha) : cuando(c.fecha)) : ''],
     quien: [esc(c.paciente), [c.modalidad, fmtTel(c.telefono)].map(esc).join(' · ')],
     motivo, pills: pills.join(''), acciones });
 }
@@ -836,12 +845,11 @@ function seccionesHoyBase() {
   const hastaConfirmar = H.periodo === 'mes' ? sumar(sumar(D.hoy.slice(0, 7) + '-01', 40).slice(0, 7) + '-01', -1) : sumar(D.hoy, 7);
   const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= hastaConfirmar &&
     (proximos.includes(c.fecha) ? !escritoHoy(c) : c.estado === 'Por confirmar' && !c.recordado));
-  const conDeuda = c => ['Por pagar', 'Adelanto 25%'].includes(c.pago);
   // Vista mensual: incluye los saldos del mes. La vista semanal conserva el aviso a tres días.
   const cobrar = D.citas.filter(c => permite(c) && !esperando(c) && conDeuda(c) && (
       (futura(c) && viva(c) && c.fecha <= hastaConfirmar && (H.periodo === 'mes' || c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
       (c.estado === 'Asistió' && c.fecha >= (H.periodo === 'mes' ? D.hoy.slice(0, 7) + '-01' : sumar(D.hoy, -30)))))
-    .sort((a, b) => (vencida(b) - vencida(a)) || (escritoHoy(a) - escritoHoy(b)) || (H.orden==='recientes' ? (b.fecha+b.hora).localeCompare(a.fecha+a.hora) : (a.fecha+a.hora).localeCompare(b.fecha+b.hora)));
+    .sort((a,b)=>ordenCitas(a,b,H.orden));
   const hoy = D.citas.filter(c => permite(c) && c.fecha === D.hoy && !['Cancelada', 'Reprogramada'].includes(c.estado));
   const recientes = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) >= 14 && diasEntre(c.fecha, D.hoy) <= 120);
   const antiguos = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) > 120);
@@ -864,7 +872,7 @@ function seccionesHoyBase() {
   return [
     { id: 'pendientes', titulo: 'Pendiente de respuesta', ayuda: 'Ya se les escribió. Marca su respuesta, pago, confirmación o cambio de cita.',
       items: D.citas.filter(c => permite(c) && esperando(c)).map(c => tarjeta(c, { motivo: `Espera: ${esc(c.contacto_motivo)} · desde ${esc(c.contacto_desde?.slice(0, 10) || c.recordado || '')}`,
-        acciones: [wa(c, c.contacto_motivo === 'cobrar' ? 'pago' : 'confirmar', 'Insistir'), boton('Respondió', c.id, { contacto_estado: 'Respondió' }),
+        acciones: [wa(c, c.contacto_motivo === 'cobrar' && conDeuda(c) ? (c.pago==='Adelanto 25%' ? 'saldo' : 'pago') : 'confirmar', 'Insistir'), boton('Respondió', c.id, { contacto_estado: 'Respondió' }),
           c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
           conDeuda(c) ? boton('Pagó', c.id, { pago: 'Pagado' }) : '', porReagendar(c), `<button class="btn chico" data-liberar="${c.id}">Cancelar</button>`] })) },
     { id: 'por-reagendar', titulo: 'Por reagendar', ayuda: 'Pidieron mover la cita y todavía no tienen fecha. Su turno anterior queda libre.',
@@ -895,7 +903,7 @@ function seccionesHoyBase() {
           : nueva ? [`Nueva · paga el 100 %: S/${soles(c.monto)}`, 'pago', [boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]]
           : [`Seguimiento · falta el pago: S/${soles(c.monto)}`, 'pago', [boton('Pagó todo ✓', c.id, { pago: 'Pagado' }, 'hecho'), boton('Pagó el 25 %', c.id, { pago: 'Adelanto 25%' })]];
         const extra = c.estado === 'Asistió' ? ' · ya asistió' : '';
-        return tarjeta(c, { motivo: motivo + extra, acciones: [wa(c, plantillaPago, 'Enviar datos de pago'), ...acciones, contactar(c, 'cobrar'), porReagendar(c),
+        return tarjeta(c, { fechaExacta:true, motivo: motivo + extra, acciones: [wa(c, plantillaPago, 'Enviar datos de pago'), ...acciones, contactar(c, 'cobrar'), porReagendar(c),
           vencida(c) && viva(c) ? `<button type="button" class="btn chico" data-liberar="${c.id}">Liberar horario</button>` : ''] });
       }) },
     { id: 'asistencia', titulo: '¿Vino a su cita?', urge: true, ayuda: 'Solo citas que estaban confirmadas y ya pasaron: marca si vino o no.',
@@ -918,7 +926,7 @@ function seccionesHoyBase() {
   ];
 }
 
-const H = { texto:'', orden:'recientes', sec: null, limite: 30, prof: '', periodo: 'mes' };
+const H = { texto:'', orden:'proximas', sec: null, limite: 30, prof: '', periodo: 'mes' };
 const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
@@ -1070,8 +1078,8 @@ const CB = { texto:'', periodo: 'mes', estado: '', servicio: '', sec: 'por-cobra
 const finales = c => Number(c.monto) || 0;
 const cobroCitas = () => D.citas.filter(c => !['Cancelada', 'Reprogramada'].includes(c.estado) && (CB.periodo === 'todas' || c.fecha.slice(0, 7) === D.hoy.slice(0, 7)));
 const SECCIONES_COBROS = [
-  ['por-cobrar', 'Por cobrar', 'Citas sin pagar o con pago parcial (25 %), según el período elegido.', c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.estado !== 'No asistió' && c.fecha >= sumar(D.hoy, -90)],
-  ['parcial', 'Pagaron el 25 %', 'Falta el saldo, que se paga antes de la cita.', c => c.pago === 'Adelanto 25%'],
+  ['por-cobrar', 'Por cobrar', 'Por fecha y hora de cita, de menor a mayor. Pre y post operación solo reciben recordatorios.', c => conDeuda(c) && c.estado !== 'No asistió' && c.fecha >= sumar(D.hoy, -90)],
+  ['parcial', 'Pagaron el 25 %', 'Falta el saldo, que se paga antes de la cita.', c => conDeuda(c) && c.pago === 'Adelanto 25%'],
   ['pagadas', 'Pagadas', 'Pagadas por la paciente (incluye cortesías).', c => ['Pagado', 'Cortesía'].includes(c.pago)],
   ['clinicas', 'Clínicas por cobrar', 'Citas que paga una clínica a fin de mes. Marca «Clínica pagó» cuando la clínica deposite.', c => c.pago === 'Pendiente clínica'],
   ['paquetes', 'Paquetes', 'Compras de varias citas: la primera lleva el pago, las demás van incluidas.', null],
@@ -1081,7 +1089,7 @@ const SECCIONES_COBROS = [
 function filasCobro(c) {
   const dcto = Number(c.descuento_pct) ? `<span class="pill gris">−${Number(c.descuento_pct)} %</span>` : '';
   const acc = c.pago === 'Pendiente clínica' ? [boton('Clínica pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')]
-    : ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? [wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Enviar datos de pago'), boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')] : [];
+    : conDeuda(c) ? [wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Enviar datos de pago'), boton('Pagó ✓', c.id, { pago: 'Pagado' }, 'hecho')] : [];
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, cuando: [fechaCorta(c.fecha), esc(horaMensaje(c.hora))],
     quien: [esc(c.paciente), [fmtTel(c.telefono), c.servicio].filter(Boolean).map(esc).join(' · ')],
     motivo: c.monto != null ? `S/${soles(c.monto)}${c.pagador ? ' · paga ' + esc(c.pagador) : ''}` : 'Falta elegir el servicio para saber cuánto cobrar',
@@ -1102,7 +1110,7 @@ function descargarVentas() {
   const celda = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // que Excel no ejecute fórmulas
     return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
-    c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', c.pago, c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
+    c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', pagoVisible(c), c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
     fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,c.monto_adelanto,c.fecha_saldo,c.monto_saldo,c.monto_pagado]);
   const csv = '﻿sep=;\n' + [cab, ...filas].map(f => f.map(celda).join(';')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -1152,7 +1160,7 @@ function pintarCobros(soloLista) {
   } else if (CB.sec === 'ventas') {
     const V = ventasFiltradas(), sum = f => V.filter(f).reduce((n, c) => n + finales(c), 0);
     const cobrado = sum(c => c.pago === 'Pagado' && !c.pago_por_revisar) + sum(c => c.pago === 'Adelanto 25%') * .25;
-    const pend = sum(c => c.pago === 'Por pagar') + sum(c => c.pago === 'Adelanto 25%') * .75;
+    const pend = sum(c => conDeuda(c) && c.pago === 'Por pagar') + sum(c => conDeuda(c) && c.pago === 'Adelanto 25%') * .75;
     const mes = D.hoy.slice(0, 7);
     cuerpo = `<div class="ventas-filtros">
       <label>Desde<input type="date" class="cob-f" data-k="desde" value="${CB.desde || mes + '-01'}"></label>
@@ -1164,11 +1172,11 @@ function pintarCobros(soloLista) {
       <label>Servicio<select class="cob-f" data-k="servicio"><option value="">Todos</option>${[...new Set(D.citas.map(c => c.servicio).filter(Boolean))].sort().map(x => `<option ${CB.servicio === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
       <button type="button" class="btn" data-periodo="semana">Esta semana</button><button type="button" class="btn" data-periodo="mes">Este mes</button>
       <button type="button" class="btn pri" data-descargar>Descargar Excel</button></div>
-      <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length ? ` <small>(${V.filter(c => ['Por pagar', 'Adelanto 25%'].includes(c.pago) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Pagos por verificar <b>S/${soles(sum(c => c.pago_por_revisar))}</b></span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
+      <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => conDeuda(c) && c.monto == null).length ? ` <small>(${V.filter(c => conDeuda(c) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Pagos por verificar <b>S/${soles(sum(c => c.pago_por_revisar))}</b></span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
       <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th><th>Fecha de pago</th></tr>
-      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(c.pago)}${c.pago_por_revisar ? ' · por verificar' : ''}</td><td>${c.fecha_pago ? fechaCorta(c.fecha_pago) : c.fecha_adelanto ? fechaCorta(c.fecha_adelanto)+' · adelanto' : '—'}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
+      ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(pagoVisible(c))}${c.pago_por_revisar ? ' · por verificar' : ''}</td><td>${c.fecha_pago ? fechaCorta(c.fecha_pago) : c.fecha_adelanto ? fechaCorta(c.fecha_adelanto)+' · adelanto' : '—'}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
   } else {
-    const L = citas.filter(filtro).sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
+    const L = citas.filter(filtro).sort((a,b)=>ordenCitas(a,b,CB.sec==='por-cobrar' ? 'proximas' : 'recientes'));
     const vis = L.slice(0, CB.limite), resto = L.length - vis.length;
     cuerpo = L.length ? vis.map(filasCobro).join('') + (resto ? `<button type="button" class="mas" data-ver-mas>Ver ${Math.min(50, resto)} más · quedan ${resto}</button>` : '') : '<p class="vacio">Nada por aquí ✓</p>';
   }
@@ -1286,6 +1294,7 @@ function pintarPaquete() {
   } else { caja.hidden = true; caja.innerHTML = ''; }
 }
 function notaTipo() {
+  if(sinCobro({tipo:fc.tipo.value,servicio:fc.servicio.value,tipo_paciente:fc.tipo_paciente.value})) { $('#nota-tipo').textContent='Pre y post operación: solo recordatorios de la cita; no aparece en Cobrar ni se envían datos de pago.';return; }
   const recurrente = fc.tipo.value && fc.tipo.value !== 'Primera cita';
   $('#nota-tipo').textContent = fc.tipo.value ? (recurrente ? 'Recurrente: paga el 25 % para reservar y el saldo antes de la cita.' : 'Paciente nueva: paga el 100 % para reservar.') : '';
 }
@@ -1311,7 +1320,7 @@ function abrirCita(c, base = {}) {
   fc.dataset.leadId = v.lead_id || '';
   fc.dataset.origenId = 'tablero-' + (crypto.randomUUID?.() || Date.now() + '-' + Math.random());
   $('#cita-titulo').textContent = c ? c.paciente : base.paciente ? 'Nueva cita · ' + base.paciente : 'Nueva cita';
-  $('#cita-sub').textContent = c ? `${fechaLarga(c.fecha)} · ${horaMensaje(c.hora)} · ${c.estado} · ${c.pago}${c.actualizado_por ? ' · último cambio: ' + c.actualizado_por : ''}` : 'Puedes escribir una paciente nueva o elegir una existente. Para corregir solo sus datos, usa Pacientes.';
+  $('#cita-sub').textContent = c ? `${fechaLarga(c.fecha)} · ${horaMensaje(c.hora)} · ${c.estado} · ${pagoVisible(c)}${c.actualizado_por ? ' · último cambio: ' + c.actualizado_por : ''}` : 'Puedes escribir una paciente nueva o elegir una existente. Para corregir solo sus datos, usa Pacientes.';
   const barra = $('#cita-barra');
   barra.hidden = !c;
   if (c) {
@@ -1319,7 +1328,7 @@ function abrirCita(c, base = {}) {
       c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
       porReagendar(c), `<button type="button" class="btn chico" data-paciente-cita="${c.id}">Editar datos de paciente</button>`,
       boton('Asistió', c.id, { estado: 'Asistió' }), boton('No asistió', c.id, { estado: 'No asistió' }),
-      ['Por pagar', 'Adelanto 25%'].includes(c.pago) ? boton('Pagó todo', c.id, { pago: 'Pagado' }) : '',
+      conDeuda(c) ? boton('Pagó todo', c.id, { pago: 'Pagado' }) : '',
       `<button type="button" class="btn chico" data-liberar="${c.id}">Cancelar cita</button>`,
       `<button type="button" class="btn chico" data-medir="${c.id}">${c.medicion ? 'Ver resultados' : 'Registrar resultados'}</button>`].join('')
       + `<span class="titulo" style="margin-top:.3rem">Enviar por WhatsApp</span>` + [
@@ -1350,7 +1359,7 @@ fc.addEventListener('input', e => {
       pintarHistorial({ paciente: p.nombre, telefono: p.telefono }); notaTipo();
     } else if (!editando) fc.dataset.leadId = '';
   }
-  if (e.target.name === 'tipo') notaTipo();
+  if (['tipo','tipo_paciente','servicio'].includes(e.target.name)) notaTipo();
   if (['fecha', 'modalidad', 'profesional', 'hora'].includes(e.target.name)) pintarTurnos();
   if (e.target.name === 'modalidad') $('#zoom-campo').hidden = modalidad() !== 'Virtual';
   if (e.target.name === 'servicio') { fc.precio_lista.value = e.target.selectedOptions[0]?.dataset.precio || fc.precio_lista.value; pintarPrecio(true); pintarPaquete(); }
@@ -1391,7 +1400,7 @@ fc.addEventListener('submit', async e => {
   if (!p.fecha_pago) delete p.fecha_pago;
   if (!p.pago) delete p.fecha_pago;
   p.permitir_cruce = fc.permitir_cruce.checked;
-  await guardar(p, $('#cita-error'), $('#dlg-cita'), editando ? 'Cita actualizada.' : ['Por pagar', 'Adelanto 25%'].includes(p.pago) ? 'Cita creada. Aparece en «Cobrar» hasta que pague.' : 'Cita creada.');
+  await guardar(p, $('#cita-error'), $('#dlg-cita'), editando ? 'Cita actualizada.' : sinCobro(p) ? 'Cita creada. Solo recordatorios; sin cobro.' : conDeuda(p) ? 'Cita creada. Aparece en «Cobrar» hasta que pague.' : 'Cita creada.');
 });
 
 async function guardar(p, error, dlg, ok) {
@@ -1467,7 +1476,8 @@ function mostrarReserva(raw) {
   const local=raw.inicio ? new Date(raw.inicio).toLocaleString('sv-SE',{timeZone:'America/Lima'}) : '';
   const c=buscarCita(raw.id) || {...raw,fecha:raw.fecha || local.slice(0,10),hora:raw.hora || local.slice(11,16)};
   $('#reserva-info-sub').textContent=`${c.paciente} · ${fechaLarga(c.fecha)} · ${horaMensaje(c.hora)}`;
-  $('#reserva-info-acciones').innerHTML=wa(c,'reserva_inicial','Enviar información de cita y pago');
+  $('#reserva-info-nota').textContent=sinCobro(c) ? 'Esta cita solo recibe información y recordatorios; no se solicita pago.' : 'Sheila puede enviar ahora los datos de cita y pago. El recordatorio de confirmación conserva su función.';
+  $('#reserva-info-acciones').innerHTML=wa(c,'reserva_inicial',sinCobro(c) ? 'Enviar información de cita' : 'Enviar información de cita y pago');
   $('#dlg-reserva-info').showModal();
 }
 const fpg=$('#form-programar'), fap=$('#form-apertura'), fpa=$('#form-pago');
