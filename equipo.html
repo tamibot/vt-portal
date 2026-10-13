@@ -573,14 +573,18 @@ const plantilla = (c, tipo) => tipo === 'recordatorio'
   ? `dia_antes_${String(c.modalidad).toLowerCase()}_${esEquipo(c) ? 'equipo' : 'vanessa'}`
   : tipo === 'confirmar' ? 'confirmar_5_7' : tipo;
 const saldoCita = c => c.monto==null ? null : Math.max(0,Number(c.monto)-Number(c.monto_adelanto ?? parte(c.monto,.25)));
-function mensaje(clave, c) {
+// Primera cita paga el 100 %; desde la segunda, el 25 %. Sheila puede mandar
+// cualquiera de los dos (decisión comercial, reunión 13-oct): `pct` lo elige el botón.
+const pctSugerido = c => c.recurrente ? 25 : 100;
+function mensaje(clave, c, pct = pctSugerido(c)) {
   if(sinCobro(c) && ['pago','saldo'].includes(clave)) return '';
   if (clave === 'reserva_inicial') {
-    const requiere = conDeuda(c);
-    const importe = c.pago === 'Adelanto 25%' ? saldoCita(c) : c.recurrente ? parte(c.monto,.25) : c.monto;
-    const pago = requiere ? mensaje(c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', c) : '';
-    return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó reservada para el ${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)} · ${String(c.modalidad).toLowerCase()}.` +
-      (requiere ? `\n\n${c.pago === 'Adelanto 25%' ? 'Saldo pendiente' : c.recurrente ? 'Adelanto del 25 %' : 'Pago del 100 %'}: S/${soles(importe)}. El plazo de pago es de hasta 48 horas desde la reserva y siempre antes de la cita.\n\n${pago}` : '');
+    const cita = `${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)} · ${String(c.modalidad).toLowerCase()}`;
+    if (!conDeuda(c)) return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó reservada para el ${cita}.`;
+    if (c.pago === 'Adelanto 25%') return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó reservada para el ${cita}.\n\n` + mensaje('saldo', c);
+    // Texto de Vanessa (13-oct): un solo saludo y el recordatorio de pago sin el suyo.
+    const pago = mensaje('pago', c, pct).replace(/^Datos de tu cita:[^\n]*\n+/, '').replace(/^¡Hola![^\n]*\n+/, '');
+    return `Hola ${nombreCorto(c)} 😊\n\nTu cita quedó pre - reservada para el ${cita}.\n\n` + pago;
   }
   const p = D.plantillas?.[clave]; if (!p || typeof p.texto !== 'string') return '';
   const precio = c.monto == null ? null : Number(c.monto);
@@ -590,9 +594,10 @@ function mensaje(clave, c) {
     zoom: c.enlace_zoom || '(te lo enviamos por aquí antes de la cita)', medidas: MEDIDAS_URL };
   const datosCita = ['pago', 'saldo'].includes(clave) && c.fecha && c.hora && !['{fecha}', '{hora}'].every(k => p.texto.includes(k))
     ? `Datos de tu cita: {fecha} a las {hora} · {modalidad}.\n\n` : '';
-  const textoPago = clave==='pago' && c.recurrente ? p.texto.replace(/pago del 100%/g,'adelanto del 25%') : p.texto;
+  const textoPago = clave==='pago' && pct===25 ? p.texto.replace(/del 100%/g,'del 25%') : p.texto;
   const lineas = (datosCita + textoPago).replace(/\\n/g, '\n').replace(/\r\n/g, '\n').split('\n').filter(l => !(l.includes('{medidas}') && !MEDIDAS_URL));
-  return lineas.join('\n').replace(/\n+/g, '\n\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
+  // `pago` trae sus saltos como los escribió Vanessa (cuentas agrupadas); el resto, un párrafo por línea.
+  return lineas.join('\n').replace(clave === 'pago' ? /\n{3,}/g : /\n+/g, '\n\n').replace(/\{(\w+)\}/g, (m, k) => k in valores ? valores[k] : m).replace('Hola ,', 'Hola,').replace('Hola  ', 'Hola ');
 }
 // api.whatsapp.com recibe bien los emojis en Windows; wa.me los rompía (30-set).
 const waUrl = (tel, texto) => { const t = telNorm(tel); return `https://api.whatsapp.com/send?phone=${/^9\d{8}$/.test(t) ? '51' + t : t}` + (texto ? `&text=${encodeURIComponent(texto)}` : ''); };
@@ -609,9 +614,14 @@ function wa(c, tipo, etiqueta = 'WhatsApp') {
   if (!tipo) return chat;
   const clave = plantilla(c, tipo);
   if (/\{(precio|adelanto|saldo)\}/.test(D.plantillas?.[clave]?.texto || '') && !Number(c.monto) && c.fecha && c.hora) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Elige el servicio en la ficha">Falta el precio</button>` + chat;
-  if (tipo==='reserva_inicial' && conDeuda(c) && !Number(c.monto)) return `<button type="button" class="btn chico" data-abrir-ficha="${c.id}">Falta el precio</button>`+chat;
   const texto = mensaje(clave, c);
   if (!texto.trim()) return '<span class="pill gris">Mensaje no disponible</span>' + chat;
+  // Reserva y recordatorio de pago: los dos porcentajes, el sugerido primero.
+  if (['reserva_inicial','pago'].includes(clave) && conDeuda(c) && c.pago !== 'Adelanto 25%') {
+    const pcts = pctSugerido(c) === 25 ? [25, 100] : [100, 25];
+    return pcts.map((x, i) => abrir(mensaje(clave, c, x), i ? '' : 'wa', `${etiqueta} · ${x === 100 ? '100 %' : '25 %'}`,
+      x === 100 ? 'Paciente nueva: paga el 100 % para reservar' : 'Desde la segunda cita: adelanto del 25 %')).join('') + chat;
+  }
   return abrir(texto, 'wa', etiqueta, 'Abre WhatsApp con el mensaje ya escrito') + chat;
 }
 const boton = (texto, id, campos, clase = '') => `<button type="button" class="btn chico ${clase}" data-editar="${id}" data-campos="${esc(JSON.stringify(campos))}">${texto}</button>`;
