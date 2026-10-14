@@ -254,7 +254,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <select id="cargo-acceso" required></select>
     <p class="error" id="error-acceso" role="alert" hidden></p>
     <button class="btn pri" type="submit">Entrar</button>
-    <p class="nota" style="margin-top:1rem"><a href="manual.html">Manual de uso</a> · <a href="https://vt-descubre-production.up.railway.app/reservar.html">Página de reservas</a></p>
+    <p class="nota" style="margin-top:1rem"><a href="manual.html">Manual de uso</a> · <a href="https://descubre.vanessatello.com.pe/reservar.html">Página de reservas</a></p>
   </form>
 </div>
 
@@ -566,7 +566,7 @@ const ordenCitas = (a,b,orden='proximas') => ((a.fecha+(a.hora || '')).localeCom
 // ---------- mensajes de WhatsApp (textos en la base: public.vt_plantillas)
 // Enlace para el recordatorio «registra tu peso, medidas y fotos»: el portal de la
 // paciente. Si se deja vacío, esa línea se omite del mensaje.
-const MEDIDAS_URL = 'https://vt-portal-production.up.railway.app/cliente.html';   // portal de la paciente: entra con su DNI y llena su cuadro de medidas
+const MEDIDAS_URL = 'https://portal.vanessatello.com.pe/cliente.html';   // portal de la paciente: entra con su DNI y llena su cuadro de medidas
 const esEquipo = c => c.profesional && c.profesional !== 'Lic. Vanessa Tello';
 // Qué plantilla corresponde a cada momento de la cita (los 3 tipos de Vanessa).
 const plantilla = (c, tipo) => tipo === 'recordatorio'
