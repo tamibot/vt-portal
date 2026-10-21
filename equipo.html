@@ -605,6 +605,8 @@ const waUrl = (tel, texto) => { const t = telNorm(tel); return `https://api.what
 function wa(c, tipo, etiqueta = 'WhatsApp') {
   if(sinCobro(c) && ['pago','saldo'].includes(tipo)) return '';
   if (tipo === 'cita') tipo = c.fecha >= D.hoy && viva(c) ? (diasRecordatorio().includes(c.fecha) || c.fecha === D.hoy ? 'recordatorio' : 'confirmar') : '';
+  // Sheilla, 19-oct: el recordatorio de confirmar es solo para citas pagadas; si debe, el mensaje pide el pago.
+  if (['recordatorio', 'confirmar'].includes(tipo) && conDeuda(c)) tipo = c.pago === 'Adelanto 25%' ? 'saldo' : 'pago';
   const t = telNorm(c.telefono);
   if (!t) return c.fecha && c.hora && c.id ? `<button type="button" class="btn chico" data-abrir-ficha="${c.id}" title="Agrega el teléfono en la ficha">Falta el teléfono</button>` : '<span class="pill gris">Sin teléfono</span>';
   const abrir = (texto, clase, rotulo, ayuda) => DEMO
