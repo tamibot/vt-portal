@@ -19,6 +19,7 @@
 <body>
 <div id="vista"></div>
 <script>
+if (location.hostname === 'tamibot.github.io') location.replace('https://portal.vanessatello.com.pe' + location.pathname.replace(/^\/vt-portal/, '') + location.search);  // 29-oct: favoritos con la dirección vieja
 // 27-oct: los informes viven en el portal (antes en una dirección de n8n). Misma clave que
 // el portal del equipo: si ya entraste a equipo.html en esta pestaña, no la vuelve a pedir.
 const API = 'https://primary-production-9caaf.up.railway.app/webhook/informes-datos-vt';

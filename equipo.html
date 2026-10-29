@@ -267,6 +267,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <button class="tab" role="tab" data-vista="agenda">Calendario</button>
       <button class="tab" role="tab" data-vista="seguimiento">Seguimiento</button>
       <button class="tab" role="tab" data-vista="cobros">Cobros</button>
+      <a class="tab" href="informes.html" style="text-decoration:none">Reportes</a>
     </nav>
     <button class="btn pri" id="nueva">+ Nueva cita</button>
     <button class="btn" data-pacientes>Pacientes</button>
@@ -480,6 +481,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
 <div class="aviso" id="aviso" hidden role="status"></div>
 
 <script>
+if (location.hostname === 'tamibot.github.io') location.replace('https://portal.vanessatello.com.pe' + location.pathname.replace(/^\/vt-portal/, '') + location.search);  // 29-oct: favoritos con la dirección vieja
 const N8N = 'https://primary-production-9caaf.up.railway.app/webhook/';
 const KOMMO_LEAD = 'https://vanetello.kommo.com/leads/detail/';
 // Cargos, no nombres (así los llama el equipo). El cargo decide con qué pestaña abre.
@@ -1199,7 +1201,7 @@ function pintar() {
   for (const v of ['hoy', 'agenda', 'seguimiento', 'cobros']) $('#vista-' + v).hidden = vista !== v;
   const segHoy = D.seguimiento.filter(x => x.estado === 'Activo' && tocaHoy(x)).length + D.operados.filter(o => !o.avisado).length;
   const urgentes = seccionesHoy().filter(s => s.urge).reduce((n, s) => n + s.items.length, 0);
-  document.querySelectorAll('.tab').forEach(t => {
+  document.querySelectorAll('button.tab').forEach(t => {
     t.setAttribute('aria-selected', t.dataset.vista === vista);
     const n = { hoy: urgentes, seguimiento: segHoy }[t.dataset.vista];
     t.innerHTML = { hoy: 'Tareas', agenda: 'Calendario', seguimiento: 'Seguimiento', cobros: 'Cobros' }[t.dataset.vista] + (n ? `<b>${n}</b>` : '');
@@ -1541,7 +1543,7 @@ async function accion(btn, pedido, ok) {
 }
 document.addEventListener('click', async e => {
   const t = e.target;
-  const tab = t.closest('.tab, [data-vista-ir]');
+  const tab = t.closest('button.tab, [data-vista-ir]');  // el <a class="tab"> de Reportes navega solo
   if (tab) { vista = tab.dataset.vista || tab.dataset.vistaIr; if (tab.dataset.vistaIr === 'agenda') { C.modo = 'dia'; C.fecha = D.hoy; } pintar(); scrollTo(0, 0); return; }
   const ce = t.closest('[data-cerrar]'); if (ce) { ce.closest('dialog').close(); return; }
   const ct = t.closest('[data-contactar]'); if (ct) return accion(ct, { accion: 'contactar', id: Number(ct.dataset.contactar), motivo: ct.dataset.motivo }, 'Movida a Pendiente de respuesta.');
