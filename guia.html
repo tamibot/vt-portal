@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head><script>/* 30-oct: direcciones viejas (Railway, GitHub) pasan al dominio */if(/\.up\.railway\.app$|\.github\.io$/.test(location.hostname))location.replace('https://portal.vanessatello.com.pe'+location.pathname.replace(/^\/vt-portal/,'')+location.search+location.hash)</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Guía de uso · VT Nutrición</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
+<style>
+  :root{--verde:#1F3A2B;--lima:#4E6B1E;--fondo:#F6F4EE;--hoja:#FBFBF8;--linea:#E4E8D6;--texto:#2C2E26;--suave:#5A5D50}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--fondo);color:var(--texto);font:17px/1.55 Lato,-apple-system,"Segoe UI",Arial,sans-serif}
+  .wrap{max-width:900px;margin-inline:auto;padding-inline:16px}
+  header.tope{background:var(--verde);color:#F6F4EE;padding-block:36px 30px}
+  header.tope a{color:#B9D47A}
+  header.tope p{margin:8px 0 0;color:#CFDCCB}
+  h1{font-size:clamp(32px,6vw,48px);font-weight:900;line-height:1.1;margin:0}
+  h2{font-size:clamp(25px,4vw,32px);font-weight:900;color:var(--verde);margin:0 0 8px;line-height:1.2}
+  h3{font-size:20px;font-weight:900;color:var(--verde);margin:0 0 4px}
+  p{margin:0 0 10px}
+  a{color:var(--lima)}
+  .eti{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--lima);margin:34px 0 0}
+  section{padding-block:26px;border-bottom:1px solid var(--linea);scroll-margin-top:12px}
+  .para{color:var(--suave)}
+  ol,ul{margin:0 0 12px;padding-left:22px}
+  li{margin-bottom:5px}
+  img{display:block;width:100%;height:auto;border:1px solid var(--linea);border-radius:12px;background:#fff;margin:10px 0 6px}
+  .pie{font-size:14px;color:var(--suave);margin:0 0 14px}
+  .indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:16px}
+  .caja{background:var(--hoja);border:1px solid var(--linea);border-radius:14px;padding:18px}
+  .caja ul{list-style:none;padding:0;margin:8px 0 0}
+  .btn{display:inline-block;background:var(--verde);color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px;margin:4px 0 10px;overflow-wrap:anywhere}
+  .tabla{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;background:var(--hoja);font-size:16px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--linea);vertical-align:top}
+  th{color:var(--verde);font-weight:900}
+  .ok{font-weight:700;color:#2E6B3A}
+  .prueba{font-weight:700;color:#8A5A00}
+  .falta{font-weight:700;color:#A5361F}
+  footer{padding-block:24px 40px;color:var(--suave);font-size:15px}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="tope"><div class="wrap">
+  <h1>Guía de uso</h1>
+  <p>Qué tiene tu sistema, para qué sirve cada parte y cómo se usa. <a href="equipo.html">Ir al portal</a></p>
+</div></header>
+
+<main class="wrap">
+<div class="indice">
+  <div class="caja"><h3>Comercial</h3><p class="para">Para que lleguen más pacientes.</p>
+    <ul><li><a href="#test">Test «Descubre tu plan»</a></li><li><a href="#reservas">Reserva online</a></li><li><a href="#kommo">Kommo</a></li><li><a href="#redes">Bot de redes</a></li><li><a href="#asistente">Asistente de WhatsApp</a></li><li><a href="#mensajes">Mensajes de seguimiento</a></li></ul></div>
+  <div class="caja"><h3>Administrativo</h3><p class="para">Para tener todo en orden.</p>
+    <ul><li><a href="#portal">Portal del equipo</a></li><li><a href="#excel">Descargar el Excel</a></li><li><a href="#reportes">Reportes</a></li><li><a href="#correos">Correos automáticos</a></li><li><a href="#pacientes">Plataforma de pacientes</a></li></ul></div>
+  <div class="caja"><h3>Para empezar</h3><p class="para">Lo primero que conviene leer.</p>
+    <ul><li><a href="#rutina">La rutina de cada mañana</a></li><li><a href="#estado">Qué está listo y qué sigue</a></li><li><a href="#links">Todos tus links</a></li></ul></div>
+</div>
+
+<p class="eti">Para empezar</p>
+<section id="rutina">
+  <h2>La rutina de cada mañana</h2>
+  <p>En el portal, pestaña <b>Tareas</b>. Si estos números bajan a cero, el equipo está al día.</p>
+  <ol><li><b>Confirmar citas:</b> enviar el recordatorio de las próximas.</li>
+  <li><b>¿Vino a su cita?:</b> marcar «Asistió» o «No asistió».</li>
+  <li><b>Cobrar:</b> pedir el pago de las citas pendientes.</li>
+  <li><b>Seguimiento → Le toca hoy:</b> escribir a los pacientes en control.</li></ol>
+</section>
+
+<p class="eti">Comercial</p>
+<section id="test">
+  <h2>Test «Descubre tu plan»</h2>
+  <p class="para">Para qué sirve: atraer a quien todavía no sabe qué necesita. Responde preguntas y recibe una recomendación y la guía de recetas.</p>
+  <a class="btn" href="https://descubre.vanessatello.com.pe">descubre.vanessatello.com.pe</a>
+  <img src="guia/descubre.jpg" alt="Primera pantalla del test Descubre tu plan" loading="lazy">
+  <p><b>Cómo se usa:</b> pon este link en tu biografía y en tus historias. Quien lo llena entra solo a Kommo con sus datos.</p>
+</section>
+
+<section id="reservas">
+  <h2>Reserva online</h2>
+  <p class="para">Para qué sirve: que la paciente elija su cita sin esperar a que le respondan.</p>
+  <a class="btn" href="https://descubre.vanessatello.com.pe/reservar.html">descubre.vanessatello.com.pe/reservar.html</a>
+  <img src="guia/reserva-inicio.jpg" alt="Página de reserva con las opciones presencial y virtual" loading="lazy">
+  <ol><li>Elige con quién: la Lic. Vanessa u otra nutricionista del equipo.</li><li>Elige presencial o virtual.</li><li>Elige día y hora: solo aparecen los que tienen espacio.</li></ol>
+  <img src="guia/reserva-calendario.jpg" alt="Calendario de la página de reserva" loading="lazy">
+  <p>La reserva aparece en el portal del equipo.</p>
+</section>
+
+<section id="kommo">
+  <h2>Kommo</h2>
+  <p class="para">Para qué sirve: es donde caen todas las conversaciones de WhatsApp, Instagram, Facebook y TikTok, y los datos de cada persona interesada.</p>
+  <a class="btn" href="https://vanetello.kommo.com">vanetello.kommo.com</a>
+  <ul><li><b>Chats:</b> para leer y responder las conversaciones.</li><li><b>Leads:</b> cada persona interesada, como una tarjeta dentro de un embudo.</li><li><b>Etiquetas:</b> marcas en cada tarjeta. <b>sin-bot</b> hace que el bot no le responda a esa persona.</li></ul>
+  <p class="para">Las pantallas de Kommo las vemos en la capacitación del viernes.</p>
+</section>
+
+<section id="redes">
+  <h2>Bot de redes</h2>
+  <p class="para">Para qué sirve: responder al instante los mensajes directos de Instagram, Facebook y TikTok.</p>
+  <ul><li>Responde solo mensajes directos. No responde comentarios ni historias.</li><li>Usa tus textos aprobados y tus preguntas frecuentes.</li><li>Si alguien del equipo está conversando con esa persona, no interrumpe.</li><li>Las dudas clínicas, los pagos y los reclamos no los responde: quedan para el equipo.</li></ul>
+  <p><b>Tú no tienes que hacer nada.</b> Para que no le responda a alguien, ponle la etiqueta <b>sin-bot</b> en Kommo.</p>
+</section>
+
+<section id="asistente">
+  <h2>Asistente de WhatsApp <span class="prueba">· en prueba</span></h2>
+  <p class="para">Para qué sirve: responder en el número de Sheilla cuando ella no está (lunes, miércoles y viernes fuera de 9:30 a 11:30; martes y jueves fuera de 8 a 18; fines de semana).</p>
+  <ul><li>Da precios, resuelve dudas y pasa el link de reserva.</li><li>No confirma citas ni pagos: eso lo sigue haciendo Sheilla.</li><li>Los casos delicados los deja para Sheilla.</li></ul>
+  <a class="btn" href="probar-asistente.html">Probar el asistente</a>
+  <p>Aquí puedes conversar con él como si fueras una paciente. No se envía nada a nadie. Se prende cuando apruebes sus respuestas.</p>
+</section>
+
+<section id="mensajes">
+  <h2>Mensajes de seguimiento <span class="prueba">· en prueba</span></h2>
+  <p class="para">Para qué sirve: volver a escribir a quien recibió el link por redes y no siguió.</p>
+  <ul><li>Primer mensaje a las 3 horas y segundo a las 20 horas.</li><li>El tercero solo si la persona vuelve a escribir: Meta permite escribir solo hasta 24 horas después de su último mensaje.</li><li>Se detiene si la persona responde, tiene una cita o la atiende el equipo.</li></ul>
+  <p>Hoy solo registra lo que enviaría. Se prende cuando apruebes los textos.</p>
+</section>
+
+<p class="eti">Administrativo</p>
+<section id="portal">
+  <h2>Portal del equipo</h2>
+  <p class="para">Para qué sirve: el día a día de citas, cobros y seguimiento. Se entra con la clave del equipo.</p>
+  <a class="btn" href="equipo.html">portal.vanessatello.com.pe/equipo.html</a>
+  <p class="pie">Las capturas son del modo práctica: los pacientes son inventados. Para practicar sin miedo, entra por el <a href="equipo.html?demo=1">modo práctica</a>: nada se guarda.</p>
+
+  <h3>Tareas</h3><p>Lo que toca hacer hoy. Elige una lista a la izquierda, toca el botón y la paciente sale de la lista.</p>
+  <img src="guia/equipo-tareas.jpg" alt="Pestaña Tareas" loading="lazy">
+
+  <h3>¿Vino a su cita?</h3><p>Son citas confirmadas que ya pasaron y nadie marcó. Si no se marcan, los reportes y el seguimiento quedan incompletos. Quien no vino pasa a «Reagendar».</p>
+  <img src="guia/equipo-vino.jpg" alt="Lista ¿Vino a su cita? con botones Asistió y No asistió" loading="lazy">
+
+  <h3>Calendario</h3><p>Toda la agenda por día, semana o mes. Con «Abrir horario» y «Bloquear agenda» manejas tu disponibilidad.</p>
+  <img src="guia/equipo-calendario.jpg" alt="Calendario semanal" loading="lazy">
+
+  <h3>Nueva cita</h3><p>Botón verde arriba. Busca a la paciente, elige modalidad, fecha, hora y servicio, y guarda.</p>
+  <img src="guia/equipo-nueva-cita.jpg" alt="Formulario Nueva cita" loading="lazy">
+
+  <h3>Seguimiento</h3><p>Pacientes en control: a quién le toca hoy, quién está en riesgo, y los botones «Escribir / anotar» y «Agendar seguimiento».</p>
+  <img src="guia/equipo-seguimiento.jpg" alt="Pestaña Seguimiento" loading="lazy">
+
+  <h3>Cobros</h3><p>Citas por cobrar o con saldo, pagadas, clínicas por cobrar y paquetes. Con «Enviar datos de pago» le llega el mensaje listo a la paciente.</p>
+  <img src="guia/equipo-cobros.jpg" alt="Pestaña Cobros" loading="lazy">
+  <p>Para más detalle de cada botón, está el <a href="manual.html">manual del portal</a>.</p>
+</section>
+
+<section id="excel">
+  <h2>Descargar el Excel</h2>
+  <ol><li>Entra a <b>Cobros → Informe de ventas</b>.</li><li>Filtra por fechas, pago, modalidad, profesional, estado o servicio.</li><li>Toca <b>Descargar Excel</b> y ábrelo con doble clic.</li></ol>
+  <img src="guia/equipo-excel.jpg" alt="Informe de ventas con el botón Descargar Excel" loading="lazy">
+  <h3>Tu reporte mensual, hoja por hoja</h3>
+  <div class="tabla"><table>
+    <tr><th>Hoja de tu Excel</th><th>Dónde está ahora</th></tr>
+    <tr><td>Reporte de citas</td><td>Cobros → Informe de ventas → Descargar Excel</td></tr>
+    <tr><td>Resumen del mes</td><td>Pestaña Reportes</td></tr>
+    <tr><td>Citas Avendaño y pre/post Avendaño</td><td>En el Excel, filtra por «Quién paga» o «Llega por». <span class="falta">Falta</span> el formato exacto que pide la clínica.</td></tr>
+    <tr><td>Citas Dr. Salazar - Ximena</td><td>En el Excel, filtra por «Llega por» y «Profesional».</td></tr>
+  </table></div>
+</section>
+
+<section id="reportes">
+  <h2>Reportes</h2>
+  <p class="para">Para qué sirve: ver cómo va el mes sin pedírselo a nadie. Última pestaña del portal, con la misma clave.</p>
+  <a class="btn" href="informes.html">portal.vanessatello.com.pe/informes.html</a>
+  <ul><li><b>Resumen:</b> consultas atendidas (contigo y con el equipo), pacientes nuevos, cobrado y por cobrar.</li><li><b>Embudo:</b> conversaciones, mensajes directos, cuántos recibieron el test o el link de reserva, cuántos llenaron, citas y pacientes nuevos.</li><li><b>¿Cómo llegaron?:</b> redes, referidos, clínica o médicos.</li></ul>
+  <p><b>Cómo leerlo:</b> mira dónde cae más el embudo. Ahí está la acción de la semana.</p>
+</section>
+
+<section id="correos">
+  <h2>Correos automáticos</h2>
+  <ul><li><b>Reporte diario, 8:00 a. m.:</b> nuevos, citas del día y embudo.</li><li><b>Conversaciones sin responder, 8:30 a. m. y 8:30 p. m.:</b> quién espera respuesta.</li></ul>
+  <p>Llegan a vanetello@vanessatello.com.pe. Si no los ves, revisa la carpeta de spam.</p>
+</section>
+
+<section id="pacientes">
+  <h2>Plataforma de pacientes</h2>
+  <p class="para">Para qué sirve: que cada paciente vea su próxima cita y su seguimiento sin preguntarle a nadie.</p>
+  <a class="btn" href="cliente.html">portal.vanessatello.com.pe/cliente.html</a>
+  <img src="guia/paciente-acceso.jpg" alt="Acceso con DNI" loading="lazy">
+  <img src="guia/paciente-ficha.jpg" alt="Ficha de ejemplo de una paciente inventada" loading="lazy">
+  <p class="pie">Ejemplo con una paciente inventada.</p>
+  <p>Entra con su DNI. Si todavía no tiene ficha cargada, le sale que no se encontró. El peso no se muestra porque bastaría el DNI para verlo.</p>
+</section>
+
+<section id="estado">
+  <h2>Qué está listo y qué sigue</h2>
+  <div class="tabla"><table>
+    <tr><th>Qué</th><th>Estado</th><th>Siguiente paso</th></tr>
+    <tr><td>Portal, reportes, correos, test, reserva y plataforma de pacientes</td><td class="ok">Funcionando</td><td>Capacitación del viernes</td></tr>
+    <tr><td>Bot de redes</td><td class="ok">Funcionando</td><td>Revisar sus respuestas cada semana</td></tr>
+    <tr><td>Juntar en Kommo el lead del test con su chat</td><td class="ok">Funcionando</td><td>Ninguno</td></tr>
+    <tr><td>Asistente de WhatsApp</td><td class="prueba">En prueba</td><td>Vanessa prueba y aprueba las respuestas</td></tr>
+    <tr><td>Mensajes de seguimiento</td><td class="prueba">En prueba</td><td>Vanessa aprueba los 3 textos</td></tr>
+    <tr><td>Separar en Kommo el número API del de Sheilla</td><td class="falta">Falta</td><td>Lo vemos en la capacitación</td></tr>
+    <tr><td>Links en tu página web</td><td class="falta">Falta</td><td>Quien maneja tu web los coloca</td></tr>
+    <tr><td>Calendario de Google y correos a pacientes</td><td class="falta">Falta</td><td>Respuesta de Sandro</td></tr>
+  </table></div>
+</section>
+
+<section id="links">
+  <h2>Todos tus links</h2>
+  <div class="tabla"><table>
+    <tr><th>Para qué</th><th>Link</th></tr>
+    <tr><td>Portal del equipo</td><td><a href="equipo.html">portal.vanessatello.com.pe/equipo.html</a></td></tr>
+    <tr><td>Reportes</td><td><a href="informes.html">portal.vanessatello.com.pe/informes.html</a></td></tr>
+    <tr><td>Probar el asistente</td><td><a href="probar-asistente.html">portal.vanessatello.com.pe/probar-asistente.html</a></td></tr>
+    <tr><td>Pacientes</td><td><a href="cliente.html">portal.vanessatello.com.pe/cliente.html</a></td></tr>
+    <tr><td>Reservar cita</td><td><a href="https://descubre.vanessatello.com.pe/reservar.html">descubre.vanessatello.com.pe/reservar.html</a></td></tr>
+    <tr><td>Test Descubre</td><td><a href="https://descubre.vanessatello.com.pe">descubre.vanessatello.com.pe</a></td></tr>
+    <tr><td>Recetario</td><td><a href="https://descubre.vanessatello.com.pe/recetas.html">descubre.vanessatello.com.pe/recetas.html</a></td></tr>
+    <tr><td>Kommo</td><td><a href="https://vanetello.kommo.com">vanetello.kommo.com</a></td></tr>
+  </table></div>
+</section>
+</main>
+<footer class="wrap">VT Nutrición · Lic. Vanessa Tello</footer>
+</body>
+</html>
