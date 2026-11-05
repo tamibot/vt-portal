@@ -1119,16 +1119,50 @@ function ventasFiltradas() {
 function fichaDe(c) {
   return D.pacientes.find(x => x.nombre === c.paciente && (!c.telefono || !x.telefono || x.telefono === c.telefono)) || {};
 }
+// 5-nov: .xlsx de verdad. El CSV con «sep=;» hacía que Excel ignorara el UTF-8 y rompiera las tildes.
+// Textos en celda de texto: no ejecutan fórmulas y el teléfono o DNI no pierde ceros.
+const num = v => (v === null || v === undefined || v === '' || !isFinite(v)) ? '' : Number(v);
+function zipSinComprimir(partes) {
+  const enc = new TextEncoder(), tabla = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = b => { let c = 0xFFFFFFFF; for (const x of b) c = tabla[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const cabecera = (firma, resto) => { const u = new Uint8Array(resto.reduce((s, [, n]) => s + n, 4)), d = new DataView(u.buffer); d.setUint32(0, firma, true); let i = 4;
+    for (const [v, n] of resto) { n === 2 ? d.setUint16(i, v, true) : d.setUint32(i, v, true); i += n; } return u; };
+  const trozos = [], central = []; let pos = 0;
+  for (const [nombre, texto] of partes) {
+    const n = enc.encode(nombre), b = enc.encode(texto), c = crc(b);
+    const comun = [[0, 2], [0, 2], [0, 2], [33, 2], [c, 4], [b.length, 4], [b.length, 4], [n.length, 2], [0, 2]];
+    const local = cabecera(0x04034b50, [[20, 2], ...comun]);
+    central.push(cabecera(0x02014b50, [[20, 2], [20, 2], ...comun, [0, 2], [0, 2], [0, 2], [0, 4], [pos, 4]]), n);
+    trozos.push(local, n, b); pos += local.length + n.length + b.length;
+  }
+  const largo = central.reduce((s, u) => s + u.length, 0);
+  return new Blob([...trozos, ...central, cabecera(0x06054b50, [[0, 2], [0, 2], [partes.length, 2], [partes.length, 2], [largo, 4], [pos, 4], [0, 2]])],
+    { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function bajarExcel(archivo, hoja, cab, filas) {
+  const x = s => String(s ?? '').replace(/[^\u0009\u000A\u000D -퟿-�]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const col = n => n < 26 ? String.fromCharCode(65 + n) : String.fromCharCode(64 + Math.floor(n / 26)) + String.fromCharCode(65 + n % 26);
+  const celda = (v, i, f, estilo) => v === '' || v === null || v === undefined ? '' : typeof v === 'number' ? `<c r="${col(i)}${f}"><v>${v}</v></c>`
+    : `<c r="${col(i)}${f}" t="inlineStr"${estilo}><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+  const fila = (vals, f, estilo = '') => `<row r="${f}">${vals.map((v, i) => celda(v, i, f, estilo)).join('')}</row>`;
+  const anchos = cab.map((c, i) => Math.min(40, Math.max(c.length, ...filas.slice(0, 200).map(r => String(r[i] ?? '').length)) + 2));
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', M = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main', R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const blob = zipSinComprimir([
+    ['[Content_Types].xml', `${X}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+    ['_rels/.rels', `${X}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml', `${X}<workbook xmlns="${M}" xmlns:r="${R}"><sheets><sheet name="${x(hoja)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels', `${X}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${R}/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml', `${X}<styleSheet xmlns="${M}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`],
+    ['xl/worksheets/sheet1.xml', `${X}<worksheet xmlns="${M}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${anchos.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${fila(cab, 1, ' s="1"')}${filas.map((r, i) => fila(r, i + 2)).join('')}</sheetData></worksheet>`],
+  ]);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = archivo; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
 function descargarVentas() {
   const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar','Fecha de pago','Fecha de adelanto','Importe de adelanto','Fecha de saldo','Importe de saldo','Importe pagado registrado'];
-  const celda = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // que Excel no ejecute fórmulas
-    return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
-    c.precio_lista ?? '', Number(c.descuento_pct) || '', c.monto ?? '', pagoVisible(c), c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
-    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,c.monto_adelanto,c.fecha_saldo,c.monto_saldo,c.monto_pagado]);
-  const csv = '﻿sep=;\n' + [cab, ...filas].map(f => f.map(celda).join(';')).join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = `ventas-vt-${D.hoy}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    num(c.precio_lista), num(c.descuento_pct), num(c.monto), pagoVisible(c), c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
+    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,num(c.monto_adelanto),c.fecha_saldo,num(c.monto_saldo),num(c.monto_pagado)]);
+  bajarExcel(`ventas-vt-${D.hoy}.xlsx`, 'Ventas', cab, filas);
   aviso(`Descargado: ${filas.length} citas. Ábrelo con Excel.`);
 }
 function movimientosPago(c) {
@@ -1145,10 +1179,8 @@ function pagosFiltrados() {
 }
 function descargarPagos() {
  const cab=['Fecha de pago','Paciente','Concepto','Importe','Medio de pago','Fecha de cita','Profesional'];
- const filas=pagosFiltrados().map(p=>[p.fecha,p.c.paciente,p.concepto,p.importe,p.medio,p.c.fecha,p.c.profesional]);
- const celda=v=>{let s=String(v ?? '');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
- const csv='\ufeffsep=;\n'+[cab,...filas].map(f=>f.map(celda).join(';')).join('\n');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`pagos-vt-${D.hoy}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+ const filas=pagosFiltrados().map(p=>[p.fecha,p.c.paciente,p.concepto,num(p.importe),p.medio,p.c.fecha,p.c.profesional]);
+ bajarExcel(`pagos-vt-${D.hoy}.xlsx`,'Pagos',cab,filas);
  aviso(`Descargado: ${filas.length} movimientos de pago.`);
 }
 function pintarCobros(soloLista) {
