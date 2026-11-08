@@ -847,6 +847,33 @@ function diasRecordatorio() {
 const escritoTras = c => c.recordado && c.recordado > c.fecha;           // se le escribió DESPUÉS de su cita
 const nDias = n => `${n} día${n === 1 ? '' : 's'}`;
 
+// ---------- Filtrar por estado (6-nov): se combinan Pago, Cita y Cliente, como en la lista que armamos con Vanessa y Sheilla.
+const pagoDe = c => ['Pagado', 'Paquete', 'Cortesía'].includes(c.pago) ? 'Realizado' : c.pago === 'Adelanto 25%' ? 'Adelanto'
+  : conDeuda(c) && (vencida(c) || (c.fecha < D.hoy && !viva(c) && c.estado !== 'Asistió')) ? 'No pagó' : 'Pendiente';
+const citaDe = c => ({ 'Confirmada': 'Confirmada', 'Por confirmar': 'No confirmó', 'Reprogramada': 'Reagendó', 'Cancelada': 'Cancelada', 'Asistió': 'Asistió', 'No asistió': 'No asistió' })[c.estado] || c.estado;
+function clienteDe(c) {
+  const q = quien(c), r = [];
+  if (D.citas.some(x => x.estado === 'Asistió' && x.fecha < c.fecha && quien(x) === q)) r.push('Cliente');
+  if (futura(c) && viva(c)) r.push('Agendado');
+  if (D.seguimiento.some(x => x.estado === 'Activo' && telNorm(x.telefono) === telNorm(c.telefono))) r.push('Seguimiento');
+  if (esperando(c)) r.push('No respondió');
+  return r.length ? r : ['Nuevo'];
+}
+const OPC_ESTADO = { fpago: ['Pendiente', 'Realizado', 'Adelanto', 'No pagó'], fcita: ['Confirmada', 'No confirmó', 'Reagendó', 'Cancelada', 'Asistió', 'No asistió'],
+  fcli: ['Nuevo', 'Agendado', 'Seguimiento', 'No respondió', 'Cliente'] };
+function filtrosEstado() {
+  const sel = (k, rot) => `<label style="margin-right:10px">${rot} <select data-fest="${k}"><option value="">Todos</option>${OPC_ESTADO[k].map(o => `<option${H[k] === o ? ' selected' : ''}>${o}</option>`).join('')}</select></label>`;
+  return 'Citas de los últimos 60 días y las próximas. Combina los tres filtros.<br>' + sel('fpago', 'Pago') + sel('fcita', 'Cita') + sel('fcli', 'Cliente');
+}
+function porEstado(permite) {
+  const desde = sumar(D.hoy, -60);
+  return D.citas.filter(c => permite(c) && c.fecha >= desde)
+    .map(c => ({ c, e: { pago: pagoDe(c), cita: citaDe(c), cliente: clienteDe(c) } }))
+    .filter(({ e }) => (!H.fpago || e.pago === H.fpago) && (!H.fcita || e.cita === H.fcita) && (!H.fcli || e.cliente.includes(H.fcli)))
+    .sort((a, b) => a.c.fecha.localeCompare(b.c.fecha));
+}
+document.addEventListener('change', e => { const f = e.target.closest('[data-fest]'); if (f) { H[f.dataset.fest] = f.value; H.limite = 30; pintarHoy(); } });
+
 function seccionesHoy() { SIMPLE = true; try { return seccionesHoyBase(); } finally { SIMPLE = false; } }
 const esperando = c => c.contacto_estado === 'Pendiente';
 const contactar = (c, motivo) => `<button type="button" class="btn chico" data-contactar="${c.id}" data-motivo="${motivo}">Ya le escribí</button>`;
@@ -858,20 +885,23 @@ function seccionesHoyBase() {
   // 1 día antes: a todas (va con indicaciones). 5 días antes: una sola vez a las que no confirmaron.
   const hastaConfirmar = H.periodo === 'mes' ? sumar(sumar(D.hoy.slice(0, 7) + '-01', 40).slice(0, 7) + '-01', -1) : sumar(D.hoy, 7);
   const confirmar = vivasFuturas.filter(c => c.fecha > D.hoy && c.fecha <= hastaConfirmar &&
-    (proximos.includes(c.fecha) ? !escritoHoy(c) : c.estado === 'Por confirmar' && !c.recordado));
+    c.estado === 'Por confirmar' && (proximos.includes(c.fecha) ? !escritoHoy(c) : !c.recordado));
+  // 7-nov: una cita confirmada ya no figura en «Confirmar citas»; si es de mañana, solo falta el recordatorio con indicaciones.
+  const recordar = vivasFuturas.filter(c => c.estado === 'Confirmada' && proximos.includes(c.fecha) && !escritoHoy(c));
   // Vista mensual: incluye los saldos del mes. La vista semanal conserva el aviso a tres días.
   const cobrar = D.citas.filter(c => permite(c) && !esperando(c) && conDeuda(c) && (
       (futura(c) && viva(c) && c.fecha <= hastaConfirmar && (H.periodo === 'mes' || c.pago === 'Por pagar' || c.fecha <= sumar(D.hoy, 3))) ||
       (c.estado === 'Asistió' && c.fecha >= (H.periodo === 'mes' ? D.hoy.slice(0, 7) + '-01' : sumar(D.hoy, -30)))))
     .sort((a,b)=>ordenCitas(a,b,H.orden));
   const hoy = D.citas.filter(c => permite(c) && c.fecha === D.hoy && !['Cancelada', 'Reprogramada'].includes(c.estado));
-  const recientes = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) >= 14 && diasEntre(c.fecha, D.hoy) <= 120);
+  const recientes = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) >= 1 && diasEntre(c.fecha, D.hoy) <= 120);
   const antiguos = D.sin_proxima.filter(c => permite(c) && !esperando(c) && diasEntre(c.fecha, D.hoy) > 120);
   const porEscribir = (a, b) => (!!escritoTras(a) - !!escritoTras(b)) || b.fecha.localeCompare(a.fecha);
   const escribi = c => contactar(c, 'seguimiento');
   // Sin confirmar / reprogramaron (pedido del 30-set): tres grupos, cada uno con su acción.
   const conCitaNueva = c => D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c));
-  const vistos = new Set();
+  const vistos = new Set(), vistos2 = new Set();
+  const reagendar = D.citas.filter(c => permite(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c)));
   const sinConfirmar = [
     ...vivasFuturas.filter(c => c.estado === 'Por confirmar' && c.recordado && c.fecha <= sumar(D.hoy, 7) && !escritoHoy(c) && !confirmar.includes(c))
       .map(c => ({ c, motivo: `Ya se le escribió el ${fechaCorta(c.recordado)} y no confirmó · cita ${cuando(c.fecha)}`,
@@ -889,11 +919,20 @@ function seccionesHoyBase() {
         acciones: [wa(c, c.contacto_motivo === 'cobrar' && conDeuda(c) ? (c.pago==='Adelanto 25%' ? 'saldo' : 'pago') : 'confirmar', 'Insistir'), boton('Respondió', c.id, { contacto_estado: 'Respondió' }),
           c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
           conDeuda(c) ? boton('Pagó', c.id, { pago: 'Pagado' }) : '', porReagendar(c), `<button class="btn chico" data-liberar="${c.id}">Cancelar</button>`] })) },
-    { id: 'por-reagendar', titulo: 'Por reagendar', ayuda: 'Pidieron mover la cita y todavía no tienen fecha. Su turno anterior queda libre.',
-      items: D.citas.filter(c => permite(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c))).map(c => tarjeta(c, {
-        motivo: 'Sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
-    { id: 'no-responde', titulo: 'No responde (sin cita)', ayuda: 'Conversaciones sin cita vigente que esperan respuesta de la paciente. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
-      items: (D.conversaciones || []).filter(c => c.estado === 'No responde').map(c => filaLibre({ quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`] })) },
+    { id: 'por-reagendar', titulo: 'Pagaron y falta fecha', ayuda: 'Pidieron mover su cita, ya pagaron y todavía no tienen fecha nueva.',
+      items: reagendar.filter(c => !conDeuda(c)).map(c => tarjeta(c, { motivo: 'Pagado · sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
+    { id: 'reagendar-sin-pago', titulo: 'Por reagendar sin pago', ayuda: 'Pidieron mover su cita, no han pagado y todavía no tienen fecha nueva.',
+      items: reagendar.filter(conDeuda).map(c => tarjeta(c, { motivo: 'Sin pago · sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
+    { id: 'canceladas', titulo: 'Cancelaron', ayuda: 'Cancelaron en los últimos 60 días y no tienen otra cita.',
+      items: D.citas.filter(c => permite(c) && c.estado === 'Cancelada' && diasEntre(c.fecha, D.hoy) <= 60 && diasEntre(D.hoy, c.fecha) <= 60 && !conCitaNueva(c) && !vistos2.has(quien(c)) && vistos2.add(quien(c)))
+        .sort((a, b) => b.fecha.localeCompare(a.fecha)).map(c => tarjeta(c, { fechaExacta: true, motivo: 'Canceló', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
+    { id: 'recordar', titulo: 'Recordatorio de mañana', ayuda: 'Ya confirmaron. Envía el recordatorio con las indicaciones (y el Zoom si es virtual).',
+      items: recordar.map(c => tarjeta(c, { motivo: `${c.fecha === proximos[0] ? 'Mañana' : 'El ' + DIAS[diaSemana(c.fecha)]} · confirmada` + (c.modalidad === 'Virtual' && !c.enlace_zoom ? ' <span class="pill rojo">Sin enlace de Zoom</span>' : ''),
+        acciones: [wa(c, 'recordatorio', 'Enviar recordatorio'), contactar(c, 'confirmar')] })) },
+    { id: 'estados', titulo: 'Filtrar por estado', ayuda: filtrosEstado(),
+      items: porEstado(permite).map(({ c, e }) => tarjeta(c, { fechaExacta: true, motivo: esc(`Pago: ${e.pago} · Cita: ${e.cita} · ${e.cliente.join(', ')}`), acciones: [wa(c, 'cita')] })) },
+    { id: 'no-responde', titulo: 'Les escribimos y no respondieron', ayuda: 'Personas sin cita a las que el equipo o el bot les escribió y no contestaron. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
+      items: (D.conversaciones || []).filter(c => c.estado === 'No responde').sort((a, b) => (b.ultima_salida || 0) - (a.ultima_salida || 0)).map(c => filaLibre({ cuando: c.ultima_salida ? [fechaCorta(new Date(c.ultima_salida * 1000 - 5 * 36e5).toISOString().slice(0, 10)), 'último mensaje'] : ['', ''], quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`] })) },
     { id: 'hoy', titulo: 'Citas de hoy', ayuda: 'Quién viene hoy.',
       items: hoy.map(c => tarjeta(c, { mostrarFecha: false, acciones: [wa(c, 'cita'),
         c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
@@ -929,7 +968,7 @@ function seccionesHoyBase() {
       items: D.citas.filter(c => permite(c) && porRevisar(c)).map(c => tarjeta(c, { motivo: esc((c.notas.match(/\[REVISAR\] ([^\n]*)/) || [])[1] || '') })) },
     { id: 'no-asistio', titulo: 'Reagendar (no vinieron)', ayuda: 'No vinieron a su última cita y no tienen otra.',
       items: D.no_asistio.filter(c => permite(c) && !esperando(c)).sort(porEscribir).map(c => tarjeta(c, { motivo: `Faltó el ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reagendar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
-    { id: 'no-volvieron', titulo: 'Invitar a su control', ayuda: 'Vinieron hace 2 semanas a 4 meses y no tienen otra cita.',
+    { id: 'no-volvieron', titulo: 'Invitar a su control', ayuda: 'Ya vinieron (desde ayer hasta hace 4 meses) y no tienen otra cita.',
       items: recientes.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita hace ${nDias(diasEntre(c.fecha, D.hoy))}`, acciones: [wa(c, 'control', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
     { id: 'reactivar', titulo: 'Reactivar pacientes', ayuda: 'Vinieron hace 4 a 12 meses y no volvieron.',
       items: antiguos.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita: ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reactivar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
@@ -940,13 +979,13 @@ function seccionesHoyBase() {
   ];
 }
 
-const H = { texto:'', orden:'proximas', sec: null, limite: 30, prof: '', periodo: 'mes' };
-const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia']], ['Seguimiento de citas', ['pendientes', 'por-reagendar', 'sin-confirmar', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Otros', ['por-cerrar', 'revisar-pagos', 'revisar']]];
+const H = { texto:'', orden:'proximas', sec: null, limite: 30, prof: '', periodo: 'mes', fpago: '', fcita: '', fcli: '' };
+const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia', 'recordar']], ['Seguimiento de citas', ['pendientes', 'sin-confirmar', 'por-reagendar', 'reagendar-sin-pago', 'canceladas', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Ventas', ['por-cerrar']], ['Filtrar', ['estados']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
   const secs = Object.fromEntries(seccionesHoy().map(s => [s.id, s]));
   const tareas = URGENTES.reduce((n, k) => n + secs[k].items.length, 0);
-  const conItems = MENU_HOY.flatMap(([, ids]) => ids).filter(id => secs[id].items.length);
+  const conItems = MENU_HOY.flatMap(([, ids]) => ids).filter(id => secs[id].items.length || id === H.sec && id === 'estados');
   if (H.sec && !conItems.includes(H.sec) && D.cargado) aviso('¡Lista terminada! ✓ Pasamos a la siguiente.');
   if (!conItems.includes(H.sec)) H.sec = URGENTES.find(k => secs[k].items.length) || conItems[0] || null;
   const seg = D.seguimiento.filter(x => x.estado === 'Activo' && tocaHoy(x)).length + D.operados.filter(o => !o.avisado).length;
@@ -954,7 +993,7 @@ function pintarHoy() {
   $('#hoy-resumen').textContent = (tareas ? `${tareas} tareas urgentes` : 'Lo urgente está al día ✓') + ` · ${secs.hoy.items.length} citas hoy`;
   const citasHoy = secs.hoy.items.length;
   $('#hoy-menu').innerHTML = MENU_HOY.map(([grupo, ids]) => {
-      const con = ids.filter(id => secs[id].items.length || ['pendientes', 'por-reagendar', 'no-responde'].includes(id));
+      const con = ids.filter(id => secs[id].items.length || ['pendientes', 'por-reagendar', 'no-responde', 'estados'].includes(id));
       return con.length ? `<p class="grupo">${grupo}</p>` + con.map(id => `<button type="button" class="item" data-sec="${id}" aria-current="${H.sec === id}"><span>${secs[id].titulo}</span><b class="${secs[id].urge ? 'urge' : ''}">${secs[id].items.length}</b></button>`).join('') : '';
     }).join('')
     + `<p class="grupo">Ir a</p><button type="button" class="item" data-vista-ir="agenda"><span>Citas de hoy</span><b>${citasHoy || ''}</b></button>`
