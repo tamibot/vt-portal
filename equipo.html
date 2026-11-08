@@ -272,6 +272,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <button class="btn pri" id="nueva">+ Nueva cita</button>
     <button class="btn" data-pacientes>Pacientes</button>
     <button class="btn" id="recargar" aria-label="Actualizar" title="Actualizar">↻</button>
+    <button class="btn" id="sincronizar" title="Igualar Kommo con el portal y traer lo nuevo de Kommo">⇄ Kommo</button>
     <a class="btn" href="guia.html" target="_blank" rel="noopener" title="Guía de uso">? Ayuda</a>
     <select id="cargo" class="cargo" aria-label="Tu cargo"></select>
   </div></header>
@@ -1695,6 +1696,20 @@ $('#nueva').addEventListener('click', () => abrirCita(null));
 $('#consejo').hidden = guardado('consejo-visto') === '1';
 $('#consejo-ok').addEventListener('click', () => { guardado('consejo-visto', '1'); $('#consejo').hidden = true; });
 $('#recargar').addEventListener('click', () => cargar().then(ok => ok && aviso('Actualizado a las ' + horaLima() + '.')));
+// 7-nov: sincronización manual. Manda el portal: deja los campos de cita y pago de Kommo iguales a los del portal
+// y luego trae lo nuevo de Kommo. Corre sola a las 7:00; el botón no repite antes de 10 minutos.
+$('#sincronizar').addEventListener('click', async () => {
+  if (DEMO) return aviso('En modo práctica no se sincroniza con Kommo.');
+  const b = $('#sincronizar'); b.disabled = true; aviso('Sincronizando con Kommo…');
+  try {
+    const r = await fetch(N8N + 'sincronizar-vt', { method: 'POST', cache: 'no-store', signal: AbortSignal.timeout?.(120000), headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return aviso(j.motivo || 'No se pudo sincronizar. Intenta de nuevo en unos minutos.');
+    aviso(`Kommo al día: ${j.enviados} lead${j.enviados === 1 ? '' : 's'} actualizado${j.enviados === 1 ? '' : 's'}. Lo nuevo de Kommo llega en un minuto.`);
+    setTimeout(() => cargar(), 60000);
+  } catch (e) { aviso('No se pudo sincronizar. Revisa tu conexión.'); }
+  finally { b.disabled = false; }
+});
 
 const nombreCargo = u => ({'Asistente de la nutricionista':'Asistencia comercial · citas y cobros (Sheila)','Nutricionista del equipo':'Seguimiento nutricional (Ximena)'})[u] || u;
 const cargos = CARGOS.map(u => `<option value="${esc(u)}">${esc(nombreCargo(u))}</option>`).join('');
