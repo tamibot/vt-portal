@@ -344,6 +344,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   <div class="campos">
     <label class="ancho">Nombre<input name="nombre" required></label><label>Teléfono<input name="telefono" inputmode="tel"></label>
     <label>Correo<input name="email" type="email"></label><label>DNI<input name="dni" inputmode="numeric" pattern="[0-9]{8,12}" maxlength="12"></label>
+    <label>Fecha de nacimiento<input name="fecha_nacimiento" type="date" min="1920-01-01"></label>
     <label>Llega por<input name="llega_por"></label><label>Tipo de paciente<select name="tipo_paciente"></select></label>
   </div><p class="nota">Guarda los datos sin pedir fecha ni hora. Las citas de esta paciente reciben el mismo cambio.</p>
   <p class="error" id="paciente-error" role="alert" hidden></p>
@@ -370,6 +371,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
       <label>Teléfono<input name="telefono" inputmode="tel" placeholder="9 dígitos"></label>
       <label>Correo<input name="email" type="email" placeholder="para el informe de ventas"></label>
       <label>DNI<input name="dni" inputmode="numeric" maxlength="12" placeholder="8 dígitos"></label>
+      <label>Fecha de nacimiento<input name="fecha_nacimiento" type="date" min="1920-01-01"></label>
       <label>Llega por<input name="llega_por" list="lista-llega" autocomplete="off" placeholder="Instagram, TikTok, referida…"></label>
       <label>Tipo de paciente<select name="tipo_paciente"></select></label>
       <label>Tipo<select name="tipo"><option value="">—</option><option>Primera cita</option><option>Control</option><option>Paquete</option><option>Pre operación</option><option>Post operación</option></select></label>
@@ -1198,10 +1200,10 @@ function bajarExcel(archivo, hoja, cab, filas) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = archivo; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 function descargarVentas() {
-  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar','Fecha de pago','Fecha de adelanto','Importe de adelanto','Fecha de saldo','Importe de saldo','Importe pagado registrado'];
+  const cab = ['Fecha', 'Hora', 'Paciente', 'Teléfono', 'Correo', 'Modalidad', 'Profesional', 'Tipo', 'Servicio', 'Precio de lista', 'Descuento %', 'Precio final', 'Pago', 'Medio de pago', 'Quién paga', 'Paquete', 'DNI', 'Fecha de nacimiento', 'Llega por', 'Tipo de paciente', 'Estado de cita', 'Pago por verificar','Fecha de pago','Fecha de adelanto','Importe de adelanto','Fecha de saldo','Importe de saldo','Importe pagado registrado'];
   const filas = ventasFiltradas().map(c => [c.fecha, c.hora, c.paciente, c.telefono, c.email, c.modalidad, c.profesional, c.tipo, c.servicio,
     num(c.precio_lista), num(c.descuento_pct), num(c.monto), pagoVisible(c), c.medio_pago, c.pagador, c.paquete_id ? `${c.nro_paquete} de ${c.paquete_total}` : '',
-    fichaDe(c).dni, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,num(c.monto_adelanto),c.fecha_saldo,num(c.monto_saldo),num(c.monto_pagado)]);
+    fichaDe(c).dni, fichaDe(c).fecha_nacimiento, fichaDe(c).llega_por, fichaDe(c).tipo_paciente, c.estado, c.pago_por_revisar ? 'Sí' : 'No',c.fecha_pago,c.fecha_adelanto,num(c.monto_adelanto),c.fecha_saldo,num(c.monto_saldo),num(c.monto_pagado)]);
   bajarExcel(`ventas-vt-${D.hoy}.xlsx`, 'Ventas', cab, filas);
   aviso(`Descargado: ${filas.length} citas. Ábrelo con Excel.`);
 }
@@ -1289,7 +1291,7 @@ function listaPacientes(texto = '') {
 }
 function datosPaciente(p = {}) {
   fp.dataset.id = p.id || '';
-  for (const k of ['nombre', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente']) fp[k].value = p[k] || '';
+  for (const k of ['nombre', 'telefono', 'email', 'dni', 'fecha_nacimiento', 'llega_por', 'tipo_paciente']) fp[k].value = p[k] || '';
 }
 function abrirPaciente(p = {}) {
   fp.reset(); fp.tipo_paciente.innerHTML = '<option value="">—</option>' + TIPOS_PACIENTE.map(x => `<option>${x}</option>`).join('');
@@ -1300,7 +1302,7 @@ $('#paciente-buscar').addEventListener('input', e => listaPacientes(e.target.val
 $('#paciente-elegir').addEventListener('change', e => datosPaciente(D.pacientes.find(p => p.id === Number(e.target.value)) || {}));
 fp.addEventListener('submit', async e => {
   e.preventDefault(); const p = { accion: 'paciente' }; if (fp.dataset.id) p.id = Number(fp.dataset.id);
-  for (const k of ['nombre', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente']) p[k] = fp[k].value.trim();
+  for (const k of ['nombre', 'telefono', 'email', 'dni', 'fecha_nacimiento', 'llega_por', 'tipo_paciente']) p[k] = fp[k].value.trim();
   await guardar(p, $('#paciente-error'), $('#dlg-paciente'), 'Datos de paciente guardados.');
 });
 function abrirBloqueo(id) {
@@ -1395,8 +1397,8 @@ function abrirCita(c, base = {}) {
   fc.tipo_paciente.innerHTML = '<option value="">—</option>' + TIPOS_PACIENTE.map(x => `<option>${x}</option>`).join('');
   $('#lista-llega').innerHTML = [...new Set(D.pacientes.map(x => x.llega_por).filter(Boolean))].sort().map(x => `<option value="${esc(x)}">`).join('');
   const v = c ? { ...fichaDe(c), ...c } : { modalidad: 'Virtual', profesional: 'Lic. Vanessa Tello', estado: 'Por confirmar', pago: 'Por pagar', tipo: 'Primera cita', ...base };
-  fc.fecha_pago.max=D.hoy;
-  for (const k of ['fecha_pago','dni', 'llega_por', 'tipo_paciente', 'paciente', 'telefono', 'email', 'profesional', 'fecha', 'hora', 'tipo', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'servicio', 'precio_lista', 'descuento_pct', 'pagador']) {
+  fc.fecha_pago.max=D.hoy; fc.fecha_nacimiento.max = D.hoy;
+  for (const k of ['fecha_pago','dni', 'fecha_nacimiento', 'llega_por', 'tipo_paciente', 'paciente', 'telefono', 'email', 'profesional', 'fecha', 'hora', 'tipo', 'estado', 'pago', 'monto', 'medio_pago', 'enlace_zoom', 'notas', 'servicio', 'precio_lista', 'descuento_pct', 'pagador']) {
     if (!fc[k] || v[k] == null) continue;
     if (fc[k].tagName === 'SELECT' && ![...fc[k].options].some(o => o.value === v[k])) fc[k].add(new Option(v[k], v[k]));
     fc[k].value = v[k];
@@ -1439,7 +1441,7 @@ fc.addEventListener('input', e => {
   if (e.target.name === 'paciente') {
     const p = D.pacientes.find(x => x.nombre === e.target.value);
     if (p) {
-      fc.telefono.value = p.telefono || ''; fc.email.value = p.email || ''; fc.dni.value = p.dni || ''; fc.llega_por.value = p.llega_por || '';
+      fc.telefono.value = p.telefono || ''; fc.email.value = p.email || ''; fc.dni.value = p.dni || ''; fc.fecha_nacimiento.value = p.fecha_nacimiento || ''; fc.llega_por.value = p.llega_por || '';
       fc.tipo_paciente.value = [...fc.tipo_paciente.options].some(o => o.value === p.tipo_paciente) ? p.tipo_paciente || '' : ''; fc.dataset.leadId = p.lead_id || '';
       if (!editando && !fc.tipo.value) fc.tipo.value = p.recurrente ? 'Control' : 'Primera cita';
       pintarHistorial({ paciente: p.nombre, telefono: p.telefono }); notaTipo();
@@ -1461,7 +1463,7 @@ fc.addEventListener('submit', async e => {
   if (!fc.checkValidity()) fc.querySelector('.mas-datos').open = true;   // el campo inválido puede estar ahí
   if (!fc.reportValidity()) return;
   if (fc.telefono.value.trim() && !telNorm(fc.telefono.value)) { $('#cita-error').textContent = 'Revisa el teléfono: escribe los 9 dígitos del celular (o el número con código de país).'; $('#cita-error').hidden = false; return; }
-  const campos = ['paciente', 'telefono', 'email', 'dni', 'llega_por', 'tipo_paciente', 'profesional', 'tipo', 'servicio', 'estado', 'pago', 'monto', 'medio_pago', 'fecha_pago', 'enlace_zoom', 'notas', 'precio_lista', 'descuento_pct', 'pagador'];
+  const campos = ['paciente', 'telefono', 'email', 'dni', 'fecha_nacimiento', 'llega_por', 'tipo_paciente', 'profesional', 'tipo', 'servicio', 'estado', 'pago', 'monto', 'medio_pago', 'fecha_pago', 'enlace_zoom', 'notas', 'precio_lista', 'descuento_pct', 'pagador'];
   let p = Object.fromEntries(campos.map(k => [k, fc[k].value.trim()]));
   p.modalidad = modalidad();
   if (p.pago !== 'Pendiente clínica') p.pagador = '';
