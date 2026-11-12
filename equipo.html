@@ -408,6 +408,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   <fieldset><legend>Pago</legend>
     <div class="campos">
       <label class="ancho">Servicio<select name="servicio" id="servicio"></select></label>
+      <p class="nota ancho" id="nota-moneda" hidden>Este paquete está en dólares. Escribe el precio en soles (al tipo de cambio del día) para que Cobros, los reportes y Kommo cuadren.</p>
       <label>Precio de lista (S/)<input name="precio_lista" type="number" min="0" step="any"></label>
       <label>Descuento (%)<input name="descuento_pct" type="number" min="0" max="100" step="any" placeholder="0"></label>
       <label>Precio final (S/)<input name="monto" type="number" min="0" step="any"></label>
@@ -531,7 +532,13 @@ const SERVICIOS = [
   ['Familiar personalizado (3 personas) · presencial', 600, 1], ['Familiar personalizado (4 personas) · virtual', 580, 1],
   ['Familiar personalizado (4 personas) · presencial', 680, 1],
   ['Promoción San Valentín · virtual', 300, 1], ['Promoción San Valentín · presencial', 360, 1],
-  ['Paquete especial semipresencial', 400, 1]];
+  ['Paquete especial semipresencial', 400, 1],
+  // 12-nov, pedido de Sheilla. Citas por paquete sin confirmar: van como 1 hasta que Vanessa diga cuántas.
+  // Los de dólares no llenan el precio: el portal, los reportes y Kommo suman en soles.
+  ['Paquete Integral nutrición (3 meses)', 1500, 1], ['Paquete Integral completo (3 meses)', 2100, 1],
+  ['Paquete Integral nutrición (1 mes)', 550, 1], ['Paquete Integral completo (1 mes)', 750, 1],
+  ['Paquete Integral nutrición (3 meses) · dólares', 501, 1, 'US$'], ['Paquete Integral completo (3 meses) · dólares', 675, 1, 'US$'],
+  ['Paquete Integral nutrición (1 mes) · dólares', 182, 1, 'US$'], ['Paquete Integral completo (1 mes) · dólares', 250, 1, 'US$']];
 // Cómo pagó la paciente (lista de Vanessa) y cómo llegó/qué tipo de paciente es.
 const MEDIOS = ['Yape', 'Plin', 'Efectivo', 'Transferencia', 'Hotmart', 'Vatema', 'PayPal', 'MercadoPago', 'Link de pago', 'Clínica Avendaño', 'Dr. Salazar', 'Cortesía'];
 const TIPOS_PACIENTE = ['Particular - Nuevo', 'Particular - Antiguo', 'PRE - GTM', 'POS - GTM', 'GTM - Nuevo', 'GTM - Antiguo', 'PRE - BY PASS', 'POS - BY PASS', 'BY PASS - Nuevo', 'BY PASS - Antiguo',
@@ -1406,7 +1413,8 @@ function notaTipo() {
 function abrirCita(c, base = {}) {
   editando = c || null;
   fc.reset();
-  $('#servicio').innerHTML = '<option value="">—</option>' + SERVICIOS.map(([s, p, n]) => `<option value="${esc(s)}" data-precio="${p}" data-citas="${n}">${esc(s)} · S/${p}${n > 1 ? ' · ' + n + ' citas' : ''}</option>`).join('');
+  $('#nota-moneda').hidden = true;
+  $('#servicio').innerHTML = '<option value="">—</option>' + SERVICIOS.map(([s, p, n, m]) => `<option value="${esc(s)}" data-precio="${m ? '' : p}" data-moneda="${m || ''}" data-citas="${n}">${esc(s)} · ${m || 'S/'}${m ? ' ' : ''}${p}${n > 1 ? ' · ' + n + ' citas' : ''}</option>`).join('');
   fc.estado.innerHTML = ESTADOS.map(x => `<option>${x}</option>`).join('');
   fc.pago.innerHTML = PAGOS.map(x => `<option>${x}</option>`).join('');
   fc.medio_pago.innerHTML = '<option value="">—</option>' + MEDIOS.map(x => `<option>${x}</option>`).join('');
@@ -1466,7 +1474,13 @@ fc.addEventListener('input', e => {
   if (['tipo','tipo_paciente','servicio'].includes(e.target.name)) notaTipo();
   if (['fecha', 'modalidad', 'profesional', 'hora'].includes(e.target.name)) pintarTurnos();
   if (e.target.name === 'modalidad') $('#zoom-campo').hidden = modalidad() !== 'Virtual';
-  if (e.target.name === 'servicio') { fc.precio_lista.value = e.target.selectedOptions[0]?.dataset.precio || fc.precio_lista.value; pintarPrecio(true); pintarPaquete(); }
+  if (e.target.name === 'servicio') {
+    const o = e.target.selectedOptions[0];
+    if (o?.dataset.moneda) { fc.precio_lista.value = ''; fc.monto.value = ''; }
+    else fc.precio_lista.value = o?.dataset.precio || fc.precio_lista.value;
+    pintarPrecio(true); pintarPaquete();
+    $('#nota-moneda').hidden = !o?.dataset.moneda;
+  }
   if (['precio_lista', 'descuento_pct'].includes(e.target.name)) pintarPrecio(true);
   if (e.target.name === 'monto' || e.target.name === 'pago') pintarPrecio(false);
   if (['paciente', 'telefono'].includes(e.target.name)) pintarPaquete();
