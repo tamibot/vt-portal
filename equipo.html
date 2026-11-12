@@ -273,6 +273,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <button class="btn" data-pacientes>Pacientes</button>
     <button class="btn" id="recargar" aria-label="Actualizar" title="Actualizar">↻</button>
     <button class="btn" id="sincronizar" title="Igualar Kommo con el portal y traer lo nuevo de Kommo">⇄ Kommo</button>
+    <button class="btn" id="plantillas" title="Plantillas de WhatsApp para escribir después de 24 horas">Plantillas</button>
     <a class="btn" href="guia.html" target="_blank" rel="noopener" title="Guía de uso">? Ayuda</a>
     <select id="cargo" class="cargo" aria-label="Tu cargo"></select>
   </div></header>
@@ -337,6 +338,21 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
   </main>
 </div>
 
+<dialog id="dlg-plantillas" aria-labelledby="plantillas-titulo"><form id="form-plantilla">
+  <h3 id="plantillas-titulo">Plantillas de WhatsApp</h3>
+  <p class="nota">Si pasaron más de 24 horas desde el último mensaje de la paciente, WhatsApp solo deja escribirle con una plantilla aprobada por Meta. Meta la revisa en minutos o hasta 1 día. Cuando diga <b>Aprobada</b>: en el chat de Kommo toca el ícono de plantillas, elígela y envía. Cada conversación que se abre con plantilla tiene un costo de Meta.</p>
+  <div id="plantillas-lista" class="nota">Cargando…</div>
+  <h4 style="margin:14px 0 4px">Nueva plantilla</h4>
+  <div class="campos">
+    <label class="ancho">Nombre (para encontrarla en Kommo)<input name="nombre" required maxlength="60" placeholder="Retomar conversación"></label>
+    <label class="ancho">Tipo<select name="categoria"><option value="UTILITY">Aviso de cita, pago o seguimiento</option><option value="MARKETING">Promoción u oferta</option></select></label>
+    <label class="ancho">Texto<textarea name="texto" rows="5" required maxlength="1024">Hola {{contact.name}}, te escribimos de VT Nutrición para retomar tu consulta. ¿Te ayudamos a agendar tu cita?</textarea></label>
+  </div>
+  <p class="nota"><button type="button" class="btn" id="plantilla-nombre">+ Nombre de la paciente</button> agrega {{contact.name}}: WhatsApp lo cambia por el nombre al enviar. No puede ir al inicio ni al final del texto.</p>
+  <p class="nota" id="plantilla-vista"></p>
+  <p class="error" id="plantilla-error" role="alert" hidden></p>
+  <div class="pie"><button class="btn pri" id="plantilla-enviar">Enviar a aprobación de Meta</button><button type="button" class="btn" data-cerrar>Cerrar</button></div>
+</form></dialog>
 <dialog id="dlg-paciente" aria-labelledby="paciente-titulo"><form id="form-paciente">
   <h3 id="paciente-titulo">Pacientes</h3>
   <label>Buscar paciente<input id="paciente-buscar" type="search" placeholder="Nombre, DNI o teléfono"></label>
@@ -1710,6 +1726,45 @@ $('#sincronizar').addEventListener('click', async () => {
     aviso(`Kommo al día: ${j.enviados} lead${j.enviados === 1 ? '' : 's'} actualizado${j.enviados === 1 ? '' : 's'}. Lo nuevo de Kommo llega en un minuto.`);
     setTimeout(() => cargar(), 60000);
   } catch (e) { aviso('No se pudo sincronizar. Revisa tu conexión.'); }
+  finally { b.disabled = false; }
+});
+
+// 11-nov: plantillas de WhatsApp. Se crean en Kommo y se mandan a Meta desde el flujo «VT · Plantillas WhatsApp».
+const fpl = $('#form-plantilla');
+const ESTADO_PL = { 'aprobada': '✅ Aprobada', 'en revisión': '⏳ En revisión', 'rechazada': '❌ Rechazada', 'borrador': 'Borrador' };
+const pedirPlantillas = async cuerpo => {
+  const r = await fetch(N8N + 'plantillas-vt', { method: 'POST', cache: 'no-store', signal: AbortSignal.timeout?.(90000), headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave, ...cuerpo }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.motivo || 'Kommo está ocupado. Intenta en un minuto.');
+  return j;
+};
+const vistaPlantilla = () => { $('#plantilla-vista').textContent = 'Así le llega: ' + fpl.texto.value.replaceAll('{{contact.name}}', 'Ana'); };
+async function listarPlantillas() {
+  const caja = $('#plantillas-lista');
+  if (DEMO) { caja.textContent = 'En modo práctica no se consultan las plantillas de Kommo.'; return; }
+  caja.textContent = 'Cargando…';
+  try {
+    const { plantillas } = await pedirPlantillas({ accion: 'listar' });
+    caja.innerHTML = plantillas.length ? '<ul style="margin:0;padding-left:18px">' + plantillas.map(t => `<li><b>${esc(t.nombre)}</b> · ${ESTADO_PL[t.estado] || esc(t.estado)}${t.motivo ? ' · ' + esc(t.motivo) : ''}<br><span style="white-space:pre-wrap">${esc(t.texto)}</span></li>`).join('') + '</ul>'
+      : 'Todavía no hay plantillas de WhatsApp. Crea la primera abajo.';
+  } catch (e) { caja.textContent = e.message; }
+}
+$('#plantillas').addEventListener('click', () => { $('#plantilla-error').hidden = true; vistaPlantilla(); $('#dlg-plantillas').showModal(); listarPlantillas(); });
+fpl.texto.addEventListener('input', vistaPlantilla);
+['click', 'keyup'].forEach(ev => fpl.texto.addEventListener(ev, () => { fpl.texto.dataset.toco = '1'; }));
+$('#plantilla-nombre').addEventListener('click', () => {
+  const t = fpl.texto, usado = t.dataset.toco === '1', i = usado ? t.selectionStart : t.value.length, f = usado ? t.selectionEnd : i;   // sin tocar el texto, va al final
+  t.value = t.value.slice(0, i) + '{{contact.name}}' + t.value.slice(f); t.focus(); vistaPlantilla();
+});
+fpl.addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#plantilla-error'); err.hidden = true;
+  if (DEMO) return aviso('En modo práctica no se envían plantillas a Meta.');
+  const b = $('#plantilla-enviar'); b.disabled = true;
+  try {
+    await pedirPlantillas({ accion: 'crear', nombre: fpl.nombre.value.trim(), categoria: fpl.categoria.value, texto: fpl.texto.value.trim() });
+    aviso('Plantilla enviada a Meta. Revisa aquí cuándo diga «Aprobada».'); fpl.nombre.value = ''; listarPlantillas();
+  } catch (x) { err.textContent = x.message; err.hidden = false; }
   finally { b.disabled = false; }
 });
 
