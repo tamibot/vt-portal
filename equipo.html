@@ -96,6 +96,10 @@ main{padding:16px 0 60px}
 .pill.naranja{background:var(--np);color:var(--n)}
 .pill.amarillo{background:var(--ap);color:var(--a)}
 .pill.rojo{background:var(--rp);color:var(--r)}
+.chat{flex-basis:100%;max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:#fff;border:1px solid var(--b);border-radius:10px;font-size:14px;white-space:pre-wrap}
+.chat .msg{max-width:80%;padding:6px 10px;border-radius:10px;background:#F1F3EA}
+.chat .msg.sale{align-self:flex-end;background:#E3EBD3}
+.chat .meta{display:block;font-size:11px;color:var(--s);margin-bottom:2px}
 .pill.azul{background:var(--azp);color:var(--az)}
 .c-acciones{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
 
@@ -1465,8 +1469,9 @@ function abrirCita(c, base = {}) {
       `<button type="button" class="btn chico" data-liberar="${c.id}">Cancelar cita</button>`,
       `<button type="button" class="btn chico" data-medir="${c.id}">${c.medicion ? 'Ver resultados' : 'Registrar resultados'}</button>`,
       `<button type="button" class="btn chico" data-borrar="${c.id}" title="Borra el registro (si se cargó por error)">Borrar registro</button>`].join('')
-      + `<span class="titulo" style="margin-top:.3rem">Chat</span><a class="btn chico" href="${kommoUrl(c)}" target="_blank" rel="noopener">Ver chat en Kommo</a>`
+      + `<span class="titulo" style="margin-top:.3rem">Chat</span>${/^\d+$/.test(String(c.lead_id || '')) ? `<button type="button" class="btn chico" data-chat-lead="${c.lead_id}">Ver mensajes aquí</button>` : ''}<a class="btn chico" href="${kommoUrl(c)}" target="_blank" rel="noopener">Ver chat en Kommo</a>`
       + (ultimoMensaje(c) ? `<span class="pill ${ultimoMensaje(c).ella ? 'naranja' : 'gris'}">${esc(ultimoMensaje(c).texto)}</span>` : '')
+      + `<div class="chat" id="cita-chat" hidden></div>`
       + `<span class="titulo" style="margin-top:.3rem">Enviar por WhatsApp</span>` + [
       wa(c, 'confirmar', 'Pedir confirmación (5–7 días)'), wa(c, 'recordatorio', 'Recordatorio (1 día antes)'),
       wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Datos de pago'), wa(c, 'confirmada', 'Confirmada y condiciones')].join('');
@@ -1693,6 +1698,22 @@ document.addEventListener('click', async e => {
     if (['Pagado','Adelanto 25%'].includes(campos.pago)) { abrirPago(buscarCita(ed.dataset.editar),campos.pago); return; }
     return accion(ed, { accion: 'editar', id: Number(ed.dataset.editar), ...campos },
       campos.estado ? 'Marcada: ' + campos.estado : campos.pago ? 'Pago: ' + campos.pago : 'Anotado: ya se le escribió hoy.');
+  }
+  // 13-nov: últimos mensajes de Kommo dentro de la cita (no se guardan; se piden al abrir).
+  const vc = t.closest('[data-chat-lead]');
+  if (vc) {
+    const caja = $('#cita-chat'); caja.hidden = false; caja.textContent = 'Trayendo los mensajes de Kommo…';
+    if (DEMO) { caja.textContent = 'En modo práctica no se leen los chats.'; return; }
+    try {
+      const r = await fetch(N8N + 'chat-vt', { method: 'POST', cache: 'no-store', signal: AbortSignal.timeout?.(90000), headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave, lead_id: vc.dataset.chatLead }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) { caja.textContent = j.motivo || 'No se pudieron traer los mensajes. Intenta en un minuto.'; return; }
+      const hora = t => new Date(t * 1000 - 5 * 36e5).toISOString(), quien = m => m.de === 'paciente' ? 'Paciente' : m.de === 'bot' ? 'Bot' : (m.quien || 'Equipo');
+      caja.innerHTML = j.mensajes.length ? j.mensajes.map(m => `<div class="msg ${m.de === 'paciente' ? 'entra' : 'sale'}"><span class="meta">${esc(quien(m))} · ${fechaCorta(hora(m.t).slice(0, 10))} ${hora(m.t).slice(11, 16)}</span>${m.texto ? esc(m.texto) : '<i>(' + esc(m.adjunto || 'archivo') + ')</i>'}</div>`).join('')
+        : 'No hay mensajes de esta paciente en Kommo.';
+      caja.scrollTop = caja.scrollHeight;
+    } catch (e) { caja.textContent = 'Sin conexión con Kommo. Intenta en un minuto.'; }
+    return;
   }
   const bo = t.closest('[data-borrar]');
   if (bo) {
