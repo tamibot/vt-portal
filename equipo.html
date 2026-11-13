@@ -362,7 +362,7 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
     <label>Correo<input name="email" type="email"></label><label>DNI<input name="dni" inputmode="numeric" pattern="[0-9]{8,12}" maxlength="12"></label>
     <label>Fecha de nacimiento<input name="fecha_nacimiento" type="date" min="1920-01-01"></label>
     <label>Llega por<input name="llega_por"></label><label>Tipo de paciente<select name="tipo_paciente"></select></label>
-  </div><p class="nota">Guarda los datos sin pedir fecha ni hora. Las citas de esta paciente reciben el mismo cambio.</p>
+  </div><p class="nota"><a class="btn chico" id="paciente-kommo" target="_blank" rel="noopener" hidden>Ver chat en Kommo</a> Guarda los datos sin pedir fecha ni hora. Las citas de esta paciente reciben el mismo cambio.</p>
   <p class="error" id="paciente-error" role="alert" hidden></p>
   <div class="pie"><button class="btn pri">Guardar paciente</button><button type="button" class="btn" data-cerrar>Cerrar</button></div>
 </form></dialog>
@@ -504,6 +504,16 @@ details.mas-datos summary{cursor:pointer;color:var(--vo);font-weight:700;font-si
 if (location.hostname === 'tamibot.github.io') location.replace('https://portal.vanessatello.com.pe' + location.pathname.replace(/^\/vt-portal/, '') + location.search);  // 29-oct: favoritos con la dirección vieja
 const N8N = 'https://primary-production-9caaf.up.railway.app/webhook/';
 const KOMMO_LEAD = 'https://vanetello.kommo.com/leads/detail/';
+// 13-nov: chat de Kommo para todas las pacientes. Con lead vinculado abre su ficha (ahí está el chat);
+// sin lead, busca en Kommo por su teléfono o nombre.
+const kommoUrl = c => /^\d+$/.test(String(c.lead_id || '')) ? KOMMO_LEAD + c.lead_id
+  : 'https://vanetello.kommo.com/leads/list/?term=' + encodeURIComponent(String(c.telefono || '').replace(/\D/g, '').slice(-9) || c.paciente || c.nombre || '');
+// Quién escribió último en Kommo (revisión cada 3 h). D.ultimos[lead] = [último entrante, último saliente] en segundos.
+function ultimoMensaje(c) {
+  const u = D.ultimos?.[c.lead_id]; if (!u) return null;
+  const [ent, sal] = u.map(Number), dia = t => fechaCorta(new Date(t * 1000 - 5 * 36e5).toISOString().slice(0, 10));
+  return ent > sal ? { ella: true, texto: 'Ella escribió último · ' + dia(ent) } : sal ? { ella: false, texto: 'Le escribimos último · ' + dia(sal) } : null;
+}
 // Cargos, no nombres (así los llama el equipo). El cargo decide con qué pestaña abre.
 const CARGOS = ['Asistente de la nutricionista', 'Nutricionista del equipo', 'Nutricionista (Lic.)', 'Soporte técnico', 'Otra persona'];
 const INICIO_POR_CARGO = { 'Nutricionista del equipo': 'seguimiento' };
@@ -728,6 +738,7 @@ function demoEnviar(p) {
     if (!p.inicio || !p.fin || p.inicio.slice(0,10)!==p.fin.slice(0,10) || aMin(p.fin.slice(11,16))-aMin(p.inicio.slice(11,16))<45) return {ok:false,motivo:'Elige al menos 45 minutos dentro del mismo día.'};
     const a=(D.aperturas ||= []).find(x=>x.id===p.id);if(a)Object.assign(a,p);else D.aperturas.push({...p,id:Date.now()});return {ok:true};
   }
+  if(p.accion==='borrar'){D.citas=D.citas.filter(c=>c.id!==p.id);return {ok:true};}
   if(p.accion==='cerrar_apertura'){D.aperturas=D.aperturas.filter(a=>a.id!==p.id);return {ok:true};}
   if(p.accion==='programar_seguimiento') {
     const x=D.seguimiento.find(x=>x.cita_id===p.cita_id);if(!x)return {ok:false,motivo:'Falta la consulta.'};
@@ -855,13 +866,14 @@ function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true, fechaExac
   if (c.recurrente === false && !SIMPLE) pills.push('<span class="pill azul">Nueva</span>');
   if (esEquipo(c)) pills.push('<span class="pill gris">Equipo</span>');
   if (c.medicion && !SIMPLE) pills.push('<span class="pill">Con resultados</span>');
+  const um = ultimoMensaje(c); if (um) pills.push(`<span class="pill ${um.ella ? 'naranja' : 'gris'}">${esc(um.texto)}</span>`);
   if (c.recordado && (c.fecha >= D.hoy || c.recordado > c.fecha)) pills.push(`<span class="pill gris">${escritoHoy(c) ? 'Escrito hoy' : 'Escrito el ' + fechaCorta(c.recordado)}</span>`);
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
     cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(fechaExacta ? fechaCorta(c.fecha) : cuando(c.fecha)) : ''],
     quien: [esc(c.paciente), [c.modalidad, fmtTel(c.telefono)].map(esc).join(' · ')],
     motivo, pills: pills.join(''),
     // 13-nov: ver la conversación sin buscarla. El texto del chat vive en Kommo (no se copia al portal: es información clínica).
-    acciones: [...acciones, /^\d+$/.test(String(c.lead_id || '')) ? `<a class="btn chico" href="${KOMMO_LEAD}${c.lead_id}" target="_blank" rel="noopener" title="Abre su conversación en Kommo">Ver chat</a>` : ''] });
+    acciones: [...acciones, `<a class="btn chico" href="${kommoUrl(c)}" target="_blank" rel="noopener" title="Abre su conversación en Kommo">Ver chat</a>`] });
 }
 
 // ---------- HOY: lo que hay que hacer, en orden de prioridad
@@ -1323,6 +1335,7 @@ function listaPacientes(texto = '') {
 function datosPaciente(p = {}) {
   fp.dataset.id = p.id || '';
   for (const k of ['nombre', 'telefono', 'email', 'dni', 'fecha_nacimiento', 'llega_por', 'tipo_paciente']) fp[k].value = p[k] || '';
+  const k = $('#paciente-kommo'); k.hidden = !p.id; if (p.id) k.href = kommoUrl({ ...p, paciente: p.nombre });
 }
 function abrirPaciente(p = {}) {
   fp.reset(); fp.tipo_paciente.innerHTML = '<option value="">—</option>' + TIPOS_PACIENTE.map(x => `<option>${x}</option>`).join('');
@@ -1450,7 +1463,10 @@ function abrirCita(c, base = {}) {
       boton('Asistió', c.id, { estado: 'Asistió' }), boton('No asistió', c.id, { estado: 'No asistió' }),
       conDeuda(c) ? boton('Pagó todo', c.id, { pago: 'Pagado' }) : '',
       `<button type="button" class="btn chico" data-liberar="${c.id}">Cancelar cita</button>`,
-      `<button type="button" class="btn chico" data-medir="${c.id}">${c.medicion ? 'Ver resultados' : 'Registrar resultados'}</button>`].join('')
+      `<button type="button" class="btn chico" data-medir="${c.id}">${c.medicion ? 'Ver resultados' : 'Registrar resultados'}</button>`,
+      `<button type="button" class="btn chico" data-borrar="${c.id}" title="Borra el registro (si se cargó por error)">Borrar registro</button>`].join('')
+      + `<span class="titulo" style="margin-top:.3rem">Chat</span><a class="btn chico" href="${kommoUrl(c)}" target="_blank" rel="noopener">Ver chat en Kommo</a>`
+      + (ultimoMensaje(c) ? `<span class="pill ${ultimoMensaje(c).ella ? 'naranja' : 'gris'}">${esc(ultimoMensaje(c).texto)}</span>` : '')
       + `<span class="titulo" style="margin-top:.3rem">Enviar por WhatsApp</span>` + [
       wa(c, 'confirmar', 'Pedir confirmación (5–7 días)'), wa(c, 'recordatorio', 'Recordatorio (1 día antes)'),
       wa(c, c.pago === 'Adelanto 25%' ? 'saldo' : 'pago', 'Datos de pago'), wa(c, 'confirmada', 'Confirmada y condiciones')].join('');
@@ -1677,6 +1693,12 @@ document.addEventListener('click', async e => {
     if (['Pagado','Adelanto 25%'].includes(campos.pago)) { abrirPago(buscarCita(ed.dataset.editar),campos.pago); return; }
     return accion(ed, { accion: 'editar', id: Number(ed.dataset.editar), ...campos },
       campos.estado ? 'Marcada: ' + campos.estado : campos.pago ? 'Pago: ' + campos.pago : 'Anotado: ya se le escribió hoy.');
+  }
+  const bo = t.closest('[data-borrar]');
+  if (bo) {
+    const c = buscarCita(bo.dataset.borrar);
+    if (!confirm(`¿Borrar el registro de ${c.paciente} del ${fechaLarga(c.fecha)} a las ${horaMensaje(c.hora)}? Desaparece del calendario, de las tareas y de los reportes. Úsalo solo si se cargó por error; si la paciente no vendrá, mejor «Cancelar cita».`)) return;
+    return accion(bo, { accion: 'borrar', id: c.id }, 'Registro borrado.');
   }
   const lib = t.closest('[data-liberar]');
   if (lib) {
