@@ -368,7 +368,7 @@ function pintar(d){
               <div><label for="m_cuello">Cuello (cm)</label><input id="m_cuello" name="cuello" inputmode="decimal" placeholder="34"></div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem">
-              <button class="btn btn-p" type="submit">Enviar mis medidas</button>
+              <button class="btn btn-p" type="submit">Enviar mis medidas por WhatsApp</button>
               <a class="btn btn-s" id="fotos" href="#" target="_blank" rel="noopener">Enviar mis 3 fotos por WhatsApp</a>
             </div>
             <div class="ok-msg" id="ok-medidas"></div>
@@ -449,11 +449,14 @@ function pintar(d){
     const msg = `Hola, soy ${nombre}. Estas son mis medidas: ` +
       Object.entries(datos).filter(([k]) => !['paciente','fecha'].includes(k) && datos[k])
         .map(([k, v]) => `${k} ${v}`).join(', ');
+    // 13-nov: las medidas llegan al equipo solo por WhatsApp (todavía no se guardan en el sistema): se abre directo.
+    const url = `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank', 'noopener');
     const ok = $('#ok-medidas');
     ok.style.display = 'block';
-    ok.innerHTML = `Listo, quedaron registradas. <a href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}"
-      target="_blank" rel="noopener" style="color:var(--verde-osc);font-weight:900">Avísale a Vane por WhatsApp</a>.`;
-    btn.disabled = false; btn.textContent = 'Actualizar mis medidas';
+    ok.innerHTML = `Se abrió WhatsApp con tus medidas: <b>toca enviar</b> para que le lleguen al equipo. Si no se abrió, <a href="${url}"
+      target="_blank" rel="noopener" style="color:var(--verde-osc);font-weight:900">ábrelo aquí</a>.`;
+    btn.disabled = false; btn.textContent = 'Enviar mis medidas por WhatsApp';
   });
 }
 
