@@ -926,8 +926,12 @@ const resuelta = c => (!['reagendar', 'seguimiento'].includes(c.contacto_motivo)
   || (c.contacto_motivo === 'cobrar' && !conDeuda(c))
   || (['reagendar', 'seguimiento'].includes(c.contacto_motivo) && D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c)));
 const esperando = c => c.contacto_estado === 'Pendiente' && !resuelta(c);
+// 13-nov (reunión): «No respondió» la saca de las listas por 30 días; después vuelve para escribirle otra vez.
+const enPausa = c => c.contacto_estado === 'No respondió' && diasEntre(String(c.actualizado || '').slice(0, 10) || D.hoy, D.hoy) < 30;
+const libre = c => !esperando(c) && !enPausa(c);
 const contactar = (c, motivo) => `<button type="button" class="btn chico" data-contactar="${c.id}" data-motivo="${motivo}">Ya le escribí</button>`;
 const porReagendar = c => boton('Por reagendar', c.id, { estado: 'Reprogramada' });
+const noRespondio = c => boton('No respondió', c.id, { contacto_estado: 'No respondió' });
 function seccionesHoyBase() {
   const proximos = diasRecordatorio();
   const permite = c => (!H.prof || c.profesional === H.prof) && (!H.texto || sinTildes(c.paciente).includes(sinTildes(H.texto)));
@@ -951,7 +955,7 @@ function seccionesHoyBase() {
   // Sin confirmar / reprogramaron (pedido del 30-set): tres grupos, cada uno con su acción.
   const conCitaNueva = c => D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c));
   const vistos = new Set(), vistos2 = new Set();
-  const reagendar = D.citas.filter(c => permite(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c)));
+  const reagendar = D.citas.filter(c => permite(c) && libre(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c)));
   const sinConfirmar = [
     ...vivasFuturas.filter(c => c.estado === 'Por confirmar' && c.recordado && c.fecha <= sumar(D.hoy, 7) && !escritoHoy(c) && !confirmar.includes(c))
       .map(c => ({ c, motivo: `Ya se le escribió el ${fechaCorta(c.recordado)} y no confirmó · cita ${cuando(c.fecha)}`,
@@ -968,20 +972,21 @@ function seccionesHoyBase() {
       items: D.citas.filter(c => permite(c) && esperando(c)).map(c => tarjeta(c, { motivo: `Espera: ${esc(c.contacto_motivo)} · desde ${esc(c.contacto_desde?.slice(0, 10) || c.recordado || '')}`,
         acciones: [wa(c, c.contacto_motivo === 'cobrar' && conDeuda(c) ? (c.pago==='Adelanto 25%' ? 'saldo' : 'pago') : 'confirmar', 'Insistir'), boton('Respondió', c.id, { contacto_estado: 'Respondió' }),
           c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
-          conDeuda(c) ? boton('Pagó', c.id, { pago: 'Pagado' }) : '', porReagendar(c), `<button class="btn chico" data-liberar="${c.id}">Cancelar</button>`] })) },
+          conDeuda(c) ? boton('Pagó', c.id, { pago: 'Pagado' }) : '', c.estado === 'Reprogramada' ? '' : porReagendar(c), noRespondio(c), `<button class="btn chico" data-liberar="${c.id}">Cancelar</button>`] })) },
     { id: 'por-reagendar', titulo: 'Pagaron y falta fecha', ayuda: 'Pidieron mover su cita, ya pagaron y todavía no tienen fecha nueva.',
       items: reagendar.filter(c => !conDeuda(c)).map(c => tarjeta(c, { motivo: 'Pagado · sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
-    { id: 'reagendar-sin-pago', titulo: 'Por reagendar sin pago', ayuda: 'Pidieron mover su cita, no han pagado y todavía no tienen fecha nueva.',
-      items: reagendar.filter(conDeuda).map(c => tarjeta(c, { motivo: 'Sin pago · sin nueva fecha', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
-    { id: 'canceladas', titulo: 'Cancelaron', ayuda: 'Cancelaron en los últimos 60 días y no tienen otra cita.',
-      items: D.citas.filter(c => permite(c) && c.estado === 'Cancelada' && diasEntre(c.fecha, D.hoy) <= 60 && diasEntre(D.hoy, c.fecha) <= 60 && !conCitaNueva(c) && !vistos2.has(quien(c)) && vistos2.add(quien(c)))
-        .sort((a, b) => b.fecha.localeCompare(a.fecha)).map(c => tarjeta(c, { fechaExacta: true, motivo: 'Canceló', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c)] })) },
+    { id: 'reagendar-sin-pago', titulo: 'Por reagendar', ayuda: 'Pidieron mover su cita o no vinieron, y no tienen fecha nueva. Si no responde, marca «No respondió»: sale de la lista por 30 días.',
+      items: [...reagendar.filter(conDeuda).map(c => tarjeta(c, { motivo: 'Pidió reagendar · sin pago', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c), noRespondio(c)] })),
+        ...D.no_asistio.filter(c => permite(c) && libre(c) && !reagendar.some(r => quien(r) === quien(c))).sort(porEscribir).map(c => tarjeta(c, { motivo: `No vino el ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c), noRespondio(c), noVolvera(c)] }))] },
+    { id: 'canceladas', titulo: 'Cancelaron', ayuda: `Cancelaron y no tienen otra cita. Si es paciente frecuente, pásala a «Por reagendar». Mes: <select onchange="H.mcan=this.value;pintar()">${['', ...[0, 1, 2, 3].map(n => { const [y, mo] = D.hoy.split('-').map(Number); return new Date(Date.UTC(y, mo - 1 - n, 1)).toISOString().slice(0, 7); })].map(m => `<option value="${m}"${(H.mcan || '') === m ? ' selected' : ''}>${m ? MESES_L[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4) : 'Últimos 60 días'}</option>`).join('')}</select>`,
+      items: D.citas.filter(c => permite(c) && libre(c) && c.estado === 'Cancelada' && (H.mcan ? c.fecha.slice(0, 7) === H.mcan : diasEntre(c.fecha, D.hoy) <= 60 && diasEntre(D.hoy, c.fecha) <= 60) && !conCitaNueva(c) && !vistos2.has(quien(c)) && vistos2.add(quien(c)))
+        .sort((a, b) => b.fecha.localeCompare(a.fecha)).map(c => tarjeta(c, { fechaExacta: true, motivo: 'Canceló', acciones: [wa(c, 'reagendar', 'Escribir'), contactar(c, 'reagendar'), agendar(c), porReagendar(c)] })) },
     { id: 'recordar', titulo: 'Recordatorio de mañana', ayuda: 'Ya confirmaron. Envía el recordatorio con las indicaciones (y el Zoom si es virtual).',
       items: recordar.map(c => tarjeta(c, { motivo: `${c.fecha === proximos[0] ? 'Mañana' : 'El ' + DIAS[diaSemana(c.fecha)]} · confirmada` + (c.modalidad === 'Virtual' && !c.enlace_zoom ? ' <span class="pill rojo">Sin enlace de Zoom</span>' : ''),
         acciones: [wa(c, 'recordatorio', 'Enviar recordatorio'), contactar(c, 'confirmar')] })) },
     { id: 'estados', titulo: 'Filtrar por estado', ayuda: filtrosEstado(),
       items: porEstado(permite).map(({ c, e }) => tarjeta(c, { fechaExacta: true, motivo: esc(`Pago: ${e.pago} · Cita: ${e.cita} · ${e.cliente.join(', ')}`), acciones: [wa(c, 'cita')] })) },
-    { id: 'no-responde', titulo: 'Les escribimos y no respondieron', ayuda: 'Personas sin cita a las que el equipo o el bot les escribió y no contestaron. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
+    { id: 'no-responde', titulo: 'Interesados que no respondieron', ayuda: 'Personas que escribieron por información (todavía no son pacientes: no tienen cita) y no contestaron nuestro último mensaje. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
       items: (D.conversaciones || []).filter(c => c.estado === 'No responde').sort((a, b) => (b.ultima_salida || 0) - (a.ultima_salida || 0)).map(c => filaLibre({ cuando: c.ultima_salida ? [fechaCorta(new Date(c.ultima_salida * 1000 - 5 * 36e5).toISOString().slice(0, 10)), 'último mensaje'] : ['', ''], quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`] })) },
     { id: 'hoy', titulo: 'Citas de hoy', ayuda: 'Quién viene hoy.',
       items: hoy.map(c => tarjeta(c, { mostrarFecha: false, acciones: [wa(c, 'cita'),
@@ -1030,7 +1035,7 @@ function seccionesHoyBase() {
 }
 
 const H = { texto:'', orden:'proximas', sec: null, limite: 30, prof: '', periodo: 'mes', fpago: '', fcita: '', fcli: '' };
-const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia', 'recordar']], ['Seguimiento de citas', ['pendientes', 'sin-confirmar', 'por-reagendar', 'reagendar-sin-pago', 'canceladas', 'no-responde']], ['Recuperar pacientes', ['no-asistio', 'no-volvieron', 'reactivar']], ['Ventas', ['por-cerrar']], ['Filtrar', ['estados']]];
+const MENU_HOY = [['Urgente hoy', ['confirmar', 'cobrar', 'asistencia', 'recordar']], ['Seguimiento de citas', ['pendientes', 'sin-confirmar', 'por-reagendar', 'reagendar-sin-pago', 'canceladas', 'no-responde']], ['Recuperar pacientes', ['no-volvieron', 'reactivar']], ['Ventas', ['por-cerrar']], ['Filtrar', ['estados']]];
 const URGENTES = ['confirmar', 'cobrar', 'asistencia'];
 function pintarHoy() {
   const secs = Object.fromEntries(seccionesHoy().map(s => [s.id, s]));
@@ -1310,6 +1315,16 @@ function pintarCobros(soloLista) {
       <div class="ventas-total"><span><b>${V.length}</b> citas</span><span>Cobrado <b>S/${soles(cobrado)}</b></span><span>Por cobrar <b>S/${soles(pend)}</b>${V.filter(c => conDeuda(c) && c.monto == null).length ? ` <small>(${V.filter(c => conDeuda(c) && c.monto == null).length} sin precio)</small>` : ''}</span><span>Pagos por verificar <b>S/${soles(sum(c => c.pago_por_revisar))}</b></span><span>Clínicas <b>S/${soles(sum(c => c.pago === 'Pendiente clínica'))}</b></span></div>
       <div class="tabla-ventas"><table><tr><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Lista</th><th>Desc.</th><th>Final</th><th>Pago</th><th>Fecha de pago</th></tr>
       ${V.slice(0, 80).map(c => `<tr data-abrir="${c.id}"><td>${fechaCorta(c.fecha)}</td><td>${esc(c.paciente)}</td><td>${esc(c.servicio || '—')}</td><td>${c.precio_lista ?? '—'}</td><td>${Number(c.descuento_pct) || ''}</td><td>${c.monto ?? '—'}</td><td>${esc(pagoVisible(c))}${c.pago_por_revisar ? ' · por verificar' : ''}</td><td>${c.fecha_pago ? fechaCorta(c.fecha_pago) : c.fecha_adelanto ? fechaCorta(c.fecha_adelanto)+' · adelanto' : '—'}</td></tr>`).join('')}</table>${V.length > 80 ? `<p class="nota" style="padding:6px 10px">Se muestran 80 de ${V.length}. El Excel trae todas.</p>` : ''}</div>`;
+  } else if (CB.sec === 'clinicas') {
+    // 13-nov (Sheilla): la clínica paga por corte del 25 al 24. Filtrar ese corte y marcar todo como pagado de una vez.
+    const [y, m, d] = D.hoy.split('-').map(Number), ini = new Date(Date.UTC(y, m - (d >= 25 ? 1 : 2), 25)).toISOString().slice(0, 10);
+    const desde = CB.cdesde || ini, hasta = CB.chasta || new Date(Date.UTC(+ini.slice(0, 4), +ini.slice(5, 7), 24)).toISOString().slice(0, 10);
+    const L = citas.filter(c => filtro(c) && c.fecha >= desde && c.fecha <= hasta && (!CB.texto || sinTildes(c.paciente).includes(sinTildes(CB.texto)))).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const total = L.reduce((n, c) => n + (Number(c.monto) || 0), 0);
+    cuerpo = `<div class="ventas-filtros"><label>Desde<input type="date" class="cob-f" data-k="cdesde" value="${desde}"></label><label>Hasta<input type="date" class="cob-f" data-k="chasta" value="${hasta}"></label>
+      ${L.length ? `<button type="button" class="btn pri" data-clinica-todas="${L.map(c => c.id).join(',')}">Clínica pagó las ${L.length} ✓</button>` : ''}</div>
+      <div class="ventas-total"><span><b>${L.length}</b> citas</span><span>Total <b>S/${soles(total)}</b></span></div>`
+      + (L.length ? L.map(filasCobro).join('') : '<p class="vacio">Nada por cobrar a la clínica en estas fechas ✓</p>');
   } else {
     const L = citas.filter(filtro).sort((a,b)=>ordenCitas(a,b,CB.sec==='por-cobrar' ? 'proximas' : 'recientes'));
     const vis = L.slice(0, CB.limite), resto = L.length - vis.length;
@@ -1692,6 +1707,20 @@ document.addEventListener('click', async e => {
   const eb = t.closest('[data-editar-bloqueo]'); if (eb) { abrirBloqueo(eb.dataset.editarBloqueo); return; }
   const db = t.closest('[data-desbloquear]'); if (db) return accion(db, { accion: 'desbloquear', id: Number(db.dataset.desbloquear), profesional: db.dataset.prof, serie: db.dataset.serie === 'true' }, 'Horario disponible otra vez.');
   const periodo = t.closest('[data-periodo]'); if (periodo) { CB.desde = periodo.dataset.periodo === 'semana' ? lunes(D.hoy) : D.hoy.slice(0, 7) + '-01'; CB.hasta = periodo.dataset.periodo === 'semana' ? sumar(CB.desde, 6) : sumar(sumar(CB.desde, 40).slice(0, 7) + '-01', -1); pintarCobros(); return; }
+  const ct2 = t.closest('[data-clinica-todas]');
+  if (ct2) {
+    const ids = ct2.dataset.clinicaTodas.split(',').map(Number);
+    const fecha = prompt(`¿Fecha en que la clínica pagó estas ${ids.length} citas? (AAAA-MM-DD)`, D.hoy);
+    if (!fecha) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || fecha > D.hoy) return aviso('Escribe la fecha como AAAA-MM-DD, hasta hoy.');
+    ct2.disabled = true; let ok = 0; const fallas = [];
+    for (const id of ids) {
+      const r = await enviar({ accion: 'editar', id, pago: 'Pagado', fecha_pago: fecha }).catch(() => ({ ok: false, motivo: 'Sin conexión' }));
+      if (r.ok) ok++; else fallas.push(`${buscarCita(id)?.paciente || id}: ${r.motivo || 'no se pudo'}`);
+    }
+    aviso(`Clínica: ${ok} de ${ids.length} marcadas como pagadas.` + (fallas.length ? ' Sin marcar: ' + fallas.join(' · ') : ''));
+    await cargar(); return;
+  }
   const ed = t.closest('[data-editar]');
   if (ed) {
     const campos = JSON.parse(ed.dataset.campos);

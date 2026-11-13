@@ -53,10 +53,16 @@ async function cargar(clave) {
     document.querySelector('.barra').insertAdjacentHTML('afterend', `<div class="excel" id="filtros-excel"><b>Reporte de citas en Excel</b> (formato de Sheilla)
       <label>Desde <input type="date" id="f-desde" value="${mesActual()}-01"></label>
       <label>Hasta <input type="date" id="f-hasta" value="${finDeMes(mesActual())}"></label>
+      <button type="button" id="corte-clinica" style="background:#fff;color:#4E6B1E;border:1px solid #4E6B1E">Corte clínica (25 al 24)</button>
       <label>Nutricionista <select id="f-nutri"><option value="">Todas</option><option>Vanessa Tello</option><option>Nutricionista VT</option></select></label>
       <label>Llega por <select id="f-llega"><option value="">Todos</option></select></label>
       <button type="button" id="excel">⬇ Descargar Excel</button> <span class="estado">Cargando opciones…</span></div>`);
     document.getElementById('excel').onclick = descargarReporte; pintarFiltros();
+    // 13-nov (Sheilla): la clínica Avendaño paga del 25 de un mes al 24 del siguiente.
+    document.getElementById('corte-clinica').onclick = () => { const [y, m] = mesActual().split('-').map(Number);
+      document.getElementById('f-desde').value = new Date(Date.UTC(y, m - 2, 25)).toISOString().slice(0, 10);
+      document.getElementById('f-hasta').value = new Date(Date.UTC(y, m - 1, 24)).toISOString().slice(0, 10);
+      document.getElementById('f-llega').value = 'Clínica Avendaño'; };
     document.getElementById('salir').onclick = e => { e.preventDefault(); guardar(''); pedirClave(); };
   } catch (e) {
     $v.innerHTML = '<div class="cargando">No hay conexión con el servidor. Prueba otra vez en un minuto.</div>';
