@@ -516,7 +516,7 @@ const kommoUrl = c => /^\d+$/.test(String(c.lead_id || '')) ? KOMMO_LEAD + c.lea
 function ultimoMensaje(c) {
   const u = D.ultimos?.[c.lead_id]; if (!u) return null;
   const [ent, sal] = u.map(Number), dia = t => fechaCorta(new Date(t * 1000 - 5 * 36e5).toISOString().slice(0, 10));
-  return ent > sal ? { ella: true, texto: 'Ella escribió último · ' + dia(ent) } : sal ? { ella: false, texto: 'Le escribimos último · ' + dia(sal) } : null;
+  return ent > sal ? { ella: true, texto: 'Nos toca responder · escribió el ' + dia(ent) } : sal ? { ella: false, texto: 'En espera de respuesta del cliente · desde el ' + dia(sal) } : null;
 }
 // Cargos, no nombres (así los llama el equipo). El cargo decide con qué pestaña abre.
 const CARGOS = ['Asistente de la nutricionista', 'Nutricionista del equipo', 'Nutricionista (Lic.)', 'Soporte técnico', 'Otra persona'];
@@ -547,12 +547,12 @@ const SERVICIOS = [
   ['Familiar personalizado (4 personas) · presencial', 680, 1],
   ['Promoción San Valentín · virtual', 300, 1], ['Promoción San Valentín · presencial', 360, 1],
   ['Paquete especial semipresencial', 400, 1],
-  // 12-nov, pedido de Sheilla. Citas por paquete sin confirmar: van como 1 hasta que Vanessa diga cuántas.
+  // 12-nov, pedido de Sheilla. Citas por paquete (Sheilla, 13-nov): 1 mes = 4 citas, 3 meses = 12 citas.
   // Los de dólares no llenan el precio: el portal, los reportes y Kommo suman en soles.
-  ['Paquete Integral nutrición (3 meses)', 1500, 1], ['Paquete Integral completo (3 meses)', 2100, 1],
-  ['Paquete Integral nutrición (1 mes)', 550, 1], ['Paquete Integral completo (1 mes)', 750, 1],
-  ['Paquete Integral nutrición (3 meses) · dólares', 501, 1, 'US$'], ['Paquete Integral completo (3 meses) · dólares', 675, 1, 'US$'],
-  ['Paquete Integral nutrición (1 mes) · dólares', 182, 1, 'US$'], ['Paquete Integral completo (1 mes) · dólares', 250, 1, 'US$']];
+  ['Paquete Integral nutrición (3 meses)', 1500, 12], ['Paquete Integral completo (3 meses)', 2100, 12],
+  ['Paquete Integral nutrición (1 mes)', 550, 4], ['Paquete Integral completo (1 mes)', 750, 4],
+  ['Paquete Integral nutrición (3 meses) · dólares', 501, 12, 'US$'], ['Paquete Integral completo (3 meses) · dólares', 675, 12, 'US$'],
+  ['Paquete Integral nutrición (1 mes) · dólares', 182, 4, 'US$'], ['Paquete Integral completo (1 mes) · dólares', 250, 4, 'US$']];
 // Cómo pagó la paciente (lista de Vanessa) y cómo llegó/qué tipo de paciente es.
 const MEDIOS = ['Yape', 'Plin', 'Efectivo', 'Transferencia', 'Hotmart', 'Vatema', 'PayPal', 'MercadoPago', 'Link de pago', 'Clínica Avendaño', 'Dr. Salazar', 'Cortesía'];
 const TIPOS_PACIENTE = ['Particular - Nuevo', 'Particular - Antiguo', 'PRE - GTM', 'POS - GTM', 'GTM - Nuevo', 'GTM - Antiguo', 'PRE - BY PASS', 'POS - BY PASS', 'BY PASS - Nuevo', 'BY PASS - Antiguo',
@@ -871,6 +871,7 @@ function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true, fechaExac
   if (esEquipo(c)) pills.push('<span class="pill gris">Equipo</span>');
   if (c.medicion && !SIMPLE) pills.push('<span class="pill">Con resultados</span>');
   const um = ultimoMensaje(c); if (um) pills.push(`<span class="pill ${um.ella ? 'naranja' : 'gris'}">${esc(um.texto)}</span>`);
+  if (c.contacto_estado === 'Respondió') pills.push('<span class="pill">Respondido</span>');
   if (c.recordado && (c.fecha >= D.hoy || c.recordado > c.fecha)) pills.push(`<span class="pill gris">${escritoHoy(c) ? 'Escrito hoy' : 'Escrito el ' + fechaCorta(c.recordado)}</span>`);
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
     cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(fechaExacta ? fechaCorta(c.fecha) : cuando(c.fecha)) : ''],
