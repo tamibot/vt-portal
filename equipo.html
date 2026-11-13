@@ -901,7 +901,13 @@ function porEstado(permite) {
 document.addEventListener('change', e => { const f = e.target.closest('[data-fest]'); if (f) { H[f.dataset.fest] = f.value; H.limite = 30; pintarHoy(); } });
 
 function seccionesHoy() { SIMPLE = true; try { return seccionesHoyBase(); } finally { SIMPLE = false; } }
-const esperando = c => c.contacto_estado === 'Pendiente';
+// 13-nov (pedido del 6-nov): tareas y calendario son lo mismo. Si la cita ya se confirmó, cobró, canceló, se atendió
+// o tiene una cita nueva —se haya marcado desde Tareas o desde el Calendario—, deja de estar «Pendiente de respuesta».
+const resuelta = c => (!['reagendar', 'seguimiento'].includes(c.contacto_motivo) && ['Cancelada', 'Asistió', 'No asistió'].includes(c.estado))
+  || (c.contacto_motivo === 'confirmar' && c.estado === 'Confirmada')
+  || (c.contacto_motivo === 'cobrar' && !conDeuda(c))
+  || (['reagendar', 'seguimiento'].includes(c.contacto_motivo) && D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c)));
+const esperando = c => c.contacto_estado === 'Pendiente' && !resuelta(c);
 const contactar = (c, motivo) => `<button type="button" class="btn chico" data-contactar="${c.id}" data-motivo="${motivo}">Ya le escribí</button>`;
 const porReagendar = c => boton('Por reagendar', c.id, { estado: 'Reprogramada' });
 function seccionesHoyBase() {
