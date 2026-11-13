@@ -859,7 +859,9 @@ function tarjeta(c, { motivo = '', acciones = [], mostrarFecha = true, fechaExac
   return filaLibre({ attrs: `data-abrir="${c.id}" tabindex="0"`, clase: ['Cancelada', 'Reprogramada'].includes(c.estado) ? 'apagada' : '',
     cuando: [esc(horaMensaje(c.hora)), mostrarFecha ? esc(fechaExacta ? fechaCorta(c.fecha) : cuando(c.fecha)) : ''],
     quien: [esc(c.paciente), [c.modalidad, fmtTel(c.telefono)].map(esc).join(' · ')],
-    motivo, pills: pills.join(''), acciones });
+    motivo, pills: pills.join(''),
+    // 13-nov: ver la conversación sin buscarla. El texto del chat vive en Kommo (no se copia al portal: es información clínica).
+    acciones: [...acciones, /^\d+$/.test(String(c.lead_id || '')) ? `<a class="btn chico" href="${KOMMO_LEAD}${c.lead_id}" target="_blank" rel="noopener" title="Abre su conversación en Kommo">Ver chat</a>` : ''] });
 }
 
 // ---------- HOY: lo que hay que hacer, en orden de prioridad
