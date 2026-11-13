@@ -51,7 +51,8 @@ async function cargar(clave) {
     const doc = new DOMParser().parseFromString(d.html, 'text/html');
     $v.innerHTML = `<div class="barra"><a href="equipo.html">← Portal del equipo</a><a href="#" id="salir">Salir</a></div>` + doc.body.innerHTML;
     document.querySelector('.barra').insertAdjacentHTML('afterend', `<div class="excel" id="filtros-excel"><b>Reporte de citas en Excel</b> (formato de Sheilla)
-      <label>Mes <input type="month" id="f-mes" value="${mesActual()}"></label>
+      <label>Desde <input type="date" id="f-desde" value="${mesActual()}-01"></label>
+      <label>Hasta <input type="date" id="f-hasta" value="${finDeMes(mesActual())}"></label>
       <label>Nutricionista <select id="f-nutri"><option value="">Todas</option><option>Vanessa Tello</option><option>Nutricionista VT</option></select></label>
       <label>Llega por <select id="f-llega"><option value="">Todos</option></select></label>
       <button type="button" id="excel">⬇ Descargar Excel</button> <span class="estado">Cargando opciones…</span></div>`);
@@ -111,6 +112,7 @@ const fichaDe = c => CITAS.pacientes.find(x => x.nombre === c.paciente && (!c.te
 const llegaPor = f => { const v = String(f.llega_por || '').trim(); return /avenda/i.test(v) ? 'Clínica Avendaño' : /tik ?tok/i.test(v) ? 'TikTok' : /referid/i.test(v) ? 'Referido de paciente' : /instagram/i.test(v) ? 'Instagram' : /facebook/i.test(v) ? 'Facebook' : v; };
 const nutri = c => c.profesional === 'Lic. Vanessa Tello' ? 'Vanessa Tello' : 'Nutricionista VT';
 const edad = (nac, dia) => { if (!nac) return ''; let e = +dia.slice(0, 4) - +nac.slice(0, 4); if (dia.slice(5) < nac.slice(5, 10)) e--; return e >= 0 && e < 120 ? e : ''; };
+const finDeMes = m => { const [y, n] = m.split('-').map(Number); return new Date(Date.UTC(y, n, 0)).toISOString().slice(0, 10); };
 const mesActual = () => { const q = new URLSearchParams(location.search).get('mes'); return /^\d{4}-\d{2}$/.test(q || '') ? q : new Date(Date.now() - 5 * 36e5).toISOString().slice(0, 7); };
 async function datosCitas() {
   if (CITAS) return CITAS;
@@ -127,8 +129,9 @@ async function pintarFiltros() {
   caja.querySelector('.estado').textContent = '';
 }
 function filasDelMes() {
-  const mes = document.getElementById('f-mes').value || mesActual(), prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
-  return { mes, citas: CITAS.citas.filter(c => c.fecha.slice(0, 7) === mes && ['Asistió', 'No asistió'].includes(c.estado)
+  const m0 = mesActual(), desde = document.getElementById('f-desde').value || m0 + '-01', hasta = document.getElementById('f-hasta').value || finDeMes(m0);
+  const mes = desde.slice(0, 7) === hasta.slice(0, 7) && desde.endsWith('-01') && hasta === finDeMes(desde.slice(0, 7)) ? desde.slice(0, 7) : desde + '_' + hasta, prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
+  return { mes, citas: CITAS.citas.filter(c => c.fecha >= desde && c.fecha <= hasta && ['Asistió', 'No asistió'].includes(c.estado)
     && (!prof || nutri(c) === prof) && (!lp || (lp === '(sin dato)' ? !llegaPor(fichaDe(c)) : llegaPor(fichaDe(c)) === lp)))
     .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)) };
 }
@@ -159,7 +162,7 @@ async function descargarReporte() {
   const salazar = citas.filter(c => /salazar/.test(sinT((c.servicio || '') + ' ' + fichaDe(c).llega_por)));
   const hojas = [
     { nombre: 'REPORTE DE CITAS', cab: ['FECHA CITA', 'MES', 'APELLIDOS Y NOMBRES', 'DNI', 'SEXO', 'TELEFONO', 'CORREO', 'LLEGA POR', 'DETALLE PACIENTE', 'NUTRICIONISTA', 'MODALIDAD', 'MONTO DE PAGO', 'FECHA INICIO PAQUETE', 'N° CONSULTA PAQUETE', 'PAGO', 'FECHA DE PAGO', 'MES DE PAGO', 'FORMA DE PAGO', 'N° OP', 'PRIMERA CITA', 'ASISTIO A LA CITA', 'MOTIVO (SI NO ASISTIO A LA CITA)'], filas: reporte },
-    { nombre: 'RESUMEN DEL MES', cab: ['RESUMEN DEL MES', mes], filas: resumen },
+    { nombre: 'RESUMEN DEL MES', cab: ['RESUMEN DEL MES', mes.includes('_') ? mes.replace('_', ' al ') : mes], filas: resumen },
     { nombre: 'CITA PRE Y POST AVENDAÑO', cab: ['N°', 'FECHA', 'NUMERO DE DNI O RUC', 'PACIENTE', 'DIAGNOSTICO', 'EDAD', 'MEDICO TRATANTE', 'OBSERVACIONES Y/O COMENTARIOS DE IMPORTANCIA', 'COMPROBANTE DE PAGO', 'IMPORTE'],
       filas: prepost.map((c, i) => { const f = fichaDe(c); return [i + 1, F(c.fecha), f.dni || '', c.paciente, c.tipo || '', edad(f.fecha_nacimiento, c.fecha), '', '', '', monto(c)]; }) },
     { nombre: 'CITAS DEL MES AVENDAÑO', cab: ['DNI', 'Tipo de DOC', '1ER APELLIDO', '2DO APELLIDO', '1ER NOMBRE', '2DO NOMBRE', 'Sexo', 'Edad', 'Fecha de Atención'],
