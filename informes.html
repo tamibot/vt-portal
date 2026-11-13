@@ -14,6 +14,11 @@
   .err{color:#B3261E;font-size:13px;min-height:18px} .cargando{text-align:center;color:#6A7160;margin:20vh 0}
   .barra{max-width:980px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;font-size:13px}
   .barra a{color:#4E6B1E}
+  .excel{max-width:980px;margin:10px auto 0;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;font-size:14px;background:#fff;border:1px solid #E4E8D6;border-radius:14px;box-sizing:border-box}
+  .excel label{display:flex;gap:6px;align-items:center;color:#5A5D50}
+  .excel input,.excel select{font:inherit;padding:5px 8px;border:1px solid #DCE3C8;border-radius:8px;background:#fff}
+  .excel button{font:inherit;font-weight:700;background:#4E6B1E;color:#FBFBF8;border:0;border-radius:99px;padding:8px 16px;cursor:pointer}
+  .excel .estado{color:#5A5D50;font-size:13px}
 </style>
 </head>
 <body>
@@ -45,10 +50,125 @@ async function cargar(clave) {
     if (!d.ok) { guardar(''); return pedirClave(d.motivo || 'No se pudo abrir el informe.'); }
     const doc = new DOMParser().parseFromString(d.html, 'text/html');
     $v.innerHTML = `<div class="barra"><a href="equipo.html">← Portal del equipo</a><a href="#" id="salir">Salir</a></div>` + doc.body.innerHTML;
+    document.querySelector('.barra').insertAdjacentHTML('afterend', `<div class="excel" id="filtros-excel"><b>Reporte de citas en Excel</b> (formato de Sheilla)
+      <label>Mes <input type="month" id="f-mes" value="${mesActual()}"></label>
+      <label>Nutricionista <select id="f-nutri"><option value="">Todas</option><option>Vanessa Tello</option><option>Nutricionista VT</option></select></label>
+      <label>Llega por <select id="f-llega"><option value="">Todos</option></select></label>
+      <button type="button" id="excel">⬇ Descargar Excel</button> <span class="estado">Cargando opciones…</span></div>`);
+    document.getElementById('excel').onclick = descargarReporte; pintarFiltros();
     document.getElementById('salir').onclick = e => { e.preventDefault(); guardar(''); pedirClave(); };
   } catch (e) {
     $v.innerHTML = '<div class="cargando">No hay conexión con el servidor. Prueba otra vez en un minuto.</div>';
   }
+}
+
+// 13-nov: «Descargar Excel» con el formato del reporte mensual de Sheilla (mismas hojas y columnas),
+// filtrable por mes, nutricionista y «llega por». Datos de citas-datos-vt con la misma clave.
+const DATOS = 'https://primary-production-9caaf.up.railway.app/webhook/citas-datos-vt';
+function zipSinComprimir(partes) {
+  const enc = new TextEncoder(), tabla = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = b => { let c = 0xFFFFFFFF; for (const x of b) c = tabla[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const cabecera = (firma, resto) => { const u = new Uint8Array(resto.reduce((s, [, n]) => s + n, 4)), d = new DataView(u.buffer); d.setUint32(0, firma, true); let i = 4;
+    for (const [v, n] of resto) { n === 2 ? d.setUint16(i, v, true) : d.setUint32(i, v, true); i += n; } return u; };
+  const trozos = [], central = []; let pos = 0;
+  for (const [nombre, texto] of partes) {
+    const n = enc.encode(nombre), b = enc.encode(texto), c = crc(b);
+    const comun = [[0, 2], [0, 2], [0, 2], [33, 2], [c, 4], [b.length, 4], [b.length, 4], [n.length, 2], [0, 2]];
+    const local = cabecera(0x04034b50, [[20, 2], ...comun]);
+    central.push(cabecera(0x02014b50, [[20, 2], [20, 2], ...comun, [0, 2], [0, 2], [0, 2], [0, 4], [pos, 4]]), n);
+    trozos.push(local, n, b); pos += local.length + n.length + b.length;
+  }
+  const largo = central.reduce((s, u) => s + u.length, 0);
+  return new Blob([...trozos, ...central, cabecera(0x06054b50, [[0, 2], [0, 2], [partes.length, 2], [partes.length, 2], [largo, 4], [pos, 4], [0, 2]])],
+    { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function libroExcel(archivo, hojas) {
+  const x = s => String(s ?? '').replace(/[^\u0009\u000A\u000D -퟿-�]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const col = n => n < 26 ? String.fromCharCode(65 + n) : String.fromCharCode(64 + Math.floor(n / 26)) + String.fromCharCode(65 + n % 26);
+  const serial = f => (Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10)) - Date.UTC(1899, 11, 30)) / 864e5;
+  const celda = (v, i, f, estilo) => v === '' || v === null || v === undefined ? ''
+    : typeof v === 'object' && v.fecha ? `<c r="${col(i)}${f}" s="2"><v>${serial(v.fecha)}</v></c>`
+    : typeof v === 'number' ? `<c r="${col(i)}${f}"${estilo}><v>${v}</v></c>`
+    : `<c r="${col(i)}${f}" t="inlineStr"${estilo}><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+  const fila = (vals, f, estilo = '') => `<row r="${f}">${vals.map((v, i) => celda(v, i, f, estilo)).join('')}</row>`;
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', M = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main', R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const partes = [
+    ['[Content_Types].xml', `${X}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${hojas.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+    ['_rels/.rels', `${X}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml', `${X}<workbook xmlns="${M}" xmlns:r="${R}"><sheets>${hojas.map((h, i) => `<sheet name="${x(h.nombre)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels', `${X}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${hojas.map((_, i) => `<Relationship Id="rId${i + 1}" Type="${R}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${hojas.length + 1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml', `${X}<styleSheet xmlns="${M}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs></styleSheet>`],
+    ...hojas.map((h, i) => {
+      const anchos = h.cab.map((c, j) => Math.min(45, Math.max(String(c).length, ...h.filas.map(r => r[j]?.fecha ? 10 : String(r[j] ?? '').length)) + 2));
+      return [`xl/worksheets/sheet${i + 1}.xml`, `${X}<worksheet xmlns="${M}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${anchos.map((w, j) => `<col min="${j + 1}" max="${j + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${fila(h.cab, 1, ' s="1"')}${h.filas.map((r, k) => fila(r, k + 2)).join('')}</sheetData>${h.filas.length ? `<autoFilter ref="A1:${col(h.cab.length - 1)}${h.filas.length + 1}"/>` : ''}</worksheet>`];
+    })];
+  const a = document.createElement('a'); a.href = URL.createObjectURL(zipSinComprimir(partes)); a.download = archivo; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+let CITAS = null;
+const sinT = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const telN = t => String(t || '').replace(/\D/g, '').slice(-9);
+const fichaDe = c => CITAS.pacientes.find(x => x.nombre === c.paciente && (!c.telefono || !x.telefono || telN(x.telefono) === telN(c.telefono))) || {};
+const llegaPor = f => { const v = String(f.llega_por || '').trim(); return /avenda/i.test(v) ? 'Clínica Avendaño' : /tik ?tok/i.test(v) ? 'TikTok' : /referid/i.test(v) ? 'Referido de paciente' : /instagram/i.test(v) ? 'Instagram' : /facebook/i.test(v) ? 'Facebook' : v; };
+const nutri = c => c.profesional === 'Lic. Vanessa Tello' ? 'Vanessa Tello' : 'Nutricionista VT';
+const edad = (nac, dia) => { if (!nac) return ''; let e = +dia.slice(0, 4) - +nac.slice(0, 4); if (dia.slice(5) < nac.slice(5, 10)) e--; return e >= 0 && e < 120 ? e : ''; };
+const mesActual = () => { const q = new URLSearchParams(location.search).get('mes'); return /^\d{4}-\d{2}$/.test(q || '') ? q : new Date(Date.now() - 5 * 36e5).toISOString().slice(0, 7); };
+async function datosCitas() {
+  if (CITAS) return CITAS;
+  const r = await fetch(DATOS, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave: leer() }) });
+  const d = await r.json().catch(() => ({}));
+  if (!d.citas) throw new Error(d.motivo || 'No se pudieron traer las citas.');
+  return CITAS = d;
+}
+async function pintarFiltros() {
+  const caja = document.getElementById('filtros-excel'); if (!caja) return;
+  try { await datosCitas(); } catch (e) { caja.querySelector('.estado').textContent = e.message; return; }
+  const opciones = [...new Set(CITAS.pacientes.map(llegaPor).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  caja.querySelector('#f-llega').innerHTML = '<option value="">Todos</option>' + opciones.map(o => `<option>${o.replace(/[&<>"]/g, '')}</option>`).join('') + '<option value="(sin dato)">Sin dato</option>';
+  caja.querySelector('.estado').textContent = '';
+}
+function filasDelMes() {
+  const mes = document.getElementById('f-mes').value || mesActual(), prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
+  return { mes, citas: CITAS.citas.filter(c => c.fecha.slice(0, 7) === mes && ['Asistió', 'No asistió'].includes(c.estado)
+    && (!prof || nutri(c) === prof) && (!lp || (lp === '(sin dato)' ? !llegaPor(fichaDe(c)) : llegaPor(fichaDe(c)) === lp)))
+    .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)) };
+}
+async function descargarReporte() {
+  const est = document.querySelector('#filtros-excel .estado'); est.textContent = 'Armando el Excel…';
+  try { await datosCitas(); } catch (e) { est.textContent = e.message; return; }
+  const { mes, citas } = filasDelMes(), F = c => ({ fecha: c });
+  const inicioPaq = id => CITAS.citas.filter(x => x.paquete_id === id && x.estado !== 'Cancelada').map(x => x.fecha).sort()[0];
+  const pagado = c => ['Pagado', 'Paquete', 'Cortesía'].includes(c.pago);
+  const monto = c => c.monto_pagado != null ? Number(c.monto_pagado) : c.monto != null ? Number(c.monto) : '';
+  const reporte = citas.map(c => { const f = fichaDe(c), fp = c.fecha_pago || '';
+    return [F(c.fecha), +c.fecha.slice(5, 7), c.paciente, f.dni || '', f.sexo || '', c.telefono || f.telefono || '', c.email || f.email || '', llegaPor(f), f.tipo_paciente || '',
+      nutri(c), c.servicio || c.modalidad || '', monto(c), c.paquete_id ? F(inicioPaq(c.paquete_id)) : '', c.nro_paquete || '', pagado(c) ? 'Si' : 'No',
+      fp ? F(fp) : '', fp ? +fp.slice(5, 7) : '', c.medio_pago || '', '', c.tipo === 'Primera cita' ? 'Si' : '', c.estado === 'Asistió' ? 'Si' : 'No', ''];
+  });
+  const at = citas.filter(c => c.estado === 'Asistió'), nuevos = at.filter(c => c.tipo === 'Primera cita');
+  const nCon = re => nuevos.filter(c => re.test(sinT(fichaDe(c).llega_por))).length || '-';
+  const resumen = [
+    ['Pacientes atendidos TOTAL', at.length], ['Pacientes atendidos por VT', at.filter(c => nutri(c) === 'Vanessa Tello').length],
+    ['Pacientes atendidos por nutri del equipo', at.filter(c => nutri(c) !== 'Vanessa Tello').length], ['Pacientes nuevos TOTAL', nuevos.length],
+    ['Paciente nuevos de Redes', nCon(/instagram|tik ?tok|facebook|redes/)], ['Paciente nuevos de referidos', nCon(/referid/)],
+    ['Pacientes Avendaño nuevos', nCon(/avenda/)], ['Pacientes Dr. Salazar nuevos', nCon(/salazar/)], ['Paciente nuevos Dra Hellen', nCon(/hellen/)],
+    ['Paciente nuevos Dr. Bringas', nCon(/bringas/)], ['Paciente nuevos Dra. Yara', nCon(/yara/)], ['Paciente nuevos Dr. Erick', nCon(/erick/)],
+    ['Paciente nuevos Dr. Rodriguez', nCon(/rodriguez/)], ['Cobrado en citas atendidas (S/)', at.filter(pagado).reduce((s, c) => s + (Number(monto(c)) || 0), 0)]];
+  const aven = at.filter(c => /avenda/.test(sinT(fichaDe(c).llega_por)));
+  const prepost = aven.filter(c => /pre |post |pre-|post-|operaci/.test(sinT((c.tipo || '') + ' ' + (c.servicio || ''))));
+  const partir = n => { const t = String(n).trim().split(/\s+/); return t.length < 3 ? [t[1] || '', '', t[0] || '', ''] : [t[t.length - 2], t[t.length - 1], t[0], t.slice(1, -2).join(' ')]; };
+  const salazar = citas.filter(c => /salazar/.test(sinT((c.servicio || '') + ' ' + fichaDe(c).llega_por)));
+  const hojas = [
+    { nombre: 'REPORTE DE CITAS', cab: ['FECHA CITA', 'MES', 'APELLIDOS Y NOMBRES', 'DNI', 'SEXO', 'TELEFONO', 'CORREO', 'LLEGA POR', 'DETALLE PACIENTE', 'NUTRICIONISTA', 'MODALIDAD', 'MONTO DE PAGO', 'FECHA INICIO PAQUETE', 'N° CONSULTA PAQUETE', 'PAGO', 'FECHA DE PAGO', 'MES DE PAGO', 'FORMA DE PAGO', 'N° OP', 'PRIMERA CITA', 'ASISTIO A LA CITA', 'MOTIVO (SI NO ASISTIO A LA CITA)'], filas: reporte },
+    { nombre: 'RESUMEN DEL MES', cab: ['RESUMEN DEL MES', mes], filas: resumen },
+    { nombre: 'CITA PRE Y POST AVENDAÑO', cab: ['N°', 'FECHA', 'NUMERO DE DNI O RUC', 'PACIENTE', 'DIAGNOSTICO', 'EDAD', 'MEDICO TRATANTE', 'OBSERVACIONES Y/O COMENTARIOS DE IMPORTANCIA', 'COMPROBANTE DE PAGO', 'IMPORTE'],
+      filas: prepost.map((c, i) => { const f = fichaDe(c); return [i + 1, F(c.fecha), f.dni || '', c.paciente, c.tipo || '', edad(f.fecha_nacimiento, c.fecha), '', '', '', monto(c)]; }) },
+    { nombre: 'CITAS DEL MES AVENDAÑO', cab: ['DNI', 'Tipo de DOC', '1ER APELLIDO', '2DO APELLIDO', '1ER NOMBRE', '2DO NOMBRE', 'Sexo', 'Edad', 'Fecha de Atención'],
+      filas: aven.map(c => { const f = fichaDe(c), [a1, a2, n1, n2] = partir(c.paciente); return [f.dni || '', f.dni ? 'DNI' : '', a1, a2, n1, n2, f.sexo || '', edad(f.fecha_nacimiento, c.fecha), F(c.fecha)]; }) },
+    { nombre: 'CITAS DR. SALAZAR - XIMENA', cab: ['FECHA CITA', 'APELLIDOS Y NOMBRES', 'N° CONSULTA PAQUETE', 'DETALLE PACIENTE', 'MONTO DE PAGO'],
+      filas: salazar.map(c => [F(c.fecha), c.paciente, c.nro_paquete || '', fichaDe(c).tipo_paciente || c.tipo || '', monto(c)]) }];
+  const prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
+  libroExcel(`reporte-citas-${mes}${prof ? '-' + sinT(prof).replace(/\W+/g, '-') : ''}${lp ? '-' + sinT(lp).replace(/\W+/g, '-') : ''}.xlsx`, hojas);
+  est.textContent = `Descargado: ${reporte.length} citas (${at.length} atendidas).`;
 }
 cargar(leer());
 </script>
