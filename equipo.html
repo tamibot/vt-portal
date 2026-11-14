@@ -957,6 +957,11 @@ function seccionesHoyBase() {
   const conCitaNueva = c => D.citas.some(x => x.id !== c.id && x.fecha > c.fecha && !['Cancelada', 'Reprogramada'].includes(x.estado) && quien(x) === quien(c));
   const vistos = new Set(), vistos2 = new Set();
   const reagendar = D.citas.filter(c => permite(c) && libre(c) && c.estado === 'Reprogramada' && !conCitaNueva(c) && !vistos.has(quien(c)) && vistos.add(quien(c)));
+  // 14-nov: una persona en una sola lista. Si ya está en Pendiente de respuesta, Por reagendar, Cancelaron o en pausa
+  // («No respondió»), no aparece además en Invitar a su control ni en Reactivar.
+  const enOtraLista = new Set([...reagendar, ...D.no_asistio, ...D.citas.filter(c => esperando(c) || enPausa(c) ||
+    (c.estado === 'Cancelada' && diasEntre(c.fecha, D.hoy) <= 60 && diasEntre(D.hoy, c.fecha) <= 60))].map(quien));
+  const sinOtraLista = c => !enOtraLista.has(quien(c));
   const sinConfirmar = [
     ...vivasFuturas.filter(c => c.estado === 'Por confirmar' && c.recordado && c.fecha <= sumar(D.hoy, 7) && !escritoHoy(c) && !confirmar.includes(c))
       .map(c => ({ c, motivo: `Ya se le escribió el ${fechaCorta(c.recordado)} y no confirmó · cita ${cuando(c.fecha)}`,
@@ -1030,9 +1035,9 @@ function seccionesHoyBase() {
     { id: 'no-asistio', titulo: 'Reagendar (no vinieron)', ayuda: 'No vinieron a su última cita y no tienen otra.',
       items: D.no_asistio.filter(c => permite(c) && !esperando(c)).sort(porEscribir).map(c => tarjeta(c, { motivo: `Faltó el ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reagendar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
     { id: 'no-volvieron', titulo: 'Invitar a su control', ayuda: 'Ya vinieron (desde ayer hasta hace 4 meses) y no tienen otra cita.',
-      items: recientes.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita hace ${nDias(diasEntre(c.fecha, D.hoy))}`, acciones: [wa(c, 'control', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
+      items: recientes.filter(sinOtraLista).sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita hace ${nDias(diasEntre(c.fecha, D.hoy))}`, acciones: [wa(c, 'control', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
     { id: 'reactivar', titulo: 'Reactivar pacientes', ayuda: 'Vinieron hace 4 a 12 meses y no volvieron.',
-      items: antiguos.sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita: ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reactivar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
+      items: antiguos.filter(sinOtraLista).sort(porEscribir).map(c => tarjeta(c, { motivo: `Última cita: ${fechaLarga(c.fecha)}`, acciones: [wa(c, 'reactivar', 'Escribir'), escribi(c), agendar(c), noVolvera(c)] })) },
     { id: 'por-cerrar', titulo: 'Ventas sin cerrar', ayuda: 'Llenaron «Descubre tu plan», reservaron y no pagaron, o piden retomar. Se trabajan desde Kommo.',
       items: D.por_cerrar.map(l => filaLibre({ cuando: [fechaCorta(l.desde), 'hace ' + nDias(diasEntre(l.desde, D.hoy))],
         quien: [esc(l.nombre || 'Sin nombre'), esc(l.servicio || '')], motivo: esc(l.etapa),
