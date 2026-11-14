@@ -991,9 +991,9 @@ function seccionesHoyBase() {
       items: (D.revision?.por_responder || []).filter(c => !H.texto || sinTildes(String(c.nombre || '')).includes(sinTildes(H.texto))).map(c => filaLibre({
         cuando: [fechaCorta(new Date(c.ultima_entrada * 1000 - 5 * 36e5).toISOString().slice(0, 10)), 'hace ' + (Date.now() / 1000 - c.ultima_entrada < 86400 ? Math.max(1, Math.round((Date.now() / 1000 - c.ultima_entrada) / 3600)) + ' h' : nDias(Math.round((Date.now() / 1000 - c.ultima_entrada) / 86400)))],
         quien: [esc(String(c.nombre || '').replace(/^(Paciente · |Cita \S+ · )/, '')), esc(fmtTel(c.telefono))], motivo: esc(c.etapa || ''),
-        acciones: [`<a class="btn chico hecho" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Responder en Kommo</a>`] })) },
+        acciones: [`<a class="btn chico hecho" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Responder en Kommo</a>`, `<button type="button" class="btn chico" data-no-paciente="${Number(c.lead_id)}" title="Amigos, proveedores o contactos que no son pacientes">No es paciente</button>`] })) },
     { id: 'no-responde', titulo: 'Interesados que no respondieron', ayuda: `Mostrar: <select onchange="H.dint=+this.value;pintar()">${[7, 30, 90].map(d => `<option value="${d}"${(H.dint || 30) === d ? ' selected' : ''}>últimos ${d} días</option>`).join('')}</select> ` + 'Personas que escribieron por información (todavía no son pacientes: no tienen cita) y no contestaron nuestro último mensaje. Revisión cada 3 horas. ' + (D.revision?.ultimo_ok ? 'Última completa: ' + new Date(D.revision.ultimo_ok).toLocaleString('es-PE', { timeZone: 'America/Lima' }) : 'Primer barrido pendiente.') + (D.revision?.error ? ' La revisión se detuvo: avisar a soporte.' : D.revision?.ultimo_ok && Date.now() - Date.parse(D.revision.ultimo_ok) > 6 * 3600000 ? ' La revisión está atrasada: avisar a soporte.' : ''),
-      items: (D.conversaciones || []).filter(c => c.estado === 'No responde' && (!c.ultima_salida || Date.now() / 1000 - c.ultima_salida <= (H.dint || 30) * 86400)).sort((a, b) => (b.ultima_salida || 0) - (a.ultima_salida || 0)).map(c => filaLibre({ cuando: c.ultima_salida ? [fechaCorta(new Date(c.ultima_salida * 1000 - 5 * 36e5).toISOString().slice(0, 10)), 'último mensaje'] : ['', ''], quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`] })) },
+      items: (D.conversaciones || []).filter(c => c.estado === 'No responde' && (!c.ultima_salida || Date.now() / 1000 - c.ultima_salida <= (H.dint || 30) * 86400)).sort((a, b) => (b.ultima_salida || 0) - (a.ultima_salida || 0)).map(c => filaLibre({ cuando: c.ultima_salida ? [fechaCorta(new Date(c.ultima_salida * 1000 - 5 * 36e5).toISOString().slice(0, 10)), 'último mensaje'] : ['', ''], quien: [esc(c.nombre), esc(fmtTel(c.telefono))], motivo: 'Sin cita vigente', acciones: [`<a class="btn chico" href="${KOMMO_LEAD}${Number(c.lead_id)}" target="_blank" rel="noopener">Abrir conversación</a>`, `<button type="button" class="btn chico" data-no-paciente="${Number(c.lead_id)}" title="Amigos, proveedores o contactos que no son pacientes">No es paciente</button>`] })) },
     { id: 'hoy', titulo: 'Citas de hoy', ayuda: 'Quién viene hoy.',
       items: hoy.map(c => tarjeta(c, { mostrarFecha: false, acciones: [wa(c, 'cita'),
         c.estado === 'Por confirmar' ? boton('Confirmó', c.id, { estado: 'Confirmada' }) : '',
@@ -1765,6 +1765,11 @@ document.addEventListener('click', async e => {
   const af = t.closest('[data-abrir-ficha]'); if (af) { abrirCita(buscarCita(af.dataset.abrirFicha)); return; }
   if (t.closest('[data-demo-wa]')) { aviso('En práctica no se abre WhatsApp. En la versión real se abre con el mensaje ya escrito.'); return; }
   const sec = t.closest('[data-sec]'); if (sec) { H.sec = sec.dataset.sec; H.limite = 30; pintarHoy(); if (innerWidth < 900) $('#hoy-lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  const npc = t.closest('[data-no-paciente]');
+  if (npc) {
+    if (!confirm('¿No es paciente? Sale de «Nos escribieron y falta responder» y de «Interesados que no respondieron».')) return;
+    return accion(npc, { accion: 'no_paciente', lead_id: npc.dataset.noPaciente }, 'Listo: ya no aparece en estas listas.');
+  }
   const nv = t.closest('[data-no-volvera]');
   if (nv) {
     const c = buscarCita(nv.dataset.noVolvera);

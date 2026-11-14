@@ -214,7 +214,7 @@ async function descargarReporte() {
     { nombre: 'REPORTE DE CITAS', cab: ['FECHA CITA', 'MES', 'APELLIDOS Y NOMBRES', 'DNI', 'SEXO', 'TELEFONO', 'CORREO', 'LLEGA POR', 'DETALLE PACIENTE', 'NUTRICIONISTA', 'MODALIDAD', 'MONTO DE PAGO', 'FECHA INICIO PAQUETE', 'N° CONSULTA PAQUETE', 'PAGO', 'FECHA DE PAGO', 'MES DE PAGO', 'FORMA DE PAGO', 'N° OP', 'PRIMERA CITA', 'ASISTIO A LA CITA', 'MOTIVO (SI NO ASISTIO A LA CITA)'], filas: reporte },
     { nombre: 'RESUMEN DEL MES', cab: ['RESUMEN DEL MES', mes.includes('_') ? mes.replace('_', ' al ') : mes], filas: resumen },
     { nombre: 'CITA PRE Y POST AVENDAÑO', cab: ['N°', 'FECHA', 'NUMERO DE DNI O RUC', 'PACIENTE', 'DIAGNOSTICO', 'EDAD', 'MEDICO TRATANTE', 'OBSERVACIONES Y/O COMENTARIOS DE IMPORTANCIA', 'COMPROBANTE DE PAGO', 'IMPORTE'],
-      filas: prepost.map((c, i) => { const f = fichaDe(c); return [i + 1, F(c.fecha), f.dni || '', c.paciente, c.tipo || '', edad(f.fecha_nacimiento, c.fecha), '', '', '', monto(c)]; }) },
+      filas: prepost.map((c, i) => { const f = fichaDe(c); return [i + 1, F(c.fecha), f.dni || '', c.paciente, f.tipo_paciente || c.tipo || '', edad(f.fecha_nacimiento, c.fecha), '', '', '', monto(c)]; }) },
     { nombre: 'CITAS DEL MES AVENDAÑO', cab: ['DNI', 'Tipo de DOC', '1ER APELLIDO', '2DO APELLIDO', '1ER NOMBRE', '2DO NOMBRE', 'Sexo', 'Edad', 'Fecha de Atención'],
       filas: aven.map(c => { const f = fichaDe(c), [a1, a2, n1, n2] = partir(c.paciente); return [f.dni || '', f.dni ? 'DNI' : '', a1, a2, n1, n2, f.sexo || '', edad(f.fecha_nacimiento, c.fecha), F(c.fecha)]; }) },
     { nombre: 'CITAS DR. SALAZAR - XIMENA', cab: ['FECHA CITA', 'APELLIDOS Y NOMBRES', 'N° CONSULTA PAQUETE', 'DETALLE PACIENTE', 'MONTO DE PAGO'],
