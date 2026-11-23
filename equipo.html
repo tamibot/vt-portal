@@ -931,7 +931,8 @@ const esperando = c => c.contacto_estado === 'Pendiente' && !resuelta(c);
 const enPausa = c => c.contacto_estado === 'No respondió' && diasEntre(String(c.actualizado || '').slice(0, 10) || D.hoy, D.hoy) < 30;
 const libre = c => !esperando(c) && !enPausa(c);
 const contactar = (c, motivo) => `<button type="button" class="btn chico" data-contactar="${c.id}" data-motivo="${motivo}">Ya le escribí</button>`;
-const porReagendar = c => boton('Por reagendar', c.id, { estado: 'Reprogramada' });
+// 23-nov: nunca sobre una cita que ya ocurrió (la borraba de los reportes); para esa paciente está «Invitar a su control».
+const porReagendar = c => c.estado === 'Asistió' ? '' : boton('Por reagendar', c.id, { estado: 'Reprogramada' });
 const noRespondio = c => boton('No respondió', c.id, { contacto_estado: 'No respondió' });
 function seccionesHoyBase() {
   const proximos = diasRecordatorio();
