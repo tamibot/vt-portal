@@ -19,6 +19,10 @@
   .excel input,.excel select{font:inherit;padding:5px 8px;border:1px solid #DCE3C8;border-radius:8px;background:#fff}
   .excel button{font:inherit;font-weight:700;background:#4E6B1E;color:#FBFBF8;border:0;border-radius:99px;padding:8px 16px;cursor:pointer}
   .excel .estado{color:#5A5D50;font-size:13px}
+  .excel details{position:relative}.excel summary{cursor:pointer;padding:5px 10px;border:1px solid #DCE3C8;border-radius:8px;color:#1F3A2B;list-style:none}
+  .excel .opc-detalle{position:absolute;z-index:5;top:110%;left:0;background:#fff;border:1px solid #DCE3C8;border-radius:10px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.08);min-width:220px}
+  .excel .opc-detalle label{display:flex;justify-content:flex-start;text-align:left;gap:8px;padding:3px 0;color:#1F3A2B;white-space:nowrap}.excel .opc-detalle input{padding:0;margin:0;width:auto}
+  .excel .opc-detalle .ac{display:flex;gap:10px;margin-top:6px;border-top:1px solid #F0F2E8;padding-top:6px}.excel .opc-detalle .ac a{color:#4E6B1E;font-size:13px;cursor:pointer}
   #resumen-pacientes{max-width:980px;margin:10px auto 0;padding:0 16px;box-sizing:border-box}
   .resumen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
   .caja-res{background:#fff;border:1px solid #E4E8D6;border-radius:14px;padding:12px 14px;font-size:14px}
@@ -61,6 +65,7 @@ async function cargar(clave) {
       <button type="button" id="corte-clinica" style="background:#fff;color:#4E6B1E;border:1px solid #4E6B1E">Corte clínica (25 al 24)</button>
       <label>Nutricionista <select id="f-nutri"><option value="">Todas</option><option>Vanessa Tello</option><option>Nutricionista VT</option></select></label>
       <label>Llega por <select id="f-llega"><option value="">Todos</option></select></label>
+      <details id="f-detalle"><summary>Detalle paciente: <b>todos</b> ▾</summary><div class="opc-detalle">Cargando…</div></details>
       <button type="button" id="excel">⬇ Descargar Excel</button> <button type="button" id="ver-resumen" style="background:#fff;color:#4E6B1E;border:1px solid #4E6B1E">Ver pacientes y comisiones</button> <span class="estado">Cargando opciones…</span></div>
       <div id="resumen-pacientes"></div>`);
     document.getElementById('excel').onclick = descargarReporte; document.getElementById('ver-resumen').onclick = verResumen; pintarFiltros();
@@ -69,6 +74,8 @@ async function cargar(clave) {
       document.getElementById('f-desde').value = new Date(Date.UTC(y, m - 2, 25)).toISOString().slice(0, 10);
       document.getElementById('f-hasta').value = new Date(Date.UTC(y, m - 1, 24)).toISOString().slice(0, 10);
       document.getElementById('f-llega').value = window.LLEGA_PEND = 'Clínica Avendaño';
+      // 24-nov (Sheilla): a Avendaño solo van PRE/POS GTM y PRE/POS BY PASS; el BIG lo paga cada paciente.
+      window.DETALLE_PEND = d => /^(pre|pos)/.test(sinT(d)) && /gtm|by ?pass/.test(sinT(d)); marcarDetalle(window.DETALLE_PEND);
       const bt = document.getElementById('corte-clinica'); bt.style.background = '#4E6B1E'; bt.style.color = '#fff'; bt.textContent = '✓ Corte clínica (25 al 24)'; };
     document.getElementById('salir').onclick = e => { e.preventDefault(); guardar(''); pedirClave(); };
   } catch (e) {
@@ -154,13 +161,27 @@ async function pintarFiltros() {
   const opciones = [...new Set(CITAS.pacientes.map(llegaPor).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
   caja.querySelector('#f-llega').innerHTML = '<option value="">Todos</option>' + opciones.map(o => `<option>${o.replace(/[&<>"]/g, '')}</option>`).join('') + '<option value="(sin dato)">Sin dato</option>';
   if (window.LLEGA_PEND) caja.querySelector('#f-llega').value = window.LLEGA_PEND;   // 23-nov: el corte se tocó antes de cargar
+  const det = [...new Set(CITAS.pacientes.map(x => String(x.tipo_paciente || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  caja.querySelector('.opc-detalle').innerHTML = [...det, '(sin dato)'].map(d => `<label><input type="checkbox" value="${d.replace(/[&<>"]/g, '')}"> ${d === '(sin dato)' ? 'Sin dato' : d.replace(/[&<>"]/g, '')}</label>`).join('')
+    + '<div class="ac"><a data-t="1">Marcar todos</a><a data-t="0">Quitar todos</a></div>';
+  caja.querySelectorAll('.opc-detalle a').forEach(a => a.onclick = () => marcarDetalle(() => a.dataset.t === '1'));
+  caja.querySelector('.opc-detalle').onchange = resumenDetalle;
+  document.addEventListener('click', e => { const d = document.getElementById('f-detalle'); if (d && !d.contains(e.target)) d.open = false; });
+  marcarDetalle(window.DETALLE_PEND || (() => false));
   caja.querySelector('.estado').textContent = '';
 }
+// 24-nov: filtro «Detalle paciente» (tipo_paciente de la ficha). Ninguna casilla = todos.
+function marcarDetalle(f) { document.querySelectorAll('#f-detalle input').forEach(i => i.checked = !!f(i.value)); resumenDetalle(); }
+function detallesElegidos() { return [...document.querySelectorAll('#f-detalle input:checked')].map(i => i.value); }
+function resumenDetalle() { const el = detallesElegidos(), s = document.querySelector('#f-detalle summary'); if (!s) return;
+  const n = document.querySelectorAll('#f-detalle input').length;
+  s.innerHTML = 'Detalle paciente: <b>' + (!el.length || el.length === n ? 'todos' : el.length <= 2 ? el.join(', ').replace(/[&<>"]/g, '') : el.length + ' elegidos') + '</b> ▾'; }
 function filasDelMes() {
   const m0 = mesActual(), desde = document.getElementById('f-desde').value || m0 + '-01', hasta = document.getElementById('f-hasta').value || finDeMes(m0);
-  const mes = desde.slice(0, 7) === hasta.slice(0, 7) && desde.endsWith('-01') && hasta === finDeMes(desde.slice(0, 7)) ? desde.slice(0, 7) : desde + '_' + hasta, prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
+  const mes = desde.slice(0, 7) === hasta.slice(0, 7) && desde.endsWith('-01') && hasta === finDeMes(desde.slice(0, 7)) ? desde.slice(0, 7) : desde + '_' + hasta, prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value, det = detallesElegidos();
   return { mes, citas: CITAS.citas.filter(c => c.fecha >= desde && c.fecha <= hasta && ['Asistió', 'No asistió'].includes(c.estado)
-    && (!prof || nutri(c) === prof) && (!lp || (lp === '(sin dato)' ? !llegaPor(fichaDe(c)) : llegaPor(fichaDe(c)) === lp)))
+    && (!prof || nutri(c) === prof) && (!lp || (lp === '(sin dato)' ? !llegaPor(fichaDe(c)) : llegaPor(fichaDe(c)) === lp))
+    && (!det.length || det.includes(String(fichaDe(c).tipo_paciente || '').trim() || '(sin dato)')))
     .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)) };
 }
 // 13-nov (pendientes 16 y 17): pacientes del periodo por edad, sexo, paquete y origen, y comisiones
@@ -209,7 +230,7 @@ async function descargarReporte() {
     ['Paciente nuevos Dr. Bringas', nCon(/bringas/)], ['Paciente nuevos Dra. Yara', nCon(/yara/)], ['Paciente nuevos Dr. Erick', nCon(/erick/)],
     ['Paciente nuevos Dr. Rodriguez', nCon(/rodriguez/)], ['Cobrado en citas atendidas (S/)', at.filter(pagado).reduce((s, c) => s + (Number(monto(c)) || 0), 0)]];
   const aven = at.filter(c => /avenda/.test(sinT(fichaDe(c).llega_por)));
-  const prepost = aven.filter(c => /pre |post |pre-|post-|operaci/.test(sinT((c.tipo || '') + ' ' + (c.servicio || ''))));
+  const prepost = detallesElegidos().length ? aven : aven.filter(c => /pre |post |pre-|post-|operaci/.test(sinT((c.tipo || '') + ' ' + (c.servicio || ''))) && !/big|balon/.test(sinT(fichaDe(c).tipo_paciente)));
   const partir = n => { const t = String(n).trim().split(/\s+/); return t.length < 3 ? [t[1] || '', '', t[0] || '', ''] : [t[t.length - 2], t[t.length - 1], t[0], t.slice(1, -2).join(' ')]; };
   const salazar = citas.filter(c => /salazar/.test(sinT((c.servicio || '') + ' ' + fichaDe(c).llega_por)));
   const hojas = [
