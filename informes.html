@@ -68,7 +68,8 @@ async function cargar(clave) {
     document.getElementById('corte-clinica').onclick = () => { const [y, m] = mesActual().split('-').map(Number);
       document.getElementById('f-desde').value = new Date(Date.UTC(y, m - 2, 25)).toISOString().slice(0, 10);
       document.getElementById('f-hasta').value = new Date(Date.UTC(y, m - 1, 24)).toISOString().slice(0, 10);
-      document.getElementById('f-llega').value = window.LLEGA_PEND = 'Clínica Avendaño'; };
+      document.getElementById('f-llega').value = window.LLEGA_PEND = 'Clínica Avendaño';
+      const bt = document.getElementById('corte-clinica'); bt.style.background = '#4E6B1E'; bt.style.color = '#fff'; bt.textContent = '✓ Corte clínica (25 al 24)'; };
     document.getElementById('salir').onclick = e => { e.preventDefault(); guardar(''); pedirClave(); };
   } catch (e) {
     $v.innerHTML = '<div class="cargando">No hay conexión con el servidor. Prueba otra vez en un minuto.</div>';
@@ -221,8 +222,10 @@ async function descargarReporte() {
     { nombre: 'CITAS DR. SALAZAR - XIMENA', cab: ['FECHA CITA', 'APELLIDOS Y NOMBRES', 'N° CONSULTA PAQUETE', 'DETALLE PACIENTE', 'MONTO DE PAGO'],
       filas: salazar.map(c => [F(c.fecha), c.paciente, c.nro_paquete || '', fichaDe(c).tipo_paciente || c.tipo || '', monto(c)]) }];
   const prof = document.getElementById('f-nutri').value, lp = document.getElementById('f-llega').value;
+  // 24-nov (Sheilla): con Avendaño, el Excel abre en las hojas de la clínica; antes abría en REPORTE DE CITAS y parecía que no salía.
+  if (/avenda/.test(sinT(lp))) hojas.unshift(...hojas.splice(2, 2));
   libroExcel(`reporte-citas-${mes}${prof ? '-' + sinT(prof).replace(/\W+/g, '-') : ''}${lp ? '-' + sinT(lp).replace(/\W+/g, '-') : ''}.xlsx`, hojas);
-  est.textContent = `Descargado: ${reporte.length} citas (${at.length} atendidas).`;
+  est.textContent = /avenda/.test(sinT(lp)) ? `Descargado: ${prepost.length} citas pre y post y ${aven.length} citas Avendaño (hojas 1 y 2 del Excel).` : `Descargado: ${reporte.length} citas (${at.length} atendidas).`;
 }
 cargar(leer());
 </script>
