@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Bot de la noche · VT Nutrición</title>
+<title>Asistente de WhatsApp · VT Nutrición</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
 <style>
   :root{--verde:#1F3A2B;--lima:#4E6B1E;--fondo:#F6F4EE;--hoja:#FBFBF8;--linea:#E4E8D6;--texto:#2C2E26;--suave:#5A5D50;--okf:#E9F2D8;--malf:#FBEDE6}
@@ -52,22 +52,38 @@
   .p{align-self:flex-start;background:#EFE9D8}
   .b{align-self:flex-end;background:#DDEBC4}
   footer{padding-block:24px 40px;color:var(--suave);font-size:15px}
+  .panel{background:var(--hoja);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-top:12px}
+  .estado-bot{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
+  .interruptor{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:18px;cursor:pointer;user-select:none}
+  .interruptor input{position:absolute;opacity:0;width:1px;height:1px}
+  .riel{width:54px;height:30px;border-radius:99px;background:#C9CCBF;position:relative;transition:background .15s}
+  .riel::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+  .interruptor input:checked+.riel{background:var(--lima)}
+  .interruptor input:checked+.riel::after{transform:translateX(24px)}
+  .interruptor input:focus-visible+.riel{outline:3px solid #B9D47A;outline-offset:2px}
+  .dia{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:start;padding:10px 0;border-top:1px solid var(--linea)}
+  .dia b{color:var(--verde);padding-top:6px}
+  .tramos{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .tramo{display:inline-flex;gap:6px;align-items:center;background:#fff;border:1px solid var(--linea);border-radius:10px;padding:4px 8px;font-size:15px}
+  .tramo input{font:inherit;border:1px solid #DCE3C8;border-radius:6px;padding:3px 4px}
+  .mini{font:inherit;font-size:14px;background:none;border:0;color:var(--lima);font-weight:700;cursor:pointer;padding:4px}
+  .guardar{font:inherit;font-weight:700;background:var(--verde);color:#fff;border:0;border-radius:10px;padding:10px 18px;cursor:pointer;margin-top:12px}
+  .aviso{font-size:15px;color:var(--suave);margin:8px 0 0}
+  .error{color:#A5361F;font-weight:700}
+  @media (max-width:520px){.dia{grid-template-columns:1fr}}
   @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <header class="tope"><div class="wrap">
-  <h1>Bot de la noche</h1>
-  <p>Responde por el WhatsApp de Sheilla cuando ella no está. Hoy está <b>apagado</b>: se prende solo con tu OK.</p>
+  <h1>Asistente de WhatsApp</h1>
+  <p>Responde por el WhatsApp de Sheilla en los horarios en que ella no atiende. Aquí lo prendes, lo apagas y cambias el horario.</p>
 </div></header>
 <main class="wrap">
-<section>
-  <h2>Cuándo responde</h2>
-  <div class="tabla"><table><tr><th>Día</th><th>Sheilla atiende</th><th>El bot responde</th></tr>
-  <tr><td>Lunes, miércoles y viernes</td><td>9:30 a 11:30</td><td>El resto del día</td></tr>
-  <tr><td>Martes y jueves</td><td>8:00 a 18:00</td><td>Antes de las 8 y después de las 18</td></tr>
-  <tr><td>Sábado y domingo</td><td>—</td><td>Todo el día</td></tr></table></div>
-  <p class="para">Si Sheilla escribe en un chat, el bot se calla en ese chat. A la mañana Sheilla retoma con todo lo conversado.</p>
+<section id="control">
+  <h2>Prender, apagar y horario</h2>
+  <div class="panel" id="panel"><p class="aviso">Cargando…</p></div>
+  <p class="para">Si Sheilla escribe en un chat, el asistente se calla en ese chat. Cuando ella vuelve, retoma con todo lo conversado.</p>
 </section>
 <section>
   <h2>Qué responde</h2>
@@ -76,15 +92,73 @@
   <p class="para">No da números de cuenta, no confirma pagos ni cambia citas: eso lo deja para Sheilla. Nunca promete que alguien llamará al momento.</p>
 </section>
 <section>
-  <h2>Lo que necesitamos que decidas</h2>
-  <ol>
-    <li>¿Las respuestas están bien así? Si quieres cambiar alguna palabra o un dato, dinos cuál.</li>
-    <li>¿El horario está bien?</li>
-    <li><b>Paquete Integral</b>: ¿el bot da los precios (1 mes = 4 citas, 3 meses = 12 citas) o lo sigue derivando a Sheilla, como ahora?</li>
-  </ol>
-  <p>Con tu OK lo prendemos solo para el número de Sheilla y lo revisamos juntos la primera semana.</p>
+  <h2>Pendiente de decidir</h2>
+  <p><b>Paquete Integral</b>: hoy el asistente no da su precio y lo deriva a Sheilla. Si quieren que lo dé, avísennos.</p>
 </section>
 </main>
-<footer class="wrap"><a href="novedades.html">← Novedades</a></footer>
+<footer class="wrap"><a href="equipo.html">← Portal del equipo</a></footer>
+<script>
+// 26-nov: el equipo prende/apaga el asistente y cambia el horario de Sheilla. Lo guarda public.vt_bot_config,
+// que el flujo «VT · Asistente» lee en cada mensaje. Misma clave que el portal del equipo.
+const API = 'https://primary-production-9caaf.up.railway.app/webhook/bot-config-vt';
+const DIAS = [['1', 'Lunes'], ['2', 'Martes'], ['3', 'Miércoles'], ['4', 'Jueves'], ['5', 'Viernes'], ['6', 'Sábado'], ['0', 'Domingo']];
+const $p = document.getElementById('panel');
+const clave = () => { try { return sessionStorage.getItem('clave') || ''; } catch (e) { return ''; } };
+const guardarClave = v => { try { sessionStorage.setItem('clave', v); } catch (e) {} };
+const hhmm = h => String(Math.floor(h)).padStart(2, '0') + ':' + String(Math.round((h % 1) * 60)).padStart(2, '0');
+const horas = t => { const [a, b] = String(t || '').split(':').map(Number); return a + (b || 0) / 60; };
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let CFG = null;
+async function llamar(cuerpo) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ clave: clave(), ...cuerpo }) });
+  const d = await r.json().catch(() => ({ ok: false, motivo: 'No hay conexión con el servidor.' }));
+  if (!d.ok) throw new Error(d.motivo || 'No se pudo.');
+  return d.config;
+}
+function pedirClave(msg = '') {
+  $p.innerHTML = `<form id="fc"><label for="c"><b>Clave del equipo</b></label><br><input id="c" type="password" required style="font:inherit;padding:6px 8px;margin:6px 0;border:1px solid #DCE3C8;border-radius:8px">
+    <button class="guardar" style="margin:0 0 0 6px">Entrar</button><p class="aviso error">${esc(msg)}</p></form>`;
+  document.getElementById('fc').onsubmit = e => { e.preventDefault(); guardarClave(document.getElementById('c').value.trim()); cargar(); };
+}
+function pintar(msg = '') {
+  const h = typeof CFG.horario === 'string' ? JSON.parse(CFG.horario) : CFG.horario || {};
+  const cuando = CFG.actualizado ? new Date(CFG.actualizado).toLocaleString('es-PE', { timeZone: 'America/Lima', dateStyle: 'medium', timeStyle: 'short' }) : '';
+  $p.innerHTML = `<div class="estado-bot"><label class="interruptor"><input type="checkbox" id="activo" ${CFG.activo ? 'checked' : ''}><span class="riel"></span>
+      <span id="txt-activo">${CFG.activo ? 'Prendido' : 'Apagado'}</span></label>
+      <span class="aviso" style="margin:0">${CFG.activo ? 'Responde fuera del horario de Sheilla.' : 'No responde a pacientes.'}</span></div>
+    <h3>Horario en que atiende Sheilla</h3><p class="aviso" style="margin-top:0">Fuera de estos horarios responde el asistente. Un día sin horario: responde todo el día.</p>
+    ${DIAS.map(([d, n]) => `<div class="dia" data-d="${d}"><b>${n}</b><div class="tramos">${(h[d] || []).map(t => tramoHtml(t)).join('')}
+      <button type="button" class="mini agregar">+ Agregar horario</button></div></div>`).join('')}
+    <button type="button" class="guardar" id="guardar">Guardar cambios</button>
+    <p class="aviso ${msg.startsWith('✓') ? '' : 'error'}" id="msg">${esc(msg)}</p>
+    <p class="aviso">Último cambio: ${esc(cuando)}${CFG.actualizado_por ? ' · ' + esc(CFG.actualizado_por) : ''}</p>`;
+  $p.querySelectorAll('.agregar').forEach(b => b.onclick = () => { b.insertAdjacentHTML('beforebegin', tramoHtml([9, 13])); enlazar(); });
+  document.getElementById('activo').onchange = e => { document.getElementById('txt-activo').textContent = e.target.checked ? 'Prendido' : 'Apagado'; };
+  document.getElementById('guardar').onclick = guardar;
+  enlazar();
+}
+const tramoHtml = ([a, b]) => `<span class="tramo"><input type="time" value="${hhmm(a)}" step="900" aria-label="Desde"> a <input type="time" value="${hhmm(b)}" step="900" aria-label="Hasta"><button type="button" class="mini quitar" aria-label="Quitar horario">✕</button></span>`;
+function enlazar() { $p.querySelectorAll('.quitar').forEach(b => b.onclick = () => b.closest('.tramo').remove()); }
+async function guardar() {
+  const horario = {};
+  for (const fila of $p.querySelectorAll('.dia')) {
+    const t = [...fila.querySelectorAll('.tramo')].map(x => [...x.querySelectorAll('input')].map(i => horas(i.value)));
+    if (t.some(([a, b]) => !(a < b))) { document.getElementById('msg').textContent = 'Revisa ' + fila.querySelector('b').textContent + ': la hora de inicio debe ser antes que la de fin.'; return; }
+    if (t.length) horario[fila.dataset.d] = t;
+  }
+  const activo = document.getElementById('activo').checked;
+  if (activo && !CFG.activo && !confirm('¿Prender el asistente? Empezará a responder a pacientes fuera del horario de Sheilla.')) return;
+  const bt = document.getElementById('guardar'); bt.disabled = true; bt.textContent = 'Guardando…';
+  try { CFG = await llamar({ accion: 'guardar', activo, horario, por: 'portal' }); pintar('✓ Guardado. El asistente ya usa estos cambios.'); }
+  catch (e) { bt.disabled = false; bt.textContent = 'Guardar cambios'; document.getElementById('msg').textContent = e.message; }
+}
+async function cargar() {
+  if (!clave()) return pedirClave();
+  $p.innerHTML = '<p class="aviso">Cargando…</p>';
+  try { CFG = await llamar({ accion: 'leer' }); pintar(); }
+  catch (e) { if (/clave/i.test(e.message)) { guardarClave(''); pedirClave(e.message); } else $p.innerHTML = `<p class="aviso error">${esc(e.message)}</p>`; }
+}
+cargar();
+</script>
 </body>
 </html>
